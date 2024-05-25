@@ -1,0 +1,13 @@
+x = 5
+y = 6
+
+out = 0
+
+if(x > y){
+    out = x
+}
+else{
+    out = y
+}
+
+out

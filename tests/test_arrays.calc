@@ -1,0 +1,16 @@
+x = 5
+array a[10] = {0} # array of 10 elements, all initialized to 0
+array b[10] = {0} # array of 10 elements, all initialized to 0
+array c[2] = {63, 42} # array of 2 elements, initialized to 63 and 42
+
+for(i = 0; i < 10; i = i + 1){
+    array a[i] = 9 - i # assign to array a[i] the value 9 - i
+    array b[i] = i # assign to array b[i] the value i
+}
+
+for(i = 0; i < 10; i = i + 1){
+    a[i] + b[i] # 9 + 0, 8 + 1, 7 + 2, 6 + 3, 5 + 4, 4 + 5, 3 + 6, 2 + 7, 1 + 8, 0 + 9
+}
+
+c[0] # 63
+c[1] # 42

@@ -1,0 +1,50 @@
+i = 3
+x = 1
+x = $Add(2, i)
+
+x # => 5
+
+y = 1
+y = $Sub(2, i)
+
+y # => -1
+
+z = 1
+z = $Mul(2, i)
+
+z # => 6
+
+w = 1
+w = $Div(6, i)
+
+w # => 2
+
+a = 1
+a = $AddOne(i)
+
+a # => 4
+
+b = 1
+b = $SumToN(i)
+
+b # => 6
+
+c = 1
+c = $SumToNSquared(i)
+
+c # => 14
+
+d = 1
+d = $SumToNCubed(i)
+
+d # => 36
+
+e = 1
+e = $Power(2, i)
+
+e # => 8
+
+f = 1
+f = $Factorial(i)
+
+f # => 6

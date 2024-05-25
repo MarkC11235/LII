@@ -1,0 +1,32 @@
+Program       -> stmt_list
+
+stmt_list     -> stmt stmt_list | epsilon
+
+stmt          -> assignment | expr | if | @p# for | for | while | return
+
+assignment    -> var = expr
+
+expr          -> term | expr + term | expr - term | expr == expr | expr != expr |
+                      expr < expr | expr > expr | expr <= expr | expr >= expr | function_call
+
+function      -> $var(list){ stmt_list } // stmt_list must end with a return
+
+function_call -> $var(list)
+
+list          -> var, list | epsilon
+
+if            -> ( expr ) { stmt_list } else { stmt_list }
+
+for           -> ( assignment ; expr ; assignment ) { stmt_list }
+
+while         -> ( expr ) { stmt_list }
+
+return        -> expr
+
+term          -> factor | term * factor | term / factor 
+
+factor        -> number | var 
+
+var           -> [a-zA-Z]+ | array var[expr] 
+
+number        -> [0-9]+
