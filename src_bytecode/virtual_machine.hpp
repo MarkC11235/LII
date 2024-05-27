@@ -30,10 +30,16 @@ double pop(){
     return vm.stack[--vm.stack_count];
 }
 
-void run_vm(){
-    std::cout << "Running VM" << std::endl;
+void run_vm(bool verbose = false){
+    if(verbose){
+        std::cout << "Running VM" << std::endl;
+    }
+
     while(true){
-        std::cout << "IP: " << (int)(vm.ip - bc.code) << std::endl;
+        if(verbose){
+            std::cout << "IP: " << (int)(vm.ip - bc.code) << std::endl;
+        }
+
         switch(*vm.ip){
             case OpCode::OP_ADD:
                 push(pop() + pop());
@@ -45,23 +51,31 @@ void run_vm(){
                 push(pop() * pop());
                 break;
             case OpCode::OP_DIV:
-                push(pop() / pop());
+            { // Braces are needed because of the declaration of dividend and divisor
+                double dividend = pop();
+                double divisor = pop();
+                if(divisor == 0){
+                    std::cout << "ERROR: Division by zero" << std::endl;
+                    return;
+                }
+                push(dividend / divisor);
                 break;
+            }
             case OpCode::OP_LOAD:
                 push(vals.values[vm.ip[1]]);
                 vm.ip++;
                 break;
             case OpCode::OP_RETURN:
-                std::cout << "Result: " << pop() << std::endl; //Temporarily print the result
+                std::cout << pop() << std::endl; //Temporarily print the result
                 return;
         }
         vm.ip++;
     }
 }
 
-void interpret_bytecode(){
+void interpret_bytecode(bool verbose = false){
     init_vm();
-    run_vm();
+    run_vm(verbose);
 }
 
 #endif // VIRUTAL_MACHINE_HPP

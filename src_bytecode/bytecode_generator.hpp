@@ -144,7 +144,17 @@ void interpret_op(Node* node){
 
 void interpret_expr(Node* node){
     if(node->get_type() == NodeType::EXPR){
-        interpret_op(node->get_child(0));
+        if(node->get_child(0)->get_type() == NodeType::OP){
+            interpret_op(node->get_child(0));
+        }
+        else if(node->get_child(0)->get_type() == NodeType::NUM){
+            vals.values[vals.count++] = std::stod(node->get_child(0)->get_value());
+            bc.code[bc.count++] = OpCode::OP_LOAD;
+            bc.code[bc.count++] = vals.count - 1;
+        }
+        else{
+            interpretation_error("Expression doesn't start with OP Node", node);
+        }
     }
     else{
         interpretation_error("Expression doesn't start with EXPR Node", node);

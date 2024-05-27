@@ -22,9 +22,9 @@ run:
 	@$(EXE) $(INPUT_FILE) -v
 
 test:
-	@for i in tests/*.calc; do \
+	@for i in tests_2/*.calc; do \
 		echo "Running test $$i"; \
-		$(EXE) $$i -i './headers/helpers.calc.functions' > $${i}.temp; \
+		$(EXE) $$i > $${i}.temp; \
 		diff -b -w $${i}.temp $${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; \
 		echo "-----------------------------------"; \
 	done
