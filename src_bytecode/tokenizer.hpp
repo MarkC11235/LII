@@ -5,9 +5,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-
-// Include the algorithm library to use the remove_if function
-#include <algorithm>
+#include <algorithm> // Include the algorithm library to use the remove_if function
 
 enum TokenType {
     ASSIGNMENT_TOKEN,
@@ -39,6 +37,7 @@ enum TokenType {
     EOF_TOKEN
 };
 
+// Helper functions ---------------------------------------------------
 std::string token_type_to_string(TokenType type){
     switch(type){
         case TokenType::ASSIGNMENT_TOKEN:
@@ -99,6 +98,14 @@ std::string token_type_to_string(TokenType type){
     return "UNKNOWN";
 }
 
+std::string removeWhitespace(std::string str) {
+    str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
+    return str;
+}
+
+// -------------------------------------------------------------------
+
+// Data structures ---------------------------------------------------
 class Token{
     TokenType type;
     std::string value;
@@ -124,6 +131,9 @@ public:
     }
 };
 
+// -------------------------------------------------------------------
+
+// Tokenizer ---------------------------------------------------------
 std::vector<Token> analyze(std::string input, int line_number){
     std::vector<Token> tokens;
     for(int i = 0; i < int(input.length()); i++){
@@ -254,11 +264,6 @@ std::vector<Token> analyze(std::string input, int line_number){
     return tokens;
 }
 
-std::string removeWhitespace(std::string str) {
-    str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
-    return str;
-}
-
 // Reads the input file and returns a vector of strings where each string is a line in the file
 std::vector<Token> read_input(std::string file_path, bool verbose = false){
     // Open the file
@@ -329,5 +334,6 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false){
     return tokens;
 }
 
+// -------------------------------------------------------------------
 
 #endif // TOKENIZER_HPP

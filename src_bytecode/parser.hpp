@@ -28,6 +28,8 @@ enum NodeType {
     LIST
 };
 
+
+// Helper functions ---------------------------------------------------
 int parsing_error(std::string message, Token token){
     std::cout << message << std::endl;
     std::cout << "Token: " << token.get_value() << " at line " << token.get_line_number() << std::endl;
@@ -72,6 +74,53 @@ std::string node_type_to_string(NodeType type){
     }
     return "UNKNOWN";
 }
+
+Token peek(std::vector<Token> tokens){
+    if(tokens.size() > 0){
+        return tokens[0];
+    } else {
+        return Token(TokenType::EOF_TOKEN, "EOF", -1);
+    }
+}
+
+Token pop(std::vector<Token>& tokens){
+    if(tokens.size() > 0){
+        Token token = tokens[0];
+        tokens.erase(tokens.begin());
+        return token;
+    } else {
+        return Token(TokenType::EOF_TOKEN, "EOF", -1);
+    }
+}
+
+void place_token_back(std::vector<Token>& tokens, Token token){
+    tokens.insert(tokens.begin(), token);
+}
+
+int precedence(std::string op){
+    if(op == "+" || op == "-"){
+        return 1;
+    } else if(op == "*" || op == "/"){
+        return 2;
+    }
+    return 0;
+}
+
+std::vector<std::string> splitStringByComma(const std::string& str) {
+    std::vector<std::string> result;
+    std::stringstream ss(str);
+    std::string token;
+
+    while (std::getline(ss, token, ',')) {
+        result.push_back(token);
+    }
+
+    return result;
+}
+
+// -------------------------------------------------------------------
+
+// Data structures ---------------------------------------------------
 
 class Node {
     NodeType type;
@@ -126,32 +175,14 @@ public:
     }
 };
 
+// -------------------------------------------------------------------
+
+// Parsing functions -------------------------------------------------
+
+// Forward declarations
 void parse_stmt_list(std::vector<Token>& tokens, Node* current);
 void parse_stmt(std::vector<Token>& tokens, Node* current);
-
-Token peek(std::vector<Token> tokens){
-    if(tokens.size() > 0){
-        return tokens[0];
-    } else {
-        return Token(TokenType::EOF_TOKEN, "EOF", -1);
-    }
-}
-
-Token pop(std::vector<Token>& tokens){
-    if(tokens.size() > 0){
-        Token token = tokens[0];
-        tokens.erase(tokens.begin());
-        return token;
-    } else {
-        return Token(TokenType::EOF_TOKEN, "EOF", -1);
-    }
-}
-
-void place_token_back(std::vector<Token>& tokens, Token token){
-    tokens.insert(tokens.begin(), token);
-}
-
-void parse_expr(std::vector<Token>& tokens, Node* current);
+void parse_expr(std::vector<Token>& tokens, Node* current); 
 
 void parse_function_call(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
@@ -176,46 +207,16 @@ void parse_function_call(std::vector<Token>& tokens, Node* current){
     }
 }
 
-int precedence(std::string op){
-    if(op == "+" || op == "-"){
-        return 1;
-    } else if(op == "*" || op == "/"){
-        return 2;
-    }
-    return 0;
-}
-
 void parse_expr(std::vector<Token>& tokens, Node* current){
     std::stack<Node*> ops;
     std::stack<Node*> values;
 
     for(;;){
-        //std::cout << "Tokens left: " << tokens.size() << std::endl;
         Token token = peek(tokens);
         if((token.get_type() != TokenType::NUMBER_TOKEN && token.get_type() != TokenType::OPERATOR_TOKEN) || token.get_type() == TokenType::EOF_TOKEN){
             break;
         }
         token = pop(tokens);
-
-        // print stack
-        // std::stack<Node*> temp = ops;
-        // std::cout << "Op Stack: ";
-        // while(temp.size() > 0){
-        //     std::cout << temp.top()->get_value() << " ";
-        //     temp.pop();
-        // }
-        // std::cout << std::endl;
-
-        // //print values
-        // temp = values;
-        // std::cout << "Value Stack: ";
-        // while(temp.size() > 0){
-        //     // std::cout << temp.top()->get_value() << " ";
-        //     // temp.pop();
-        //     temp.top()->print();
-        //     temp.pop();
-        // }
-        // std::cout << std::endl << std::endl;
 
         if(token.get_type() == TokenType::NUMBER_TOKEN){
             Node* num = new Node(NodeType::NUM, token.get_value());
@@ -359,18 +360,6 @@ void parse_while(std::vector<Token>& tokens, Node* current){
     } else {
         parsing_error("Syntax error: expected opening parenthesis", token);
     }
-}
-
-std::vector<std::string> splitStringByComma(const std::string& str) {
-    std::vector<std::string> result;
-    std::stringstream ss(str);
-    std::string token;
-
-    while (std::getline(ss, token, ',')) {
-        result.push_back(token);
-    }
-
-    return result;
 }
 
 void parse_for(std::vector<Token>& tokens, Node* current, std::string directive = ""){
@@ -663,5 +652,7 @@ Node* parse(std::vector<Token> tokens, bool verbose = false){
 
     return root;
 }
+
+// -------------------------------------------------------------------
 
 #endif // PARSER_HPP

@@ -2,14 +2,12 @@
 #define BYTECODE_GENERATOR_HPP
 
 #include <cstdint> // int8_t
-#include "parser.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
 #include <map>
-#include <thread>
-#include <mutex>
-#include <future>
+
+#include "parser.hpp"
 
 enum OpCode{
     // Arithmetic
@@ -18,18 +16,20 @@ enum OpCode{
     OP_MUL,
     OP_DIV,
     // Variables
-    OP_LOAD,
+    OP_LOAD, // push a value from the values array to the stack, index is the next byte
     // Control flow
     OP_RETURN,
 };
 
+
+// Data Structures ---------------------------------------------------
 struct bytecode {
-    int8_t* code;
+    int8_t* code; // Bytecode array
     int count;
     int capacity;
 };
 
-bytecode bc;
+bytecode bc; // Statically allocated because only one bytecode array is needed
 
 struct values{
     double* values;
@@ -37,8 +37,12 @@ struct values{
     int capacity;
 };
 
-values vals;
+values vals; // Statically allocated because only one values array is needed
+             // This array stores constant values
 
+// -------------------------------------------------------------------
+
+// Visual Representation for debugging -------------------------------
 void display_bytecode(){
     for(int i = 0; i < bc.count; i++){
         std::cout << i << ": ";
@@ -74,16 +78,10 @@ void display_constants(){
     }
 }
 
-void interpret_stmt_list(Node* node);
-void interpret_stmt(Node* node);
-void interpret_expr(Node* node);
-void interpret_assign(Node* node);
-void interpret_if(Node* node);
-void interpret_while(Node* node);
-void interpret_for(Node* node);
-void interpret_return(Node* node);
-void interpret(Node* node);
+// -------------------------------------------------------------------
 
+
+// Interpretation ----------------------------------------------------
 void interpretation_error(std::string message, Node* node){
     std::cout << message << std::endl;
     node->print();
@@ -228,5 +226,7 @@ void generate_bytecode(Node* ast) {
     // // add return statement to the end of the bytecode
     // bc.code[bc.count++] = OpCode::OP_RETURN;
 }
+
+// -------------------------------------------------------------------
 
 #endif // BYTECODE_GENERATOR_HPP

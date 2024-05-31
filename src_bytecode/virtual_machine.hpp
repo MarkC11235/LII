@@ -4,16 +4,20 @@
 #include <cstdint> // int8_t
 #include "bytecode_generator.hpp"
 
+// Data Structures ---------------------------------------------------
 struct VM{
     double* stack;
     int stack_count;
     int stack_capacity;
 
-    int8_t* ip;
+    int8_t* ip; // Pointer to the current instruction
 };
 
-VM vm;
+VM vm; // Statically allocated because only one VM is needed
 
+// -------------------------------------------------------------------
+
+// Initializes the virtual machine ----------------------------------
 void init_vm(){
     vm.stack = new double[256];
     vm.stack_count = 0;
@@ -22,6 +26,9 @@ void init_vm(){
     vm.ip = bc.code;
 }
 
+// -------------------------------------------------------------------
+
+// Stack operations -------------------------------------------------
 void push(double value){
     vm.stack[vm.stack_count++] = value;
 }
@@ -30,6 +37,9 @@ double pop(){
     return vm.stack[--vm.stack_count];
 }
 
+// -------------------------------------------------------------------
+
+// Runs the virtual machine ------------------------------------------
 void run_vm(bool verbose = false){
     if(verbose){
         std::cout << "Running VM" << std::endl;
@@ -73,9 +83,14 @@ void run_vm(bool verbose = false){
     }
 }
 
+// -------------------------------------------------------------------
+
+// Starts the interpretation process ---------------------------------
 void interpret_bytecode(bool verbose = false){
     init_vm();
     run_vm(verbose);
 }
+
+// -------------------------------------------------------------------
 
 #endif // VIRUTAL_MACHINE_HPP
