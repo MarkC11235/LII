@@ -1,6 +1,6 @@
-25
 if(0){
-    45
+    return 1
 }
-
-return
+else{
+    return 0
+}

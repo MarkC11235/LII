@@ -1,8 +1,6 @@
 if(1){
-    15
+    return 15
 }
 else{
-    25
-}
-
-return 
+    return 25
+} 

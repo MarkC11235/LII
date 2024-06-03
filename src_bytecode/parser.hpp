@@ -423,9 +423,9 @@ void parse_return(std::vector<Token>& tokens, Node* current){
     Node* return_node = new Node(NodeType::RETURN, "");
     current->add_child(return_node);
 
-    //Node* expr = new Node(NodeType::EXPR, "");
-    //return_node->add_child(expr);
-    //parse_expr(tokens, expr);
+    Node* expr = new Node(NodeType::EXPR, "");
+    return_node->add_child(expr);
+    parse_expr(tokens, expr);
 }
 
 void parse_list(std::vector<Token>& tokens, Node* current){

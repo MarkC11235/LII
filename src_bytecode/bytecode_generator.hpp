@@ -197,7 +197,7 @@ void interpret_return(Node* node){
         interpretation_error("Return doesn't start with RETURN Node", node);
     }
 
-    //interpret_expr(node->get_child(0));
+    interpret_expr(node->get_child(0));
 
     //bc.code[bc.count++] = OpCode::OP_RETURN;
     WRITE_BYTE(OpCode::OP_RETURN);
