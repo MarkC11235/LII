@@ -78,6 +78,19 @@ void run_vm(bool verbose = false){
             case OpCode::OP_RETURN:
                 std::cout << pop() << std::endl; //Temporarily print the result
                 return;
+            case OpCode::OP_JUMP:
+                vm.ip += vm.ip[1];
+                break;
+            case OpCode::OP_JUMP_IF_FALSE:
+                if(pop() == 0){
+                    vm.ip += vm.ip[1];
+                } else {
+                    vm.ip++;
+                }
+                break;
+            default:
+                std::cout << "ERROR: Unknown opcode" << std::endl;
+                return;
         }
         vm.ip++;
     }

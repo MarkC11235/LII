@@ -19,6 +19,8 @@ enum OpCode{
     OP_LOAD, // push a value from the values array to the stack, index is the next byte
     // Control flow
     OP_RETURN,
+    OP_JUMP,
+    OP_JUMP_IF_FALSE
 };
 
 
@@ -60,10 +62,20 @@ void display_bytecode(){
                 std::cout << "OP_DIV" << std::endl;
                 break;
             case OpCode::OP_LOAD:
-                std::cout << "OP_LOAD    " << "Index: " << (int)bc.code[++i] << std::endl;
+                std::cout << "OP_LOAD";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)bc.code[++i];
+                std::cout << "          ";
+                std::cout << "Value: " << vals.values[(int)bc.code[i]] << std::endl;
                 break;
             case OpCode::OP_RETURN:
                 std::cout << "OP_RETURN" << std::endl;
+                break;
+            case OpCode::OP_JUMP:
+                std::cout << "OP_JUMP    " << "Offset: " << (int)bc.code[++i] << std::endl;
+                break;
+            case OpCode::OP_JUMP_IF_FALSE:
+                std::cout << "OP_JUMP_IF_FALSE    " << "Offset: " << (int)bc.code[++i] << std::endl;
                 break;
             default:
                 std::cout << "Unknown opcode" << std::endl;
@@ -80,8 +92,19 @@ void display_constants(){
 
 // -------------------------------------------------------------------
 
+// Helper functions --------------------------------------------------
+#define WRITE_BYTE(byte) bc.code[bc.count++] = byte
+// -------------------------------------------------------------------
 
 // Interpretation ----------------------------------------------------
+void interpret(Node* node);
+void interpret_stmt_list(Node* node);
+void interpret_stmt(Node* node);
+void interpret_if(Node* node);
+void interpret_return(Node* node);
+void interpret_expr(Node* node);
+void interpret_op(Node* node);
+
 void interpretation_error(std::string message, Node* node){
     std::cout << message << std::endl;
     node->print();
@@ -98,8 +121,10 @@ void interpret_op(Node* node){
         }
         else if(l_child->get_type() == NodeType::NUM){
             vals.values[vals.count++] = std::stod(l_child->get_value());
-            bc.code[bc.count++] = OpCode::OP_LOAD;
-            bc.code[bc.count++] = vals.count - 1;
+            //bc.code[bc.count++] = OpCode::OP_LOAD;
+            //bc.code[bc.count++] = vals.count - 1;
+            WRITE_BYTE(OpCode::OP_LOAD);
+            WRITE_BYTE(vals.count - 1);
         }
         else{
             interpretation_error("Invalid child type for OP Node", node);
@@ -110,8 +135,10 @@ void interpret_op(Node* node){
         }
         else if(r_child->get_type() == NodeType::NUM){
             vals.values[vals.count++] = std::stod(r_child->get_value());
-            bc.code[bc.count++] = OpCode::OP_LOAD;
-            bc.code[bc.count++] = vals.count - 1;
+            // bc.code[bc.count++] = OpCode::OP_LOAD;
+            // bc.code[bc.count++] = vals.count - 1;
+            WRITE_BYTE(OpCode::OP_LOAD);
+            WRITE_BYTE(vals.count - 1);
         }
         else{
             interpretation_error("Invalid child type for OP Node", node);
@@ -119,16 +146,20 @@ void interpret_op(Node* node){
         
         switch(node->get_value()[0]){
             case '+':
-                bc.code[bc.count++] = OpCode::OP_ADD;
+                //bc.code[bc.count++] = OpCode::OP_ADD;
+                WRITE_BYTE(OpCode::OP_ADD);
                 break;
             case '-':
-                bc.code[bc.count++] = OpCode::OP_SUB;
+                //bc.code[bc.count++] = OpCode::OP_SUB;
+                WRITE_BYTE(OpCode::OP_SUB);
                 break;
             case '*':
-                bc.code[bc.count++] = OpCode::OP_MUL;
+                //bc.code[bc.count++] = OpCode::OP_MUL;
+                WRITE_BYTE(OpCode::OP_MUL);
                 break;
             case '/':
-                bc.code[bc.count++] = OpCode::OP_DIV;
+                //bc.code[bc.count++] = OpCode::OP_DIV;
+                WRITE_BYTE(OpCode::OP_DIV);
                 break;
             default:
                 interpretation_error("Invalid operator", node);
@@ -147,8 +178,10 @@ void interpret_expr(Node* node){
         }
         else if(node->get_child(0)->get_type() == NodeType::NUM){
             vals.values[vals.count++] = std::stod(node->get_child(0)->get_value());
-            bc.code[bc.count++] = OpCode::OP_LOAD;
-            bc.code[bc.count++] = vals.count - 1;
+            // bc.code[bc.count++] = OpCode::OP_LOAD;
+            // bc.code[bc.count++] = vals.count - 1;
+            WRITE_BYTE(OpCode::OP_LOAD);
+            WRITE_BYTE(vals.count - 1);
         }
         else{
             interpretation_error("Expression doesn't start with OP Node", node);
@@ -166,7 +199,37 @@ void interpret_return(Node* node){
 
     //interpret_expr(node->get_child(0));
 
-    bc.code[bc.count++] = OpCode::OP_RETURN;
+    //bc.code[bc.count++] = OpCode::OP_RETURN;
+    WRITE_BYTE(OpCode::OP_RETURN);
+}
+
+void interpret_if(Node* node){
+    if(node->get_type() != NodeType::IF){
+        interpretation_error("If doesn't start with IF Node", node);
+    }
+
+    interpret_expr(node->get_child(0));
+    WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE);
+    int jump_index = bc.count;
+    WRITE_BYTE(0); // Placeholder for the jump index
+
+    interpret_stmt_list(node->get_child(1));
+
+    int jump_offset = bc.count - jump_index;
+    bc.code[jump_index] = jump_offset;
+
+    if(node->get_children().size() == 3){
+        bc.code[jump_index] = jump_offset + 2; // Plus 2 because of the jump instruction
+
+        WRITE_BYTE(OpCode::OP_JUMP);
+        int jump_index = bc.count;
+        WRITE_BYTE(0); // Placeholder for the jump index
+
+        interpret_stmt_list(node->get_child(2));
+
+        int jump_offset = bc.count - jump_index;
+        bc.code[jump_index] = jump_offset;
+    }
 }
 
 void interpret_stmt(Node* node){
@@ -178,6 +241,9 @@ void interpret_stmt(Node* node){
                 break;
             case NodeType::RETURN:
                 interpret_return(child);
+                break;
+            case NodeType::IF:
+                interpret_if(child);
                 break;
             default:
                 interpretation_error("Invalid statement type", node);
