@@ -356,11 +356,11 @@ void interpret_stmt_list(Node* node){
 }
 
 void interpret(Node* node){
-    if(node->get_type() != NodeType::PROGRAM){
-        interpretation_error("Program doesn't start with PROGRAM Node", node);
+    if(node->get_type() != NodeType::STMT_LIST){
+        interpretation_error("Program doesn't start with STMT_LIST Node", node);
     }
     
-    interpret_stmt_list(node->get_child(0));
+    interpret_stmt_list(node);
 }
 
 void generate_bytecode(Node* ast) {

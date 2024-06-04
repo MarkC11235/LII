@@ -1,6 +1,13 @@
-if(1){
-    return 15
+let x = 0
+let y = 1
+if(x){
+    return 1
 }
 else{
-    return 25
-} 
+    if(y){
+        return 2
+    }
+    else{
+        return 3
+    }
+}

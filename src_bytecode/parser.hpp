@@ -33,8 +33,7 @@ enum NodeType {
 int parsing_error(std::string message, Token token){
     std::cout << message << std::endl;
     std::cout << "Token: " << token.get_value() << " at line " << token.get_line_number() << std::endl;
-    // exit(1);
-    return 1;
+    exit(1);
 }
 
 std::string node_type_to_string(NodeType type){
@@ -117,7 +116,6 @@ std::vector<std::string> splitStringByComma(const std::string& str) {
 
     return result;
 }
-
 // -------------------------------------------------------------------
 
 // Data structures ---------------------------------------------------
@@ -184,29 +182,6 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current);
 void parse_stmt(std::vector<Token>& tokens, Node* current);
 void parse_expr(std::vector<Token>& tokens, Node* current); 
 
-void parse_function_call(std::vector<Token>& tokens, Node* current){
-    Token token = pop(tokens);
-    Node* function_call = new Node(NodeType::FUNCTION, token.get_value());
-    current->add_child(function_call);
-    token = pop(tokens);
-
-    if(token.get_type() == TokenType::OPENPAR_TOKEN){
-        token = pop(tokens);
-        while(token.get_type() != TokenType::CLOSEPAR_TOKEN){
-            if(token.get_type() == TokenType::NUMBER_TOKEN){
-                Node* num = new Node(NodeType::NUM, token.get_value());
-                function_call->add_child(num);
-            } else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-                Node* var = new Node(NodeType::VAR, token.get_value());
-                function_call->add_child(var);
-            }
-            token = pop(tokens);
-        }
-    } else {
-        parsing_error("Syntax error: expected opening parenthesis", token);
-    }
-}
-
 void parse_expr(std::vector<Token>& tokens, Node* current){
     std::stack<Node*> ops;
     std::stack<Node*> values;
@@ -220,7 +195,6 @@ void parse_expr(std::vector<Token>& tokens, Node* current){
             break;
         }
         token = pop(tokens);
-        //token.print();
 
         if(token.get_type() == TokenType::NUMBER_TOKEN){
             Node* num = new Node(NodeType::NUM, token.get_value());
@@ -256,15 +230,10 @@ void parse_expr(std::vector<Token>& tokens, Node* current){
     }
 
     current->add_child(values.top());
-    //current->print();
 }
 
 void parse_assignment(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
-    if(token.get_type() == TokenType::EOF_TOKEN){
-        return;
-    }
-
     Node* assign = new Node(NodeType::ASSIGN, "");
     current->add_child(assign);
 
@@ -272,14 +241,11 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
         Node* var = new Node(NodeType::VAR, token.get_value());
         assign->add_child(var);
         token = pop(tokens);
+
         if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){
-            //std::cout << "Assignment" << std::endl;
-            //current->print();
             Node* expr = new Node(NodeType::EXPR, "");
             assign->add_child(expr);
             parse_expr(tokens, expr);
-
-            //current->print();
         } else {
             parsing_error("Syntax error: expected assignment operator", token);
         }
@@ -291,146 +257,67 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
 void parse_if(std::vector<Token>& tokens, Node* current){
     Node* if_node = new Node(NodeType::IF, "");
     current->add_child(if_node);
+
     Token token = pop(tokens);
-    if(token.get_type() == TokenType::OPENPAR_TOKEN){
-        Node* expr = new Node(NodeType::EXPR, "");
-        if_node->add_child(expr);
-        parse_expr(tokens, expr);
-
-        token = pop(tokens);
-        if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
-            token = pop(tokens);
-            if(token.get_type() == TokenType::OPENBRACKET_TOKEN){
-                 Node* stmt_list = new Node(NodeType::STMT_LIST, "");
-                if_node->add_child(stmt_list);
-                parse_stmt_list(tokens, stmt_list);
-
-                token = pop(tokens);
-                if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){
-                    token = pop(tokens);
-                    if(token.get_type() == TokenType::ELSE_TOKEN){
-                        token = pop(tokens);
-                        if(token.get_type() == TokenType::OPENBRACKET_TOKEN){
-                            Node* else_stmt_list = new Node(NodeType::STMT_LIST, "");
-                            if_node->add_child(else_stmt_list);
-                            parse_stmt_list(tokens, else_stmt_list);
-
-                            token = pop(tokens);
-                            if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){
-                                return;
-                            } else {
-                                parsing_error("Syntax error: expected closing bracket", token);
-                            }
-                        } else {
-                            parsing_error("Syntax error: expected opening bracket", token);
-                        }
-                    } else {
-                        place_token_back(tokens, token);
-                        return;
-                    }
-                } else {
-                    parsing_error("Syntax error: expected closing bracket", token);
-                }
-            } else {
-                parsing_error("Syntax error: expected opening bracket", token);
-            }
-        } else {
-            parsing_error("Syntax error: expected closing parenthesis", token);
-        }
-    } else {
-        parsing_error("Syntax error: expected opening parenthesis", token);
+    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+        parsing_error("Syntax error: expected '('", token);
     }
-}
 
-void parse_while(std::vector<Token>& tokens, Node* current){
-    Node* while_node = new Node(NodeType::WHILE, "");
-    current->add_child(while_node);
-    Token token = pop(tokens);
-    if(token.get_type() == TokenType::OPENPAR_TOKEN){
-        Node* expr = new Node(NodeType::EXPR, "");
-        while_node->add_child(expr);
-        parse_expr(tokens, expr);
+    Node* expr = new Node(NodeType::EXPR, "");
+    if_node->add_child(expr);
+    parse_expr(tokens, expr);
 
-        token = pop(tokens);
-        if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
-            token = pop(tokens);
-            if(token.get_type() == TokenType::OPENBRACKET_TOKEN){
-                Node* stmt_list = new Node(NodeType::STMT_LIST, "");
-                while_node->add_child(stmt_list);
-                parse_stmt_list(tokens, stmt_list);
-
-                token = pop(tokens);
-                if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){
-                    return;
-                } else {
-                    parsing_error("Syntax error: expected closing bracket", token);
-                }
-            } else {
-                parsing_error("Syntax error: expected opening bracket", token);
-            }
-        } else {
-            parsing_error("Syntax error: expected closing parenthesis", token);
-        }
-    } else {
-        parsing_error("Syntax error: expected opening parenthesis", token);
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
     }
-}
 
-void parse_for(std::vector<Token>& tokens, Node* current, std::string directive = ""){
-    std::vector<std::string> directives = splitStringByComma(directive);
-    if(directives.size() == 0){
-        directives.push_back("");
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '{'", token);
     }
-    Node* for_node = new Node(NodeType::FOR, directives);
+
+    if(peek(tokens).get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are statements inside the if block
+        Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+        if_node->add_child(stmt_list);
+        parse_stmt_list(tokens, stmt_list);
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '}'", token);
+    }
+
+    // Check for else
+    token = peek(tokens);
+    if(token.get_type() != TokenType::ELSE_TOKEN){
+        return; // No else block
+    }
+
+    // Parse else
+    pop(tokens);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '{'", token);
+    }
+
+    // Check if there are statements inside the else block
+    if(peek(tokens).get_type() == TokenType::CLOSEBRACKET_TOKEN){
+        pop(tokens);
+        return; // Empty else block
+    }
+
+    // Parse else block
+    Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+    if_node->add_child(stmt_list);
+    parse_stmt_list(tokens, stmt_list);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '}'", token); ////////////// HERE
+    }
     
-    current->add_child(for_node);
-    Token token = pop(tokens);
-    if(token.get_type() == TokenType::OPENPAR_TOKEN){
-        Node* assign = new Node(NodeType::STMT, "");
-        for_node->add_child(assign);
-        parse_stmt(tokens, assign);
-
-        token = pop(tokens);
-        if(token.get_type() == TokenType::SEMICOLON_TOKEN){
-            Node* expr = new Node(NodeType::STMT, "");
-            for_node->add_child(expr);
-            parse_stmt(tokens, expr);
-
-            token = pop(tokens);
-            if(token.get_type() == TokenType::SEMICOLON_TOKEN){
-                Node* assign = new Node(NodeType::STMT, "");
-                for_node->add_child(assign);
-                parse_stmt(tokens, assign);
-
-                token = pop(tokens);
-                if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
-                    token = pop(tokens);
-                    if(token.get_type() == TokenType::OPENBRACKET_TOKEN){
-                        Node* stmt_list = new Node(NodeType::STMT_LIST, "");
-                        for_node->add_child(stmt_list);
-                        parse_stmt_list(tokens, stmt_list);
-
-                        token = pop(tokens);
-                        if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){
-                            return;
-                        } else {
-                            parsing_error("Syntax error: expected closing bracket", token);
-                        }
-                    } else {
-                        parsing_error("Syntax error: expected opening bracket", token);
-                    }
-                } else {
-                    parsing_error("Syntax error: expected closing parenthesis", token);
-                }
-            } else {
-                parsing_error("Syntax error: expected semicolon", token);
-            }
-        } else {
-            parsing_error("Syntax error: expected semicolon", token);
-        }
-    } else {
-        parsing_error("Syntax error: expected opening parenthesis", token);
-    }
 }
 
 void parse_return(std::vector<Token>& tokens, Node* current){
@@ -442,97 +329,14 @@ void parse_return(std::vector<Token>& tokens, Node* current){
     parse_expr(tokens, expr);
 }
 
-void parse_list(std::vector<Token>& tokens, Node* current){
-    Token token = pop(tokens);
-    //token.print();
-    if(token.get_type() == TokenType::EOF_TOKEN){
-        return;
-    }
-    if(token.get_type() == TokenType::OPENBRACKET_TOKEN){
-        //std::cout << "Parsing list" << std::endl;
-        token = pop(tokens);
-        while(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
-            if(token.get_type() == TokenType::NUMBER_TOKEN){
-                Node* num = new Node(NodeType::NUM, token.get_value());
-                current->add_child(num);
-            } else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-                Node* var = new Node(NodeType::VAR, token.get_value());
-                current->add_child(var);
-            }
-            token = pop(tokens);
-        }
-    } else {
-        parsing_error("Syntax error: expected opening bracket", token);
-    }
-}
-
-void parse_array_assign(std::vector<Token>& tokens, Node* current){
-    Token token = pop(tokens);
-    if(token.get_type() == TokenType::EOF_TOKEN){
-        return;
-    }
-    Node* assign = new Node(NodeType::ASSIGN, "");
-    current->add_child(assign);
-    if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-        Node* var = new Node(NodeType::VAR, token.get_value());
-        assign->add_child(var);
-        token = pop(tokens);
-
-        if(token.get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){
-            Node* expr = new Node(NodeType::EXPR, "");
-            assign->add_child(expr);
-            parse_expr(tokens, expr);
-
-            token = pop(tokens);
-            if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
-                token = pop(tokens);
-                if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){
-                    Node* a = new Node(NodeType::OP, "=");
-                    assign->add_child(a);
-
-                    if(peek(tokens).get_type() == TokenType::OPENBRACKET_TOKEN){
-                        Node* list = new Node(NodeType::LIST, "");
-                        assign->add_child(list);
-                        parse_list(tokens, list);
-                    } else if(peek(tokens).get_type() == TokenType::NUMBER_TOKEN || peek(tokens).get_type() == TokenType::IDENTIFIER_TOKEN){
-                        Node* expr = new Node(NodeType::EXPR, "");
-                        assign->add_child(expr);
-                        parse_expr(tokens, expr);
-                    } else {
-                        parsing_error("Syntax error: expected list or expression", token);
-                    }
-
-                } else {
-                    parsing_error("Syntax error: expected assignment operator", token);
-                }
-            } else {
-                parsing_error("Syntax error: expected closing square bracket", token);
-            }
-        } else {
-            parsing_error("Syntax error: expected opening square bracket", token);
-        }
-    }
-}
-
 void parse_stmt(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     if(token.get_type() == TokenType::EOF_TOKEN){
-        return;
+        return; // End of file
     }
     if(token.get_type() == TokenType::IF_TOKEN){
         parse_if(tokens, current);
     } 
-    else if(token.get_type() == TokenType::WHILE_TOKEN){
-        parse_while(tokens, current);
-    }
-    else if(token.get_type() == TokenType::DIRECTIVE_TOKEN){
-        std::string directive = token.get_value().substr(2);
-        pop(tokens);
-        parse_for(tokens, current, directive);
-    }
-    else if(token.get_type() == TokenType::FOR_TOKEN){
-        parse_for(tokens, current);
-    }
     else if(token.get_type() == TokenType::RETURN_TOKEN){
         parse_return(tokens, current);
     }
@@ -543,91 +347,27 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
 
 void parse_stmt_list(std::vector<Token>& tokens, Node* current){
     Token token = peek(tokens);
-    if(token.get_type() == TokenType::EOF_TOKEN){
-        return;
-    }
-
-    if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){
+    if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){ // End of block
         return;
     }
 
     Node* stmt = new Node(NodeType::STMT, "");
     current->add_child(stmt);
-    //std::cout << "Parsing stmt" << std::endl;
     parse_stmt(tokens, stmt);
-    //std::cout << "Parsed stmt" << std::endl;
 
-    // Check to see if there are more statements
-    if(peek(tokens).get_type() == TokenType::EOF_TOKEN){
+    token = peek(tokens);
+    if(token.get_type() == TokenType::EOF_TOKEN){
         return;
     }
 
     Node* stmt_list = new Node(NodeType::STMT_LIST, "");
-    current->add_child(stmt_list);
-    //std::cout << "Parsing another stmt list" << std::endl;  
+    current->add_child(stmt_list); 
     parse_stmt_list(tokens, stmt_list);
 }
 
-std::vector<Node*> parse_functions(std::vector<Token>& tokens, bool verbose = false){
-    std::vector<Node*> functions;
-    while(tokens.size() != 0){
-        Token token = pop(tokens);
-        if(token.get_type() == TokenType::FUNCTION_TOKEN){
-            token = pop(tokens);
-            if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-                Node* function = new Node(NodeType::FUNCTION, token.get_value());
-                functions.push_back(function);
-                token = pop(tokens);
-                if(token.get_type() == TokenType::OPENPAR_TOKEN){
-                    token = pop(tokens);
-                    while(token.get_type() != TokenType::CLOSEPAR_TOKEN){
-                        if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-                            function->add_value(token.get_value());
-                        }
-                        token = pop(tokens);
-                    }
-                    token = pop(tokens);
-                    if(token.get_type() == TokenType::OPENBRACKET_TOKEN){
-                        Node* stmt_list = new Node(NodeType::STMT_LIST, "");
-                        function->add_child(stmt_list);
-                        parse_stmt_list(tokens, stmt_list);
-
-                        token = pop(tokens);
-                        if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){
-                            continue;
-                        } else {
-                            parsing_error("Syntax error: expected closing bracket", token);
-                        }
-                    } else {
-                        parsing_error("Syntax error: expected opening bracket", token);
-                    }
-                } else {
-                    parsing_error("Syntax error: expected opening parenthesis", token);
-                }
-            } else {
-                parsing_error("Syntax error: expected identifier", token);
-            }
-        } 
-    }
-
-    // Print the functions
-    if(verbose){
-        std::cout << "Printing the functions..." << std::endl;
-        for(Node* function : functions){
-            function->print();
-        }
-    }
-
-    return functions;
-}
-
 Node* parse(std::vector<Token> tokens, bool verbose = false){
-    Node* root = new Node(NodeType::PROGRAM, "");
-    Node* current = new Node(NodeType::STMT_LIST, "");
-    root->add_child(current);
-    parse_stmt_list(tokens, current);
-
-    //std::cout << "Parsing complete" << std::endl;
+    Node* root = new Node(NodeType::STMT_LIST, "");
+    parse_stmt_list(tokens, root);
 
     // Print the AST
     if(verbose){
