@@ -18,11 +18,15 @@ enum OpCode{
     // Variables
     OP_LOAD, // push a value from the values array to the stack, index is the next byte
     OP_STORE_VAR, // store a value from the stack to the variables map
+    OP_UPDATE_VAR, // update a value in the variables map
     OP_LOAD_VAR, // push a value from the variables map to the stack
     // Control flow
     OP_RETURN,
     OP_JUMP,
-    OP_JUMP_IF_FALSE
+    OP_JUMP_IF_FALSE,
+    //Scope 
+    OP_INC_SCOPE,
+    OP_DEC_SCOPE
 };
 
 
@@ -59,6 +63,7 @@ void display_bytecode(){
     for(int i = 0; i < bc.count; i++){
         std::cout << i << ": ";
         switch(bc.code[i]){
+            // Arithmetic
             case OpCode::OP_ADD:
                 std::cout << "OP_ADD" << std::endl;
                 break;
@@ -71,6 +76,8 @@ void display_bytecode(){
             case OpCode::OP_DIV:
                 std::cout << "OP_DIV" << std::endl;
                 break;
+
+            // Variables
             case OpCode::OP_LOAD:
                 std::cout << "OP_LOAD";
                 std::cout << "          ";
@@ -78,17 +85,15 @@ void display_bytecode(){
                 std::cout << "          ";
                 std::cout << "Value: " << vals.values[(int)bc.code[i]] << std::endl;
                 break;
-            case OpCode::OP_RETURN:
-                std::cout << "OP_RETURN" << std::endl;
-                break;
-            case OpCode::OP_JUMP:
-                std::cout << "OP_JUMP    " << "Offset: " << (int)bc.code[++i] << std::endl;
-                break;
-            case OpCode::OP_JUMP_IF_FALSE:
-                std::cout << "OP_JUMP_IF_FALSE    " << "Offset: " << (int)bc.code[++i] << std::endl;
-                break;
             case OpCode::OP_STORE_VAR:
                 std::cout << "OP_STORE_VAR";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)bc.code[++i];
+                std::cout << "          ";
+                std::cout << "Name: " << variable_names.names[(int)bc.code[i]] << std::endl;
+                break;
+            case OpCode::OP_UPDATE_VAR:
+                std::cout << "OP_UPDATE_VAR";
                 std::cout << "          ";
                 std::cout << "Index: " << (int)bc.code[++i];
                 std::cout << "          ";
@@ -101,6 +106,27 @@ void display_bytecode(){
                 std::cout << "          ";
                 std::cout << "Name: " << variable_names.names[(int)bc.code[i]] << std::endl;
                 break;
+            
+            // Control flow
+            case OpCode::OP_RETURN:
+                std::cout << "OP_RETURN" << std::endl;
+                break;
+            case OpCode::OP_JUMP:
+                std::cout << "OP_JUMP    " << "Offset: " << (int)bc.code[++i] << std::endl;
+                break;
+            case OpCode::OP_JUMP_IF_FALSE:
+                std::cout << "OP_JUMP_IF_FALSE    " << "Offset: " << (int)bc.code[++i] << std::endl;
+                break;
+            
+            // Scope
+            case OpCode::OP_INC_SCOPE:
+                std::cout << "OP_INC_SCOPE" << std::endl;
+                break;
+            case OpCode::OP_DEC_SCOPE:
+                std::cout << "OP_DEC_SCOPE" << std::endl;
+                break;
+
+
             default:
                 std::cout << "Unknown opcode" << std::endl;
                 break;
@@ -275,19 +301,27 @@ void interpret_if(Node* node){
     int jump_index = bc.count;
     WRITE_BYTE(0); // Placeholder for the jump index
 
+    WRITE_BYTE(OpCode::OP_INC_SCOPE); // Increase the scope for the if block
+
     interpret_stmt_list(node->get_child(1));
+
+    WRITE_BYTE(OpCode::OP_DEC_SCOPE); // Decrease the scope for the if block
 
     int jump_offset = bc.count - jump_index;
     bc.code[jump_index] = jump_offset;
 
     if(node->get_children().size() == 3){
-        bc.code[jump_index] = jump_offset + 2; // Plus 2 because of the jump instruction
+        bc.code[jump_index] = jump_offset + 2; 
 
         WRITE_BYTE(OpCode::OP_JUMP);
         int jump_index = bc.count;
         WRITE_BYTE(0); // Placeholder for the jump index
 
+        WRITE_BYTE(OpCode::OP_INC_SCOPE); // Increase the scope for the else block
+
         interpret_stmt_list(node->get_child(2));
+
+        WRITE_BYTE(OpCode::OP_DEC_SCOPE); // Decrease the scope for the else block
 
         int jump_offset = bc.count - jump_index;
         bc.code[jump_index] = jump_offset;
@@ -305,11 +339,27 @@ void interpret_assign(Node* node){
 
     interpret_expr(node->get_child(1));
 
-    //std::cout << "Variable: " << node->get_child(0)->get_value() << std::endl;
-
     WRITE_BYTE(OpCode::OP_STORE_VAR); // takes the value from the stack and stores it in the variables map
     if(get_variable_index(node->get_child(0)->get_value()) == -1){
         WRITE_VAR_NAME(node->get_child(0)->get_value());
+    }
+    WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()));
+}
+
+void interpret_update(Node* node){
+    if(node->get_type() != NodeType::UPDATE){
+        interpretation_error("Update doesn't start with UPDATE Node", node);
+    }
+
+    if(node->get_child(0)->get_type() != NodeType::VAR){
+        interpretation_error("Update doesn't have a VAR Node as the first child", node);
+    }
+
+    interpret_expr(node->get_child(1));
+
+    WRITE_BYTE(OpCode::OP_UPDATE_VAR); // takes the value from the stack and updates the value in the variables map
+    if(get_variable_index(node->get_child(0)->get_value()) == -1){
+        
     }
     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()));
 }
@@ -329,6 +379,9 @@ void interpret_stmt(Node* node){
                 break;
             case NodeType::ASSIGN:
                 interpret_assign(child);
+                break;
+            case NodeType::UPDATE:
+                interpret_update(child);
                 break;
             default:
                 interpretation_error("Invalid statement type", node);

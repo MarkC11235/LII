@@ -5,7 +5,7 @@ EXE = ./lli.exe
 
 VERSION = BYTECODE
 
-all: build test
+all: build run
 
 build:
 ifeq ($(VERSION), BASE)

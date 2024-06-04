@@ -17,6 +17,7 @@ enum NodeType {
     WHILE,
     FOR,
     ASSIGN,
+    UPDATE,
     EXPR,
     IF,
     RETURN,
@@ -52,6 +53,8 @@ std::string node_type_to_string(NodeType type){
             return "FOR";
         case NodeType::ASSIGN:
             return "ASSIGN";
+        case NodeType::UPDATE:
+            return "UPDATE";
         case NodeType::EXPR:
             return "EXPR";
         case NodeType::IF:
@@ -252,6 +255,11 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
     } else {
         parsing_error("Syntax error: expected identifier", token);
     }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+        parsing_error("Syntax error: expected ';'", token);
+    }
 }
 
 void parse_if(std::vector<Token>& tokens, Node* current){
@@ -327,6 +335,38 @@ void parse_return(std::vector<Token>& tokens, Node* current){
     Node* expr = new Node(NodeType::EXPR, "");
     return_node->add_child(expr);
     parse_expr(tokens, expr);
+
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+        parsing_error("Syntax error: expected ';'", token);
+    }
+}
+
+void parse_variable_update(std::vector<Token>& tokens, Node* current){
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
+    }
+
+    Node* update = new Node(NodeType::UPDATE, "");
+    current->add_child(update);
+
+    Node* var = new Node(NodeType::VAR, token.get_value());
+    update->add_child(var);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::ASSIGNMENT_TOKEN){
+        parsing_error("Syntax error: expected assignment operator", token);
+    }
+
+    Node* expr = new Node(NodeType::EXPR, "");
+    update->add_child(expr);
+    parse_expr(tokens, expr);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+        parsing_error("Syntax error: expected ';'", token);
+    }
 }
 
 void parse_stmt(std::vector<Token>& tokens, Node* current){
@@ -342,6 +382,13 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
     }
     else if(token.get_type() == TokenType::LET_TOKEN){
         parse_assignment(tokens, current);
+    }
+    else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
+        place_token_back(tokens, token);
+        parse_variable_update(tokens, current);
+    }
+    else {
+        parsing_error("Syntax error: expected statement", token);
     }
 }
 

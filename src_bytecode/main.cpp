@@ -16,42 +16,13 @@ int main(int argc, char *argv[]) {
     }
     std::string input_file = argv[1];
     bool verbose = false;
-    //bool sif = false;
-    //std::vector<std::string> function_files;
 
     // Check for flags
     for(int i = 2; i < argc; i++) {
         if(std::string(argv[i]) == "-v") {
             verbose = true;
         } 
-        // else if(std::string(argv[i]) == "-sif") {
-        //     sif = true;
-        // } 
-        // else if(std::string(argv[i]) == "-i") {
-        //     for(int j = i + 1; j < argc; j++) {
-        //         function_files.push_back(argv[j]);
-        //     }
-        //     break;
-        // }
     }
-
-    // // Map to store the function definitions
-    // std::map<std::string, Node*> functions;
-
-    // // Load the function files
-    // for (const std::string& function_file : function_files) {
-    //     if(verbose){
-    //         std::cout << "Loading function file: " << function_file << std::endl;
-    //     }
-    //     std::vector<Token> function_tokens = read_input(function_file, verbose);
-    //     std::vector<Node*> function_nodes = parse_functions(function_tokens, verbose);
-    //     for (Node* function_node : function_nodes) {
-    //         functions[function_node->get_value()] = function_node; // value 0 is the function name
-    //         if(verbose){
-    //             std::cout << "Function " << function_node->get_value() << " loaded." << std::endl;
-    //         }
-    //     }
-    // }
 
     // Read the input file and tokenize the input
     auto start = std::chrono::high_resolution_clock::now();
@@ -109,9 +80,6 @@ int main(int argc, char *argv[]) {
 
     // Free the memory
     delete ast;
-    // for (auto& function : functions) {
-    //     delete function.second;
-    // }
 
     return 0;
 }
