@@ -26,7 +26,9 @@ enum OpCode{
     OP_JUMP_IF_FALSE,
     //Scope 
     OP_INC_SCOPE,
-    OP_DEC_SCOPE
+    OP_DEC_SCOPE,
+    // Output
+    OP_PRINT
 };
 
 
@@ -125,7 +127,12 @@ void display_bytecode(){
             case OpCode::OP_DEC_SCOPE:
                 std::cout << "OP_DEC_SCOPE" << std::endl;
                 break;
-
+            
+            // Output
+            case OpCode::OP_PRINT:
+                std::cout << "OP_PRINT" << std::endl;
+                break;
+                
 
             default:
                 std::cout << "Unknown opcode" << std::endl;
@@ -364,6 +371,16 @@ void interpret_update(Node* node){
     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()));
 }
 
+void interpret_print(Node* node){
+    if(node->get_type() != NodeType::PRINT){
+        interpretation_error("Print doesn't start with PRINT Node", node);
+    }
+
+    interpret_expr(node->get_child(0));
+
+    WRITE_BYTE(OpCode::OP_PRINT);
+}
+
 void interpret_stmt(Node* node){
     if(node->get_type() == NodeType::STMT){
         Node* child = node->get_child(0);
@@ -382,6 +399,9 @@ void interpret_stmt(Node* node){
                 break;
             case NodeType::UPDATE:
                 interpret_update(child);
+                break;
+            case NodeType::PRINT:
+                interpret_print(child);
                 break;
             default:
                 interpretation_error("Invalid statement type", node);

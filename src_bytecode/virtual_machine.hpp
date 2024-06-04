@@ -14,6 +14,8 @@ struct VM{
     int current_scope;
 
     int8_t* ip; // Pointer to the current instruction
+    int end_of_file;
+    int current_instruction;
 };
 
 VM vm; // Statically allocated because only one VM is needed
@@ -31,9 +33,23 @@ void init_vm(){
     // posible function offset here
 
     vm.ip = bc.code;
+    vm.end_of_file = bc.count;
+    vm.current_instruction = 0;
 }
 
 // -------------------------------------------------------------------
+
+//Helper functions ---------------------------------------------------
+
+void increase_ip(int offset){
+    if(vm.ip + offset >= bc.code + vm.end_of_file){
+        std::cout << "ERROR: Jumping out of bounds" << std::endl;
+        return;
+    }
+
+    vm.ip += offset;
+    vm.current_instruction += offset;
+}
 
 // Stack operations -------------------------------------------------
 void push(double value){
@@ -75,6 +91,8 @@ double get_variable(const std::string& name){ // When functions get added this w
 
 // -------------------------------------------------------------------
 
+//--------------------------------------------------------------------
+
 // Runs the virtual machine ------------------------------------------
 void run_vm(bool verbose = false){
     if(verbose){
@@ -84,6 +102,10 @@ void run_vm(bool verbose = false){
     while(true){
         if(verbose){
             std::cout << "IP: " << (int)(vm.ip - bc.code) << std::endl;
+        }
+
+        if(vm.ip >= bc.code + vm.end_of_file){
+            return; // End of file
         }
 
         switch(*vm.ip){
@@ -112,33 +134,32 @@ void run_vm(bool verbose = false){
             // Memory operations
             case OpCode::OP_LOAD:
                 push(vals.values[vm.ip[1]]);
-                vm.ip++;
+                increase_ip(1);
                 break;
             case OpCode::OP_STORE_VAR:
                 set_variable(variable_names.names[vm.ip[1]], pop());
-                vm.ip++;
+                increase_ip(1);
                 break;
             case OpCode::OP_UPDATE_VAR:
                 update_variable(variable_names.names[vm.ip[1]], pop());
-                vm.ip++;
+                increase_ip(1);
                 break;
             case OpCode::OP_LOAD_VAR:
                 push(get_variable(variable_names.names[vm.ip[1]]));
-                vm.ip++;
+                increase_ip(1);
                 break;
 
             // Control flow operations
             case OpCode::OP_RETURN:
-                std::cout << pop() << std::endl; //Temporarily print the result
                 return;
             case OpCode::OP_JUMP:
-                vm.ip += vm.ip[1];
+                increase_ip(vm.ip[1]);
                 break;
             case OpCode::OP_JUMP_IF_FALSE:
                 if(pop() == 0){
-                    vm.ip += vm.ip[1];
+                    increase_ip(vm.ip[1]);
                 } else {
-                    vm.ip++;
+                    increase_ip(1);
                 }
                 break;
 
@@ -150,6 +171,11 @@ void run_vm(bool verbose = false){
             case OpCode::OP_DEC_SCOPE:
                 vm.variables.pop_back();
                 vm.current_scope--;
+                break;
+
+            // Output operations
+            case OpCode::OP_PRINT:
+                std::cout << pop() << std::endl;
                 break;
             
             default:

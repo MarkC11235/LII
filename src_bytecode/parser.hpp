@@ -26,7 +26,8 @@ enum NodeType {
     VAR,
     NUM,
     OP,
-    LIST
+    LIST,
+    PRINT
 };
 
 
@@ -73,6 +74,8 @@ std::string node_type_to_string(NodeType type){
             return "OP";
         case NodeType::LIST:
             return "LIST";
+        case NodeType::PRINT:   
+            return "PRINT";
     }
     return "UNKNOWN";
 }
@@ -369,6 +372,21 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
     }
 }
 
+void parse_print(std::vector<Token>& tokens, Node* current){
+    Node* print = new Node(NodeType::PRINT, "");
+    current->add_child(print);
+
+    // Parse the expression
+    Node* expr = new Node(NodeType::EXPR, "");
+    print->add_child(expr);
+    parse_expr(tokens, expr);
+
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+        parsing_error("Syntax error: expected ';'", token);
+    }
+}
+
 void parse_stmt(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     if(token.get_type() == TokenType::EOF_TOKEN){
@@ -382,6 +400,9 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
     }
     else if(token.get_type() == TokenType::LET_TOKEN){
         parse_assignment(tokens, current);
+    }
+    else if(token.get_type() == TokenType::PRINT_TOKEN){
+        parse_print(tokens, current);
     }
     else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
         place_token_back(tokens, token);

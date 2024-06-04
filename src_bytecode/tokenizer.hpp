@@ -8,6 +8,7 @@
 #include <algorithm> // Include the algorithm library to use the remove_if function
 
 enum TokenType {
+    PRINT_TOKEN,
     LET_TOKEN,
     ASSIGNMENT_TOKEN,
     WHILE_TOKEN,
@@ -41,6 +42,8 @@ enum TokenType {
 // Helper functions ---------------------------------------------------
 std::string token_type_to_string(TokenType type){
     switch(type){
+        case TokenType::PRINT_TOKEN:
+            return "PRINT";
         case TokenType::LET_TOKEN:
             return "LET";
         case TokenType::ASSIGNMENT_TOKEN:
@@ -257,6 +260,9 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "let"){
                         tokens.push_back(Token(TokenType::LET_TOKEN, "let", line_number));
+                    }
+                    else if(identifier == "print"){
+                        tokens.push_back(Token(TokenType::PRINT_TOKEN, "print", line_number));
                     }
                     else{
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));

@@ -1,13 +1,13 @@
-let x = 0
-let y = 1
+let x = 0;
+let y = 1;
 if(x){
-    return 1
+    print 1;
 }
 else{
     if(y){
-        return 2
+        print 2;
     }
     else{
-        return 3
+        print 3;
     }
 }
