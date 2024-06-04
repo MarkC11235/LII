@@ -17,6 +17,8 @@ enum OpCode{
     OP_DIV,
     // Variables
     OP_LOAD, // push a value from the values array to the stack, index is the next byte
+    OP_STORE_VAR, // store a value from the stack to the variables map
+    OP_LOAD_VAR, // push a value from the variables map to the stack
     // Control flow
     OP_RETURN,
     OP_JUMP,
@@ -42,6 +44,14 @@ struct values{
 values vals; // Statically allocated because only one values array is needed
              // This array stores constant values
 
+struct varible_names{
+    std::string* names;
+    int count;
+    int capacity;
+};
+
+varible_names variable_names; // Statically allocated because only one variable names array is needed
+                              // This array stores the names of the variables
 // -------------------------------------------------------------------
 
 // Visual Representation for debugging -------------------------------
@@ -77,6 +87,20 @@ void display_bytecode(){
             case OpCode::OP_JUMP_IF_FALSE:
                 std::cout << "OP_JUMP_IF_FALSE    " << "Offset: " << (int)bc.code[++i] << std::endl;
                 break;
+            case OpCode::OP_STORE_VAR:
+                std::cout << "OP_STORE_VAR";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)bc.code[++i];
+                std::cout << "          ";
+                std::cout << "Name: " << variable_names.names[(int)bc.code[i]] << std::endl;
+                break;
+            case OpCode::OP_LOAD_VAR:
+                std::cout << "OP_LOAD_VAR";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)bc.code[++i];
+                std::cout << "          ";
+                std::cout << "Name: " << variable_names.names[(int)bc.code[i]] << std::endl;
+                break;
             default:
                 std::cout << "Unknown opcode" << std::endl;
                 break;
@@ -90,10 +114,29 @@ void display_constants(){
     }
 }
 
+void display_variables(){
+    for(int i = 0; i < variable_names.count; i++){
+        std::cout << i << ": " << variable_names.names[i] << std::endl;
+    }
+}
 // -------------------------------------------------------------------
 
 // Helper functions --------------------------------------------------
 #define WRITE_BYTE(byte) bc.code[bc.count++] = byte
+#define WRITE_VALUE(double) vals.values[vals.count++] = double
+
+void WRITE_VAR_NAME(const std::string& name){
+    variable_names.names[variable_names.count++] = name;
+}
+
+int get_variable_index(const std::string& name){
+    for(int i = 0; i < variable_names.count; i++){
+        if(variable_names.names[i] == name){
+            return i;
+        }
+    }
+    return -1;
+}
 // -------------------------------------------------------------------
 
 // Interpretation ----------------------------------------------------
@@ -126,6 +169,13 @@ void interpret_op(Node* node){
             WRITE_BYTE(OpCode::OP_LOAD);
             WRITE_BYTE(vals.count - 1);
         }
+        else if(l_child->get_type() == NodeType::VAR){
+            WRITE_BYTE(OpCode::OP_LOAD_VAR);
+            if(get_variable_index(l_child->get_value()) == -1){
+                interpretation_error("Variable not found", node);
+            }
+            WRITE_BYTE(get_variable_index(l_child->get_value()));
+        }
         else{
             interpretation_error("Invalid child type for OP Node", node);
         }
@@ -139,6 +189,13 @@ void interpret_op(Node* node){
             // bc.code[bc.count++] = vals.count - 1;
             WRITE_BYTE(OpCode::OP_LOAD);
             WRITE_BYTE(vals.count - 1);
+        }
+        else if(r_child->get_type() == NodeType::VAR){
+            WRITE_BYTE(OpCode::OP_LOAD_VAR);
+            if(get_variable_index(r_child->get_value()) == -1){
+                interpretation_error("Variable not found", node);
+            }
+            WRITE_BYTE(get_variable_index(r_child->get_value()));
         }
         else{
             interpretation_error("Invalid child type for OP Node", node);
@@ -178,10 +235,15 @@ void interpret_expr(Node* node){
         }
         else if(node->get_child(0)->get_type() == NodeType::NUM){
             vals.values[vals.count++] = std::stod(node->get_child(0)->get_value());
-            // bc.code[bc.count++] = OpCode::OP_LOAD;
-            // bc.code[bc.count++] = vals.count - 1;
             WRITE_BYTE(OpCode::OP_LOAD);
             WRITE_BYTE(vals.count - 1);
+        }
+        else if(node->get_child(0)->get_type() == NodeType::VAR){
+            WRITE_BYTE(OpCode::OP_LOAD_VAR);
+            if(get_variable_index(node->get_child(0)->get_value()) == -1){
+                interpretation_error("Variable not found", node);
+            }
+            WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()));
         }
         else{
             interpretation_error("Expression doesn't start with OP Node", node);
@@ -232,6 +294,26 @@ void interpret_if(Node* node){
     }
 }
 
+void interpret_assign(Node* node){
+    if(node->get_type() != NodeType::ASSIGN){
+        interpretation_error("Assign doesn't start with ASSIGN Node", node);
+    }
+
+    if(node->get_child(0)->get_type() != NodeType::VAR){
+        interpretation_error("Assign doesn't have a VAR Node as the first child", node);
+    }
+
+    interpret_expr(node->get_child(1));
+
+    //std::cout << "Variable: " << node->get_child(0)->get_value() << std::endl;
+
+    WRITE_BYTE(OpCode::OP_STORE_VAR); // takes the value from the stack and stores it in the variables map
+    if(get_variable_index(node->get_child(0)->get_value()) == -1){
+        WRITE_VAR_NAME(node->get_child(0)->get_value());
+    }
+    WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()));
+}
+
 void interpret_stmt(Node* node){
     if(node->get_type() == NodeType::STMT){
         Node* child = node->get_child(0);
@@ -244,6 +326,9 @@ void interpret_stmt(Node* node){
                 break;
             case NodeType::IF:
                 interpret_if(child);
+                break;
+            case NodeType::ASSIGN:
+                interpret_assign(child);
                 break;
             default:
                 interpretation_error("Invalid statement type", node);
@@ -286,6 +371,10 @@ void generate_bytecode(Node* ast) {
     vals.values = new double[1000]; // Allocate 1000 doubles for the values
     vals.count = 0;
     vals.capacity = 1000;
+
+    variable_names.names = new std::string[1000]; // Allocate 1000 strings for the variable names
+    variable_names.count = 0;
+    variable_names.capacity = 1000;
 
     interpret(ast);
 

@@ -13,12 +13,13 @@ ifeq ($(VERSION), BASE)
 	@echo "Base version compiled"
 else ifeq ($(VERSION), BYTECODE)
 	$(CC) $(CFLAGS) ./src_bytecode/main.cpp -o lli.exe
-	@echo "Bytecode version compiled"
+	@echo -e "Bytecode version compiled\n"
 else
 	$(error Invalid version: $(VERSION))
 endif
 
 run:
+	@echo -e "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -v
 
 test:

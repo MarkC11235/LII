@@ -213,15 +213,23 @@ void parse_expr(std::vector<Token>& tokens, Node* current){
 
     for(;;){
         Token token = peek(tokens);
-        if((token.get_type() != TokenType::NUMBER_TOKEN && token.get_type() != TokenType::OPERATOR_TOKEN) || token.get_type() == TokenType::EOF_TOKEN){
+        if((token.get_type() != TokenType::NUMBER_TOKEN 
+            && token.get_type() != TokenType::OPERATOR_TOKEN
+            && token.get_type() != TokenType::IDENTIFIER_TOKEN)
+            || token.get_type() == TokenType::EOF_TOKEN){
             break;
         }
         token = pop(tokens);
+        //token.print();
 
         if(token.get_type() == TokenType::NUMBER_TOKEN){
             Node* num = new Node(NodeType::NUM, token.get_value());
             values.push(num);
         } 
+        else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
+            Node* var = new Node(NodeType::VAR, token.get_value());
+            values.push(var);
+        }
         else if(token.get_type() == TokenType::OPERATOR_TOKEN){
             Node* op = new Node(NodeType::OP, token.get_value());
             while(ops.size() > 0 && precedence(ops.top()->get_value()) >= precedence(op->get_value())){
@@ -248,6 +256,7 @@ void parse_expr(std::vector<Token>& tokens, Node* current){
     }
 
     current->add_child(values.top());
+    //current->print();
 }
 
 void parse_assignment(std::vector<Token>& tokens, Node* current){
@@ -255,17 +264,22 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
     if(token.get_type() == TokenType::EOF_TOKEN){
         return;
     }
+
+    Node* assign = new Node(NodeType::ASSIGN, "");
+    current->add_child(assign);
+
     if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
         Node* var = new Node(NodeType::VAR, token.get_value());
-        current->add_child(var);
+        assign->add_child(var);
         token = pop(tokens);
         if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){
-            Node* assign = new Node(NodeType::OP, "=");
-            current->add_child(assign);
-
+            //std::cout << "Assignment" << std::endl;
+            //current->print();
             Node* expr = new Node(NodeType::EXPR, "");
-            current->add_child(expr);
+            assign->add_child(expr);
             parse_expr(tokens, expr);
+
+            //current->print();
         } else {
             parsing_error("Syntax error: expected assignment operator", token);
         }
@@ -522,43 +536,9 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
     else if(token.get_type() == TokenType::RETURN_TOKEN){
         parse_return(tokens, current);
     }
-    else if(token.get_type() == TokenType::IDENTIFIER_TOKEN || token.get_type() == TokenType::NUMBER_TOKEN){
-        if(peek(tokens).get_type() == TokenType::ASSIGNMENT_TOKEN){
-            Node* assign = new Node(NodeType::ASSIGN, "");
-            current->add_child(assign);
-            place_token_back(tokens, token);
-            parse_assignment(tokens, assign);
-        } 
-        else if(token.get_value() == "array" && peek(tokens).get_type() == TokenType::IDENTIFIER_TOKEN){
-            parse_array_assign(tokens, current);
-        }
-        else {
-            std::vector<Token> temp_tokens;
-            temp_tokens.push_back(token);
-            while(peek(tokens).get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN && peek(tokens).get_type() != TokenType::EOF_TOKEN){
-                token = pop(tokens);
-                temp_tokens.push_back(token);
-            }
-            if(peek(tokens).get_type() == TokenType::ASSIGNMENT_TOKEN){
-                Node* assign = new Node(NodeType::ASSIGN, "");
-                current->add_child(assign);
-                for(int i = 0; i < int(temp_tokens.size()); i++){
-                    place_token_back(tokens, temp_tokens[i]);
-                }
-                parse_assignment(tokens, assign);
-            } else {
-                Node* expr = new Node(NodeType::EXPR, "");
-                current->add_child(expr);
-                token = pop(tokens);
-                place_token_back(tokens, token);
-                for(int i = int(temp_tokens.size()) - 1; i >= 0; i--){
-                    //temp_tokens[i].print();
-                    place_token_back(tokens, temp_tokens[i]);
-                }
-                parse_expr(tokens, expr);
-            }
-        }
-    } 
+    else if(token.get_type() == TokenType::LET_TOKEN){
+        parse_assignment(tokens, current);
+    }
 }
 
 void parse_stmt_list(std::vector<Token>& tokens, Node* current){
@@ -573,7 +553,9 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current){
 
     Node* stmt = new Node(NodeType::STMT, "");
     current->add_child(stmt);
+    //std::cout << "Parsing stmt" << std::endl;
     parse_stmt(tokens, stmt);
+    //std::cout << "Parsed stmt" << std::endl;
 
     // Check to see if there are more statements
     if(peek(tokens).get_type() == TokenType::EOF_TOKEN){
@@ -582,6 +564,7 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current){
 
     Node* stmt_list = new Node(NodeType::STMT_LIST, "");
     current->add_child(stmt_list);
+    //std::cout << "Parsing another stmt list" << std::endl;  
     parse_stmt_list(tokens, stmt_list);
 }
 
@@ -643,6 +626,8 @@ Node* parse(std::vector<Token> tokens, bool verbose = false){
     Node* current = new Node(NodeType::STMT_LIST, "");
     root->add_child(current);
     parse_stmt_list(tokens, current);
+
+    //std::cout << "Parsing complete" << std::endl;
 
     // Print the AST
     if(verbose){

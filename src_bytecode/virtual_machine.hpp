@@ -10,6 +10,8 @@ struct VM{
     int stack_count;
     int stack_capacity;
 
+    std::map<std::string, int> variables;
+
     int8_t* ip; // Pointer to the current instruction
 };
 
@@ -35,6 +37,17 @@ void push(double value){
 
 double pop(){
     return vm.stack[--vm.stack_count];
+}
+
+// -------------------------------------------------------------------
+
+// Map operations -----------------------------------------------------
+void set_variable(const std::string& name, double value){
+    vm.variables[name] = value;
+}
+
+double get_variable(const std::string& name){
+    return vm.variables[name];
 }
 
 // -------------------------------------------------------------------
@@ -87,6 +100,14 @@ void run_vm(bool verbose = false){
                 } else {
                     vm.ip++;
                 }
+                break;
+            case OpCode::OP_STORE_VAR:
+                set_variable(variable_names.names[vm.ip[1]], pop());
+                vm.ip++;
+                break;
+            case OpCode::OP_LOAD_VAR:
+                push(get_variable(variable_names.names[vm.ip[1]]));
+                vm.ip++;
                 break;
             default:
                 std::cout << "ERROR: Unknown opcode" << std::endl;

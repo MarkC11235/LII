@@ -4,14 +4,11 @@ stmt_list     -> stmt stmt_list | epsilon
 
 stmt          -> assignment | expr | if | @p# for | for | while | return
 
-assignment    -> var = expr
+assignment    -> let var = expr | let var(list){ stmt_list } | let var[list] = expr
 
-expr          -> term | expr + term | expr - term | expr == expr | expr != expr |
-                      expr < expr | expr > expr | expr <= expr | expr >= expr | function_call
+expr          -> term | expr + term | expr - term 
 
-function      -> $var(list){ stmt_list } // stmt_list must end with a return
-
-function_call -> $var(list)
+function_call -> var(list)
 
 list          -> var, list | epsilon
 

@@ -86,6 +86,10 @@ int main(int argc, char *argv[]) {
         display_constants();
         std::cout << std::endl;
 
+        std::cout << "Variables:" << std::endl;
+        display_variables();
+        std::cout << std::endl;
+
         std::cout << "Bytecode:" << std::endl;
         //std::cout << "Count: " << bc.count << std::endl;
         display_bytecode();
