@@ -27,7 +27,8 @@ enum NodeType {
     NUM,
     OP,
     LIST,
-    PRINT
+    PRINT,
+    FUNCTION_CALL
 };
 
 
@@ -76,6 +77,8 @@ std::string node_type_to_string(NodeType type){
             return "LIST";
         case NodeType::PRINT:   
             return "PRINT";
+        case NodeType::FUNCTION_CALL:
+            return "FUNCTION_CALL";
     }
     return "UNKNOWN";
 }
@@ -187,6 +190,13 @@ public:
 void parse_stmt_list(std::vector<Token>& tokens, Node* current);
 void parse_stmt(std::vector<Token>& tokens, Node* current);
 void parse_expr(std::vector<Token>& tokens, Node* current); 
+void parse_function_call(std::vector<Token>& tokens, Node* current);
+void parse_function(std::vector<Token>& tokens, Node* current);
+void parse_assignment(std::vector<Token>& tokens, Node* current);
+void parse_if(std::vector<Token>& tokens, Node* current);
+void parse_return(std::vector<Token>& tokens, Node* current);
+void parse_variable_update(std::vector<Token>& tokens, Node* current);
+void parse_print(std::vector<Token>& tokens, Node* current);
 
 void parse_expr(std::vector<Token>& tokens, Node* current){
     std::stack<Node*> ops;
@@ -202,13 +212,24 @@ void parse_expr(std::vector<Token>& tokens, Node* current){
         }
         token = pop(tokens);
 
+        //token.print();
+
         if(token.get_type() == TokenType::NUMBER_TOKEN){
             Node* num = new Node(NodeType::NUM, token.get_value());
             values.push(num);
         } 
         else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-            Node* var = new Node(NodeType::VAR, token.get_value());
-            values.push(var);
+            // Check if it is a function call
+            if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){
+                place_token_back(tokens, token);
+                Node* function_call = new Node(NodeType::FUNCTION_CALL, "");
+                parse_function_call(tokens, function_call);
+
+                values.push(function_call);
+            } else {
+                Node* var = new Node(NodeType::VAR, token.get_value());
+                values.push(var);
+            }   
         }
         else if(token.get_type() == TokenType::OPERATOR_TOKEN){
             Node* op = new Node(NodeType::OP, token.get_value());
@@ -238,6 +259,103 @@ void parse_expr(std::vector<Token>& tokens, Node* current){
     current->add_child(values.top());
 }
 
+void parse_function_call(std::vector<Token>& tokens, Node* current){
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
+    }
+
+    current->add_value(token.get_value());
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+        parsing_error("Syntax error: expected '('", token);
+    }
+
+    // Parse the parameters
+    Node* list = new Node(NodeType::LIST, "");
+    current->add_child(list);
+    token = peek(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
+        for(;;){
+            Node* expr = new Node(NodeType::EXPR, "");
+            list->add_child(expr);
+            parse_expr(tokens, expr);
+
+            token = peek(tokens);
+            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
+                break;
+            } else if(token.get_type() == TokenType::COMMA_TOKEN){
+                pop(tokens);
+            } else {
+                parsing_error("Syntax error: expected ',' or ')'", token);
+            }
+        }
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
+    }
+
+
+}
+
+void parse_function(std::vector<Token>& tokens, Node* current){
+    Node* function = new Node(NodeType::FUNCTION, "");
+    current->add_child(function);
+
+    // Parse the parameters
+    Node* list = new Node(NodeType::LIST, "");
+    function->add_child(list);
+    Token token = peek(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
+        for(;;){
+            token = pop(tokens);
+            if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
+                Node* var = new Node(NodeType::VAR, token.get_value());
+                list->add_child(var);
+            } else {
+                parsing_error("Syntax error: expected identifier", token);
+            }
+
+            token = peek(tokens);
+            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
+                break;
+            } else if(token.get_type() == TokenType::COMMA_TOKEN){
+                pop(tokens);
+            } else {
+                parsing_error("Syntax error: expected ',' or ')'", token);
+            }
+        }
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '{'", token);
+    }
+
+    // check if there are statements inside the function
+    if(peek(tokens).get_type() == TokenType::CLOSEBRACKET_TOKEN){
+        pop(tokens);
+        return; // Empty function
+    }
+
+    Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+    function->add_child(stmt_list);
+    parse_stmt_list(tokens, stmt_list);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '}'", token);
+    }
+}
+
 void parse_assignment(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     Node* assign = new Node(NodeType::ASSIGN, "");
@@ -248,11 +366,15 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
         assign->add_child(var);
         token = pop(tokens);
 
-        if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){
+        if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){ // Expression assignment
             Node* expr = new Node(NodeType::EXPR, "");
             assign->add_child(expr);
             parse_expr(tokens, expr);
-        } else {
+        } 
+        else if(token.get_type() == TokenType::OPENPAR_TOKEN){ // Function definition
+            parse_function(tokens, assign);
+        }
+        else {
             parsing_error("Syntax error: expected assignment operator", token);
         }
     } else {

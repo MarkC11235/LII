@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -std=c++11 
+CFLAGS = -Wall -std=c++17 
 INPUT_FILE = tester.calc
 EXE = ./lli.exe
 

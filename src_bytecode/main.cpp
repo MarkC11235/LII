@@ -11,7 +11,7 @@
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
     if(argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file.calc> [-v] [-sif] [-i 'file1.calc.functions' 'file2.calc.functions' ...]" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file.calc> [-v]" << std::endl;
         return 1;
     }
     std::string input_file = argv[1];
@@ -62,8 +62,10 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
 
         std::cout << "Bytecode:" << std::endl;
-        //std::cout << "Count: " << bc.count << std::endl;
-        display_bytecode();
+        for(auto it = function_definitions.begin(); it != function_definitions.end(); it++){
+            std::cout << "Function: " << it->first << std::endl;
+            display_bytecode(it->second);
+        }
         std::cout << std::endl;
     }
 

@@ -14,4 +14,4 @@ let a(){
 
 print a();
 
-#print p(); # error
+print p(); # error
