@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -Wall -std=c++17 
 INPUT_FILE = tester.calc
-EXE = ./lli.exe
+EXE = ./lii.exe
 
 VERSION = BYTECODE
 
@@ -9,10 +9,10 @@ all: build test
 
 build:
 ifeq ($(VERSION), BASE)
-	$(CC) $(CFLAGS) ./src_base/main.cpp -o lli.exe
+	$(CC) $(CFLAGS) ./src_base/main.cpp -o $(EXE)
 	@echo "Base version compiled"
 else ifeq ($(VERSION), BYTECODE)
-	$(CC) $(CFLAGS) ./src_bytecode/main.cpp -o lli.exe
+	$(CC) $(CFLAGS) ./src_bytecode/main.cpp -o $(EXE)
 	@echo -e "Bytecode version compiled\n"
 else
 	$(error Invalid version: $(VERSION))

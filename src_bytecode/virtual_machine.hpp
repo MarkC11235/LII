@@ -264,6 +264,7 @@ void run_vm(bool verbose = false){
 
             // Output operations
             case OpCode::OP_PRINT:
+                //pop();
                 std::cout << pop() << std::endl;
                 break;
             

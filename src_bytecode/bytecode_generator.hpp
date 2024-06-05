@@ -533,6 +533,43 @@ void interpret_print(Node* node, function* func){
     WRITE_BYTE(OpCode::OP_PRINT, func);
 }
 
+void interpret_for(Node* node, function* func){
+    if(node->get_type() != NodeType::FOR){
+        interpretation_error("For doesn't start with FOR Node", node);
+    }
+
+    WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the for loop
+
+    interpret_assign(node->get_child(0), func); // Initialize the for loop
+
+    // get the index to jump back to
+    int jump_index = func->count;
+
+    // interpret the condition
+    interpret_expr(node->get_child(1), func);
+
+    // jump if the condition is false
+    WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
+
+    // get the index to jump to the end of the for loop
+    int jump_index2 = func->count;
+    WRITE_BYTE(0, func); // Placeholder for the jump index
+
+    interpret_stmt_list(node->get_child(3), func); // Interpret the body of the for loop
+
+    interpret_update(node->get_child(2), func); // Update the for loop
+
+    // jump back to the condition
+    WRITE_BYTE(OpCode::OP_JUMP, func);
+    WRITE_BYTE(jump_index - func->count, func);
+
+    // jump to the end of the for loop
+    int jump_offset = func->count - jump_index2;
+    func->code[jump_index2] = jump_offset;
+
+    WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
+}
+
 void interpret_stmt(Node* node, function* func){
     if(node->get_type() == NodeType::STMT){
         Node* child = node->get_child(0);
@@ -554,6 +591,9 @@ void interpret_stmt(Node* node, function* func){
                 break;
             case NodeType::PRINT:
                 interpret_print(child, func);
+                break;
+            case NodeType::FOR:
+                interpret_for(child, func);
                 break;
             default:
                 interpretation_error("Invalid statement type", node);

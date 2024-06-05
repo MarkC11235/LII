@@ -509,29 +509,84 @@ void parse_print(std::vector<Token>& tokens, Node* current){
     }
 }
 
+void parse_for(std::vector<Token>& tokens, Node* current){
+    Token token = pop(tokens);
+    Node* for_node = new Node(NodeType::FOR, "");
+    current->add_child(for_node);
+    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+        parsing_error("Syntax error: expected '('", token);
+    }
+
+    // Parse the initialization
+    pop(tokens); // Skip the let keyword(usally done in the parse_stmt function)
+    parse_assignment(tokens, for_node);
+
+    // Parse the condition
+    Node* condition = new Node(NodeType::EXPR, "");
+    for_node->add_child(condition);
+    parse_expr(tokens, condition);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+        parsing_error("Syntax error: expected ';'", token);
+    }
+
+    // Parse the update
+    parse_variable_update(tokens, for_node);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '{'", token);
+    }
+
+    // Check if there are statements inside the for block
+    if(peek(tokens).get_type() == TokenType::CLOSEBRACKET_TOKEN){
+        pop(tokens);
+        return; // Empty for block
+    }
+
+    // Parse for block
+    Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+    for_node->add_child(stmt_list);
+    parse_stmt_list(tokens, stmt_list);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '}'", token);
+    }
+}
+
 void parse_stmt(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
-    if(token.get_type() == TokenType::EOF_TOKEN){
-        return; // End of file
-    }
-    if(token.get_type() == TokenType::IF_TOKEN){
-        parse_if(tokens, current);
-    } 
-    else if(token.get_type() == TokenType::RETURN_TOKEN){
-        parse_return(tokens, current);
-    }
-    else if(token.get_type() == TokenType::LET_TOKEN){
-        parse_assignment(tokens, current);
-    }
-    else if(token.get_type() == TokenType::PRINT_TOKEN){
-        parse_print(tokens, current);
-    }
-    else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-        place_token_back(tokens, token);
-        parse_variable_update(tokens, current);
-    }
-    else {
-        parsing_error("Syntax error: expected statement", token);
+    switch(token.get_type()){
+        case TokenType::EOF_TOKEN:
+            return; // End of file
+        case TokenType::IF_TOKEN:
+            parse_if(tokens, current);
+            break;
+        case TokenType::RETURN_TOKEN:
+            parse_return(tokens, current);
+            break;
+        case TokenType::LET_TOKEN:
+            parse_assignment(tokens, current);
+            break;
+        case TokenType::PRINT_TOKEN:
+            parse_print(tokens, current);
+            break;
+        case TokenType::IDENTIFIER_TOKEN:
+            place_token_back(tokens, token);
+            parse_variable_update(tokens, current);
+            break;
+        case TokenType::FOR_TOKEN:
+            parse_for(tokens, current);
+            break;
+        default:
+            parsing_error("Syntax error: expected statement", token);
     }
 }
 
