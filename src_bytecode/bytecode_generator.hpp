@@ -220,6 +220,9 @@ function* create_function(int capacity, std::string name = "", function* parent 
     return func;
 }
 
+double get_constant(int index){
+    return vals.values[index];
+}
 // -------------------------------------------------------------------
 
 // Interpretation ----------------------------------------------------

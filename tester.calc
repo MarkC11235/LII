@@ -1,10 +1,1 @@
-let inc(x){
-    return x + 1;
-};
-
-   # assignment; condition; next value
-for(let i = 0; i - 1000000; i = i + 1;){
-    print inc(i);
-}
-
-print 1000000;
+print 5 / 7 + 3 - 2 * 4;

@@ -2,9 +2,27 @@
 #define VIRUTAL_MACHINE_HPP
 
 #include <cstdint> // int8_t
+
 #include "bytecode_generator.hpp"
 
 // Data Structures ---------------------------------------------------
+enum Value_Type{
+    NUMBER,
+    BOOL,
+    STRING,
+    STRUCT,
+};
+
+struct Data{
+    double number;
+    bool boolean;
+    std::string string;
+};
+
+struct Value{
+    Value_Type type;
+    Data data;
+};
 
 struct function_frame{
     function* func;
@@ -14,11 +32,11 @@ struct function_frame{
     int end_of_function;
     int current_instruction;
 
-    std::vector<std::map<std::string, double>> variables; // Variables in the current function
+    std::vector<std::map<std::string, Value>> variables; // Variables in the current function
 };
 
 struct VM{
-    double* stack;
+    Value* stack;
     int stack_count;
     int stack_capacity;
 
@@ -44,14 +62,14 @@ function_frame* create_function_frame(function* func){
     frame->ip = func->code;
     frame->end_of_function = func->count;
     frame->current_instruction = 0;
-    frame->variables.push_back(std::map<std::string, double>());
+    frame->variables.push_back(std::map<std::string, Value>());
 
     return frame;
 }
 
 // Initializes the virtual machine ----------------------------------
 void init_vm(){
-    vm.stack = new double[256];
+    vm.stack = new Value[256]; 
     vm.stack_count = 0;
     vm.stack_capacity = 256;
 
@@ -83,6 +101,70 @@ bool increase_ip(int offset){
     return true;
 }
 
+bool VALUE_AS_BOOL(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            return value.data.number != 0;
+        case Value_Type::BOOL:
+            return value.data.boolean;
+        case Value_Type::STRING:
+            return value.data.string == "true";
+        case Value_Type::STRUCT:
+            return false;
+        default:
+            return false; // Should never reach here, but to avoid warnings
+    }
+}
+
+double VALUE_AS_NUMBER(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            return value.data.number;
+        case Value_Type::BOOL:
+            return value.data.boolean ? 1 : 0;
+        case Value_Type::STRING:
+            return std::stod(value.data.string);
+        case Value_Type::STRUCT:
+            return 0;
+        default:
+            return 0; // Should never reach here, but to avoid warnings
+    }
+}
+
+std::string VALUE_AS_STRING(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            return std::to_string(value.data.number);
+        case Value_Type::BOOL:
+            return value.data.boolean ? "true" : "false";
+        case Value_Type::STRING:
+            return value.data.string;
+        case Value_Type::STRUCT:
+            return "STRUCT";
+        default:
+            return "UNKNOWN"; // Should never reach here, but to avoid warnings
+    }
+}
+
+void print_value(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            std::cout << value.data.number;
+            break;
+        case Value_Type::BOOL:
+            std::cout << (value.data.boolean ? "true" : "false");
+            break;
+        case Value_Type::STRING:
+            std::cout << value.data.string;
+            break;
+        case Value_Type::STRUCT:
+            std::cout << "STRUCT";
+            break;
+        default:
+            std::cout << "UNKNOWN"; // Should never reach here, but to avoid warnings
+    }
+}
+
 //get ip from the current function frame
 int8_t* get_ip(){
     return get_current_function_frame()->ip;
@@ -90,17 +172,18 @@ int8_t* get_ip(){
 
 
 // Stack operations -------------------------------------------------
-void push(double value){
+void push(Value value){
     vm.stack[vm.stack_count++] = value;
 }
 
-double pop(){
+Value pop(){
     return vm.stack[--vm.stack_count];
 }
 
 void print_stack(){
     for(int i = 0; i < vm.stack_count; i++){
-        std::cout << vm.stack[i] << " ";
+        print_value(vm.stack[i]);
+        std::cout << " ";
     }
     std::cout << std::endl;
 }
@@ -111,12 +194,12 @@ void print_stack(){
 
 // Will never go outside of the scope of the function
 // Will climb the scope stack from the current scope to the first scope looking for the variable
-void set_variable(const std::string& name, double value){
+void set_variable(const std::string& name, Value value){
     function_frame* frame = get_current_function_frame();
     frame->variables[frame->current_scope][name] = value;
 }
 
-void update_variable(const std::string& name, double value){
+void update_variable(const std::string& name, Value value){
     function_frame* frame = get_current_function_frame();
     for(int i = frame->current_scope; i >= 0; i--){
         if(frame->variables[i].find(name) != frame->variables[i].end()){
@@ -127,7 +210,7 @@ void update_variable(const std::string& name, double value){
     vm_error("Variable not found");
 }
 
-double get_variable(const std::string& name){ 
+Value get_variable(const std::string& name){ 
     //std::cout << "Getting variable: " << name << std::endl;
     function_frame* frame = get_current_function_frame();
     //std::cout << "Current scope: " << frame->current_scope << std::endl;
@@ -138,7 +221,7 @@ double get_variable(const std::string& name){
         }
     }
     vm_error("Variable not found");
-    return 0;
+    return Value();
 }
 
 // -------------------------------------------------------------------
@@ -162,29 +245,57 @@ void run_vm(bool verbose = false){
         switch(*get_ip()){
             // Arithmetic operations
             case OpCode::OP_ADD:
-                push(pop() + pop());
-                break;
-            case OpCode::OP_SUB:
-                push(pop() - pop());
-                break;
-            case OpCode::OP_MUL:
-                push(pop() * pop());
-                break;
-            case OpCode::OP_DIV:
-            { // Braces are needed because of the declaration of dividend and divisor
-                double dividend = pop();
-                double divisor = pop();
-                if(divisor == 0){
-                    std::cout << "ERROR: Division by zero" << std::endl;
-                    return;
+            {
+                Value a = pop();
+                Value b = pop();
+                if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+                    push({Value_Type::NUMBER, {a.data.number + b.data.number}});
+                } else {
+                    vm_error("Invalid types for addition");
                 }
-                push(dividend / divisor);
+                break;
+            }
+            case OpCode::OP_SUB:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+                    push({Value_Type::NUMBER, {a.data.number - b.data.number}});
+                } else {
+                    vm_error("Invalid types for subtraction");
+                }
+                break;
+            }
+            case OpCode::OP_MUL:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+                    push({Value_Type::NUMBER, {a.data.number * b.data.number}});
+                } else {
+                    vm_error("Invalid types for multiplication");
+                }
+                break;
+            }
+            case OpCode::OP_DIV:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+                    if(b.data.number == 0){
+                        vm_error("Division by zero");
+                    }
+                    push({Value_Type::NUMBER, {a.data.number / b.data.number}});
+                } else {
+                    vm_error("Invalid types for division");
+                }
                 break;
             }
 
             // Memory operations
             case OpCode::OP_LOAD:
-                push(vals.values[get_ip()[1]]);
+                //push(vals.values[get_ip()[1]]);
+                push(Value{Value_Type::NUMBER, {get_constant(get_ip()[1])}});
                 increase_ip(1);
                 break;
             case OpCode::OP_STORE_VAR:
@@ -208,7 +319,9 @@ void run_vm(bool verbose = false){
                 if(vm.function_frames.size() == 1){
                     //print the return value
                     if(verbose){
-                        std::cout << "Exit Code: " << pop() << std::endl;
+                        std::cout << "Exit Code: ";
+                        print_value(pop());
+                        std::cout << std::endl;
                     }
                     return;
                 }
@@ -230,12 +343,15 @@ void run_vm(bool verbose = false){
                 increase_ip(get_ip()[1]);
                 break;
             case OpCode::OP_JUMP_IF_FALSE:
-                if(pop() == 0){
+            {
+                bool val = VALUE_AS_BOOL(pop());
+                if(!val){
                     increase_ip(get_ip()[1]);
                 } else {
                     increase_ip(1);
                 }
                 break;
+            }
             case OpCode::OP_FUNCTION_CALL:
             {
                 if(verbose){
@@ -255,7 +371,7 @@ void run_vm(bool verbose = false){
             // Scope operations
             case OpCode::OP_INC_SCOPE:
                 get_current_function_frame()->current_scope++;
-                get_current_function_frame()->variables.push_back(std::map<std::string, double>());
+                get_current_function_frame()->variables.push_back(std::map<std::string, Value>());
                 break;
             case OpCode::OP_DEC_SCOPE:
                 get_current_function_frame()->current_scope--;
@@ -265,7 +381,8 @@ void run_vm(bool verbose = false){
             // Output operations
             case OpCode::OP_PRINT:
                 //pop();
-                std::cout << pop() << std::endl;
+                print_value(pop());
+                std::cout << std::endl;
                 break;
             
             default:
