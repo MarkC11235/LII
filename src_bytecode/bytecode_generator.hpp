@@ -34,7 +34,7 @@ enum OpCode{
 
 
 // Data Structures ---------------------------------------------------
-struct function;
+struct function; // Forward declaration
 
 struct function {
     int8_t* code; // Bytecode array
@@ -52,8 +52,11 @@ struct function {
 };
 
 std::map<std::string, function*> function_definitions; // Dynamically allocated because multiple functions can be created
-                                             // This vector stores the functions
+                                                        // This vector stores the functions
 
+// Constants struct
+// This is so constants can be stored in the bytecode as indices
+// The array will probably get changed to be Values instead of doubles
 struct values{
     double* values;
     int count;
@@ -63,6 +66,8 @@ struct values{
 values vals; // Statically allocated because only one values array is needed
              // This array stores constant values
 
+// Variable names struct
+// This is so variable names can be stored in the bytecode as indices
 struct varible_names{
     std::string* names;
     int count;
@@ -183,11 +188,11 @@ inline void WRITE_VALUE(double value){
     vals.values[vals.count++] = value;
 }
 
-void WRITE_VAR_NAME(const std::string& name){
+inline void WRITE_VAR_NAME(const std::string& name){
     variable_names.names[variable_names.count++] = name;
 }
 
-int get_variable_index(const std::string& name){
+int get_variable_index(const std::string& name){ // returns the index of the variable in the variable names array
     for(int i = 0; i < variable_names.count; i++){
         if(variable_names.names[i] == name){
             return i;
@@ -200,21 +205,34 @@ std::string get_variable_name(int index){
     return variable_names.names[index];
 }
 
+// Constructor for the function struct
 function* create_function(int capacity, std::string name = "", function* parent = nullptr){
     function* func = new function;
-    func->code = new int8_t[capacity];
+    func->code = new int8_t[capacity]; 
     func->count = 0;
     func->capacity = capacity;
 
-    func->parent = parent;
+    func->parent = parent; // Set the parent function
 
-    func->name = name;
+    if(name == "main"){
+        func->name = name;
+        return func;
+    }
+    else{
+        func->name = name + "^" + parent->name;
+    }
+
+    // std::cout << "Function name: " << name << std::endl;
+    // std::cout << "Parent function name: " << parent->name << std::endl;
 
     if(parent != nullptr){
+        // new name should be function^parent_name to avoid name conflicts 
+        // if there are name conflicts, the function will be overwritten, which is the intended behavior
+        function_definitions[func->name] = func;
         //add the function to the functions map of the parent function
-        parent->functions[name] = func;
-        //add the function name to the variables map
-        WRITE_VAR_NAME(name);
+        parent->functions[func->name] = func;
+        //add the function name to the variables map, because functions are variables
+        WRITE_VAR_NAME(func->name);
     }
 
     return func;
@@ -247,12 +265,11 @@ void interpret_function_call(Node* node, function* func){
 
     //get the name of the function
     std::string name = node->get_value(1);
-    //std::cout << name << std::endl;
 
     //look up the function scopes to find the function
     function* func_where_called_func_resides = func;
     while(func_where_called_func_resides != nullptr){
-        if(func_where_called_func_resides->functions.find(name) != func_where_called_func_resides->functions.end()){
+        if(func_where_called_func_resides->functions.find(name + '^' + func_where_called_func_resides->name) != func_where_called_func_resides->functions.end()){
             break;
         }
         func_where_called_func_resides = func_where_called_func_resides->parent;
@@ -267,9 +284,10 @@ void interpret_function_call(Node* node, function* func){
     // Get the function from the variables map
     // lookup the function in the functions map
     //std::cout << "Function name: " << name << std::endl;
-    function* called_func = func_where_called_func_resides->functions[name];
+    function* called_func = func_where_called_func_resides->functions[name+"^"+func_where_called_func_resides->name];
+    //std::cout << "Called function name: " << called_func->name << std::endl;
     if(called_func == nullptr){
-        interpretation_error("Function not found: " + name, nullptr);
+        interpretation_error("Function not found: " + name+"^"+func_where_called_func_resides->name, nullptr);
     }
 
     //check if the number of arguments is correct
@@ -284,10 +302,10 @@ void interpret_function_call(Node* node, function* func){
     //call the function
     WRITE_BYTE(OpCode::OP_FUNCTION_CALL, func);
     //write the function index
-    if(get_variable_index(name) == -1){
-        interpretation_error("Function not found: " + name, node);
+    if(get_variable_index(name+"^"+func_where_called_func_resides->name) == -1){
+        interpretation_error("Function not found: " + name+"^"+func_where_called_func_resides->name, node);
     }
-    WRITE_BYTE(get_variable_index(name), func);
+    WRITE_BYTE(get_variable_index(name+"^"+func_where_called_func_resides->name), func);
 }
 
 void interpret_op(Node* node, function* func){
@@ -453,8 +471,6 @@ void interpret_function(Node* node, function* func, std::string name){
     }
 
     function* new_func = create_function(1000, name, func);
-
-    function_definitions[name] = new_func;
 
     // add the arguments to the variables map
     for(int i = 0; i < (int)node->get_child(0)->get_children().size(); i++){

@@ -72,8 +72,7 @@ int main(int argc, char *argv[]) {
 
     // Interpret the bytecode
     start = std::chrono::high_resolution_clock::now();
-    //interpret_bytecode(verbose);
-    interpret_bytecode();
+    interpret_bytecode(verbose);
     end = std::chrono::high_resolution_clock::now();
     if (verbose) {
         std::cout << "Interpretation took "
