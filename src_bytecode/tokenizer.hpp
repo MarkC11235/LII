@@ -33,6 +33,7 @@ enum TokenType {
     OPERATOR_TOKEN,
     NUMBER_TOKEN,
     IDENTIFIER_TOKEN,
+    STRING_TOKEN,
     FUNCTION_TOKEN,
     DIRECTIVE_TOKEN,
     ERROR_TOKEN,
@@ -92,6 +93,8 @@ std::string token_type_to_string(TokenType type){
             return "NUMBER";
         case TokenType::IDENTIFIER_TOKEN:
             return "IDENTIFIER";
+        case TokenType::STRING_TOKEN:
+            return "STRING";
         case TokenType::FUNCTION_TOKEN:
             return "FUNCTION";
         case TokenType::DIRECTIVE_TOKEN:
@@ -225,6 +228,20 @@ std::vector<Token> analyze(std::string input, int line_number){
                 else{
                     return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "error", line_number)};
                 }
+                break;
+            case '"':
+            {
+                std::string string = "";
+                i++;
+                while(i < int(input.length()) && input[i] != '"'){
+                    std::cout << input[i] << std::endl;
+                    std::cout << i << std::endl;
+                    string += input[i];
+                    i++;
+                }
+                std::cout << string << std::endl;
+                tokens.push_back(Token(TokenType::STRING_TOKEN, string, line_number));
+            }
                 break;
             default:
                 if(isdigit(input[i])){

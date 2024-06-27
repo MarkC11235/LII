@@ -295,52 +295,106 @@ void interpret_op(Node* node, function* func){
         Node* l_child = node->get_child(0);
         Node* r_child = node->get_child(1);
 
-        if(l_child->get_type() == NodeType::OP){
-            interpret_op(l_child, func);
-        }
-        else if(l_child->get_type() == NodeType::NUM){
-            vals.values[vals.count++] = std::stod(l_child->get_value());
-            //bc.code[bc.count++] = OpCode::OP_LOAD;
-            //bc.code[bc.count++] = vals.count - 1;
-            WRITE_BYTE(OpCode::OP_LOAD, func);
-            WRITE_BYTE(vals.count - 1, func);
-        }
-        else if(l_child->get_type() == NodeType::VAR){
-            WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
-            if(get_variable_index(l_child->get_value()) == -1){
-                interpretation_error("Variable not found", node);
-            }
-            WRITE_BYTE(get_variable_index(l_child->get_value()), func);
-        }
-        else if(l_child->get_type() == NodeType::FUNCTION_CALL){
-            interpret_function_call(l_child, func);
-        }
-        else{
-            interpretation_error("Invalid child type for OP Node", node);
+        // if(l_child->get_type() == NodeType::OP){
+        //     interpret_op(l_child, func);
+        // }
+        // else if(l_child->get_type() == NodeType::NUM){
+        //     vals.values[vals.count++] = std::stod(l_child->get_value());
+        //     //bc.code[bc.count++] = OpCode::OP_LOAD;
+        //     //bc.code[bc.count++] = vals.count - 1;
+        //     WRITE_BYTE(OpCode::OP_LOAD, func);
+        //     WRITE_BYTE(vals.count - 1, func);
+        // }
+        // else if(l_child->get_type() == NodeType::VAR){
+        //     WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
+        //     if(get_variable_index(l_child->get_value()) == -1){
+        //         interpretation_error("Variable not found", node);
+        //     }
+        //     WRITE_BYTE(get_variable_index(l_child->get_value()), func);
+        // }
+        // else if(l_child->get_type() == NodeType::FUNCTION_CALL){
+        //     interpret_function_call(l_child, func);
+        // }
+        // else{
+        //     interpretation_error("Invalid child type for OP Node", node);
+        // }
+
+        switch(l_child->get_type()){
+            case NodeType::OP:
+                interpret_op(l_child, func);
+                break;
+            case NodeType::NUM:
+                vals.values[vals.count++] = std::stod(l_child->get_value());
+                WRITE_BYTE(OpCode::OP_LOAD, func);
+                WRITE_BYTE(vals.count - 1, func);
+                break;
+            case NodeType::VAR:
+                WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
+                if(get_variable_index(l_child->get_value()) == -1){
+                    interpretation_error("Variable not found", node);
+                }
+                WRITE_BYTE(get_variable_index(l_child->get_value()), func);
+                break;
+            case NodeType::FUNCTION_CALL:
+                interpret_function_call(l_child, func);
+                break;
+            case NodeType::EXPR:
+                interpret_expr(l_child, func);
+                break;
+            default:
+                interpretation_error("Invalid child type for OP Node", node);
+                break;
         }
 
-        if(r_child->get_type() == NodeType::OP){
-            interpret_op(r_child, func);
-        }
-        else if(r_child->get_type() == NodeType::NUM){
-            vals.values[vals.count++] = std::stod(r_child->get_value());
-            // bc.code[bc.count++] = OpCode::OP_LOAD;
-            // bc.code[bc.count++] = vals.count - 1;
-            WRITE_BYTE(OpCode::OP_LOAD, func);
-            WRITE_BYTE(vals.count - 1, func);
-        }
-        else if(r_child->get_type() == NodeType::VAR){
-            WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
-            if(get_variable_index(r_child->get_value()) == -1){
-                interpretation_error("Variable not found", node);
-            }
-            WRITE_BYTE(get_variable_index(r_child->get_value()), func);
-        }
-        else if(r_child->get_type() == NodeType::FUNCTION_CALL){
-            interpret_function_call(r_child, func);
-        }
-        else{
-            interpretation_error("Invalid child type for OP Node", node);
+        // if(r_child->get_type() == NodeType::OP){
+        //     interpret_op(r_child, func);
+        // }
+        // else if(r_child->get_type() == NodeType::NUM){
+        //     vals.values[vals.count++] = std::stod(r_child->get_value());
+        //     // bc.code[bc.count++] = OpCode::OP_LOAD;
+        //     // bc.code[bc.count++] = vals.count - 1;
+        //     WRITE_BYTE(OpCode::OP_LOAD, func);
+        //     WRITE_BYTE(vals.count - 1, func);
+        // }
+        // else if(r_child->get_type() == NodeType::VAR){
+        //     WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
+        //     if(get_variable_index(r_child->get_value()) == -1){
+        //         interpretation_error("Variable not found", node);
+        //     }
+        //     WRITE_BYTE(get_variable_index(r_child->get_value()), func);
+        // }
+        // else if(r_child->get_type() == NodeType::FUNCTION_CALL){
+        //     interpret_function_call(r_child, func);
+        // }
+        // else{
+        //     interpretation_error("Invalid child type for OP Node", node);
+        // }
+
+        switch(r_child->get_type()){
+            case NodeType::OP:
+                interpret_op(r_child, func);
+                break;
+            case NodeType::NUM:
+                vals.values[vals.count++] = std::stod(r_child->get_value());
+                WRITE_BYTE(OpCode::OP_LOAD, func);
+                WRITE_BYTE(vals.count - 1, func);
+                break;
+            case NodeType::VAR:
+                WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
+                if(get_variable_index(r_child->get_value()) == -1){
+                    interpretation_error("Variable not found", node);
+                }
+                WRITE_BYTE(get_variable_index(r_child->get_value()), func);
+                break;
+            case NodeType::FUNCTION_CALL:
+                interpret_function_call(r_child, func);
+                break;
+            case NodeType::EXPR:
+                interpret_expr(r_child, func);
+                break;
+            default:
+                interpretation_error("Invalid child type for OP Node", node);
+                break;
         }
         
         switch(node->get_value()[0]){

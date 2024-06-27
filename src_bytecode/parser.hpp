@@ -189,7 +189,7 @@ public:
 // Forward declarations
 void parse_stmt_list(std::vector<Token>& tokens, Node* current);
 void parse_stmt(std::vector<Token>& tokens, Node* current);
-void parse_expr(std::vector<Token>& tokens, Node* current); 
+void parse_expr(std::vector<Token>& tokens, Node* current, bool nested); 
 void parse_function_call(std::vector<Token>& tokens, Node* current);
 void parse_function(std::vector<Token>& tokens, Node* current);
 void parse_assignment(std::vector<Token>& tokens, Node* current);
@@ -198,21 +198,25 @@ void parse_return(std::vector<Token>& tokens, Node* current);
 void parse_variable_update(std::vector<Token>& tokens, Node* current);
 void parse_print(std::vector<Token>& tokens, Node* current);
 
-void parse_expr(std::vector<Token>& tokens, Node* current){
+void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
     std::stack<Node*> ops;
     std::stack<Node*> values;
 
     for(;;){
         Token token = peek(tokens);
+        if(token.get_type() == TokenType::CLOSEPAR_TOKEN && nested){ // End of nested expression
+            pop(tokens);
+            break;
+        }
         if((token.get_type() != TokenType::NUMBER_TOKEN 
             && token.get_type() != TokenType::OPERATOR_TOKEN
-            && token.get_type() != TokenType::IDENTIFIER_TOKEN)
+            && token.get_type() != TokenType::IDENTIFIER_TOKEN
+            && token.get_type() != TokenType::OPENPAR_TOKEN)
             || token.get_type() == TokenType::EOF_TOKEN){
             break;
         }
         token = pop(tokens);
 
-        //token.print();
 
         if(token.get_type() == TokenType::NUMBER_TOKEN){
             Node* num = new Node(NodeType::NUM, token.get_value());
@@ -244,6 +248,12 @@ void parse_expr(std::vector<Token>& tokens, Node* current){
             }
             ops.push(op);
         }
+        else if(token.get_type() == TokenType::OPENPAR_TOKEN){
+            Node* expr = new Node(NodeType::EXPR, "");
+            parse_expr(tokens, expr, true); // Nested expression
+            values.push(expr);
+        }
+
     }
 
     while(ops.size() > 0){
