@@ -10,22 +10,28 @@
 #include "tokenizer.hpp"
 
 enum NodeType {
+    // PROGRAM
     PROGRAM,
     FUNCTION,
     STMT_LIST,
     STMT,
+    // CONTROL FLOW
     WHILE,
     FOR,
-    ASSIGN,
-    UPDATE,
-    EXPR,
     IF,
     RETURN,
+    // ASSIGNMENTS
+    ASSIGN,
+    UPDATE,
+    // ARITHMETIC
+    EXPR,
     TERM,
     FACTOR,
     VAR,
     NUM,
     OP,
+
+    // OTHERS
     LIST,
     PRINT,
     FUNCTION_CALL
@@ -287,13 +293,13 @@ void parse_function_call(std::vector<Token>& tokens, Node* current){
     current->add_child(list);
     token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
-        for(;;){
+        for(;;){ // Can have 0 or more parameters
             Node* expr = new Node(NodeType::EXPR, "");
             list->add_child(expr);
             parse_expr(tokens, expr);
 
             token = peek(tokens);
-            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
+            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
                 break;
             } else if(token.get_type() == TokenType::COMMA_TOKEN){
                 pop(tokens);
@@ -320,9 +326,9 @@ void parse_function(std::vector<Token>& tokens, Node* current){
     function->add_child(list);
     Token token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
-        for(;;){
+        for(;;){ // Can have 0 or more parameters
             token = pop(tokens);
-            if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
+            if(token.get_type() == TokenType::IDENTIFIER_TOKEN){ // Identifier
                 Node* var = new Node(NodeType::VAR, token.get_value());
                 list->add_child(var);
             } else {
@@ -330,9 +336,9 @@ void parse_function(std::vector<Token>& tokens, Node* current){
             }
 
             token = peek(tokens);
-            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
+            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
                 break;
-            } else if(token.get_type() == TokenType::COMMA_TOKEN){
+            } else if(token.get_type() == TokenType::COMMA_TOKEN){ // More parameters
                 pop(tokens);
             } else {
                 parsing_error("Syntax error: expected ',' or ')'", token);
@@ -366,13 +372,14 @@ void parse_function(std::vector<Token>& tokens, Node* current){
     }
 }
 
+// This is called when the let keyword is encountered
 void parse_assignment(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     Node* assign = new Node(NodeType::ASSIGN, "");
     current->add_child(assign);
 
-    if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-        Node* var = new Node(NodeType::VAR, token.get_value());
+    if(token.get_type() == TokenType::IDENTIFIER_TOKEN){ 
+        Node* var = new Node(NodeType::VAR, token.get_value()); 
         assign->add_child(var);
         token = pop(tokens);
 
@@ -406,6 +413,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected '('", token);
     }
 
+    // Parse the condition
     Node* expr = new Node(NodeType::EXPR, "");
     if_node->add_child(expr);
     parse_expr(tokens, expr);
@@ -415,6 +423,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected ')'", token);
     }
 
+    // if block -----------------------------------
     token = pop(tokens);
     if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
         parsing_error("Syntax error: expected '{'", token);
@@ -431,6 +440,9 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected '}'", token);
     }
 
+    // --------------------------------------------
+
+    // else block ---------------------------------
     // Check for else
     token = peek(tokens);
     if(token.get_type() != TokenType::ELSE_TOKEN){
@@ -458,15 +470,17 @@ void parse_if(std::vector<Token>& tokens, Node* current){
 
     token = pop(tokens);
     if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
-        parsing_error("Syntax error: expected '}'", token); ////////////// HERE
+        parsing_error("Syntax error: expected '}'", token); 
     }
-    
+
+    // --------------------------------------------
 }
 
 void parse_return(std::vector<Token>& tokens, Node* current){
     Node* return_node = new Node(NodeType::RETURN, "");
     current->add_child(return_node);
 
+    // Expression to return
     Node* expr = new Node(NodeType::EXPR, "");
     return_node->add_child(expr);
     parse_expr(tokens, expr);
@@ -477,6 +491,7 @@ void parse_return(std::vector<Token>& tokens, Node* current){
     }
 }
 
+// This is called when an identifier is encountered, with no let keyword
 void parse_variable_update(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
@@ -486,7 +501,7 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
     Node* update = new Node(NodeType::UPDATE, "");
     current->add_child(update);
 
-    Node* var = new Node(NodeType::VAR, token.get_value());
+    Node* var = new Node(NodeType::VAR, token.get_value()); // Variable to update
     update->add_child(var);
 
     token = pop(tokens);
@@ -494,7 +509,7 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected assignment operator", token);
     }
 
-    Node* expr = new Node(NodeType::EXPR, "");
+    Node* expr = new Node(NodeType::EXPR, ""); // Expression to assign
     update->add_child(expr);
     parse_expr(tokens, expr);
 
@@ -508,8 +523,7 @@ void parse_print(std::vector<Token>& tokens, Node* current){
     Node* print = new Node(NodeType::PRINT, "");
     current->add_child(print);
 
-    // Parse the expression
-    Node* expr = new Node(NodeType::EXPR, "");
+    Node* expr = new Node(NodeType::EXPR, ""); // Expression to print
     print->add_child(expr);
     parse_expr(tokens, expr);
 
@@ -527,11 +541,12 @@ void parse_for(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected '('", token);
     }
 
-    // Parse the initialization
+    // Parse the initialization -----------------------------------
     pop(tokens); // Skip the let keyword(usally done in the parse_stmt function)
     parse_assignment(tokens, for_node);
+    // -----------------------------------------------------------
 
-    // Parse the condition
+    // Parse the condition 
     Node* condition = new Node(NodeType::EXPR, "");
     for_node->add_child(condition);
     parse_expr(tokens, condition);
@@ -540,15 +555,19 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
         parsing_error("Syntax error: expected ';'", token);
     }
+    // -----------------------------------------------------------
 
-    // Parse the update
+    // Parse the update ------------------------------------------
     parse_variable_update(tokens, for_node);
 
     token = pop(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
         parsing_error("Syntax error: expected ')'", token);
     }
+    // -----------------------------------------------------------
 
+
+    // for body -----------------------------------------------
     token = pop(tokens);
     if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
         parsing_error("Syntax error: expected '{'", token);
@@ -569,6 +588,8 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
         parsing_error("Syntax error: expected '}'", token);
     }
+
+    // -----------------------------------------------------------
 }
 
 void parse_stmt(std::vector<Token>& tokens, Node* current){

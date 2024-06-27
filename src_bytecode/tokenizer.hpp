@@ -147,6 +147,8 @@ std::vector<Token> analyze(std::string input, int line_number){
     std::vector<Token> tokens;
     for(int i = 0; i < int(input.length()); i++){
         switch(input[i]){
+            case '#':
+                return tokens; // Ignore the rest of the line if a comment is found
             case '$':
                 tokens.push_back(Token(TokenType::FUNCTION_TOKEN, "$", line_number));
                 break;
@@ -293,7 +295,6 @@ std::vector<Token> analyze(std::string input, int line_number){
     return tokens;
 }
 
-// Reads the input file and returns a vector of strings where each string is a line in the file
 std::vector<Token> read_input(std::string file_path, bool verbose = false){
     // Open the file
     std::ifstream File(file_path); 
@@ -319,7 +320,7 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false){
         }
 
         while(token.length() > 0){
-            // Split the line by spaces
+            // Find the next space in the line, everything before the space is a token
             size_t pos = token.find(" ");
             std::string token_value;
             if(pos != std::string::npos){
@@ -333,12 +334,13 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false){
             // Remove whitespace from the token
             token_value = removeWhitespace(token_value);
 
-            // Analyze the token
+            // Analyze the token, 
             std::vector<Token> analyzed_tokens = analyze(token_value, line_number);
-            if(analyzed_tokens.size() == 1 && analyzed_tokens[0].get_type() == TokenType::ERROR_TOKEN){
+            if(analyzed_tokens.size() == 1 && analyzed_tokens[0].get_type() == TokenType::ERROR_TOKEN){ //analyze returns a single error token if there is an error
                 std::cout << "Error: Invalid token " << token_value << " on line " << line_number << std::endl;
                 return std::vector<Token>();
             }
+
             for(Token token : analyzed_tokens){
                 tokens.push_back(token);
             }
@@ -346,6 +348,7 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false){
         line_number++;
     }
 
+    // Add an EOF token to the end of the file
     tokens.push_back(Token(TokenType::EOF_TOKEN, "EOF", line_number));
 
     // Close the file

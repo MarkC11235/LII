@@ -34,7 +34,7 @@ enum OpCode{
 
 
 // Data Structures ---------------------------------------------------
-struct function;
+struct function; // Forward declaration
 
 struct function {
     int8_t* code; // Bytecode array
@@ -52,8 +52,11 @@ struct function {
 };
 
 std::map<std::string, function*> function_definitions; // Dynamically allocated because multiple functions can be created
-                                             // This vector stores the functions
+                                                        // This vector stores the functions
 
+// Constants struct
+// This is so constants can be stored in the bytecode as indices
+// The array will probably get changed to be Values instead of doubles
 struct values{
     double* values;
     int count;
@@ -63,6 +66,8 @@ struct values{
 values vals; // Statically allocated because only one values array is needed
              // This array stores constant values
 
+// Variable names struct
+// This is so variable names can be stored in the bytecode as indices
 struct varible_names{
     std::string* names;
     int count;
@@ -183,11 +188,11 @@ inline void WRITE_VALUE(double value){
     vals.values[vals.count++] = value;
 }
 
-void WRITE_VAR_NAME(const std::string& name){
+inline void WRITE_VAR_NAME(const std::string& name){
     variable_names.names[variable_names.count++] = name;
 }
 
-int get_variable_index(const std::string& name){
+int get_variable_index(const std::string& name){ // returns the index of the variable in the variable names array
     for(int i = 0; i < variable_names.count; i++){
         if(variable_names.names[i] == name){
             return i;
@@ -200,21 +205,34 @@ std::string get_variable_name(int index){
     return variable_names.names[index];
 }
 
+// Constructor for the function struct
 function* create_function(int capacity, std::string name = "", function* parent = nullptr){
     function* func = new function;
-    func->code = new int8_t[capacity];
+    func->code = new int8_t[capacity]; 
     func->count = 0;
     func->capacity = capacity;
 
-    func->parent = parent;
+    func->parent = parent; // Set the parent function
 
-    func->name = name;
+    if(name == "main"){
+        func->name = name;
+        return func;
+    }
+    else{
+        func->name = name + "^" + parent->name;
+    }
+
+    // std::cout << "Function name: " << name << std::endl;
+    // std::cout << "Parent function name: " << parent->name << std::endl;
 
     if(parent != nullptr){
+        // new name should be function^parent_name to avoid name conflicts 
+        // if there are name conflicts, the function will be overwritten, which is the intended behavior
+        function_definitions[func->name] = func;
         //add the function to the functions map of the parent function
-        parent->functions[name] = func;
-        //add the function name to the variables map
-        WRITE_VAR_NAME(name);
+        parent->functions[func->name] = func;
+        //add the function name to the variables map, because functions are variables
+        WRITE_VAR_NAME(func->name);
     }
 
     return func;
@@ -247,26 +265,25 @@ void interpret_function_call(Node* node, function* func){
 
     //get the name of the function
     std::string name = node->get_value(1);
-    //std::cout << name << std::endl;
 
     //look up the function scopes to find the function
+    //finds definition that is closest to the current function
     function* func_where_called_func_resides = func;
     while(func_where_called_func_resides != nullptr){
-        if(func_where_called_func_resides->functions.find(name) != func_where_called_func_resides->functions.end()){
+        if(func_where_called_func_resides->functions.find(name + '^' + func_where_called_func_resides->name) != func_where_called_func_resides->functions.end()){
             break;
         }
         func_where_called_func_resides = func_where_called_func_resides->parent;
     }
 
-    //std::cout << "Current function where called function resides : " << func_where_called_func_resides->name << std::endl;
-
     if(func_where_called_func_resides == nullptr){
         interpretation_error("Function not found: " + name, nullptr);
     }
 
+    name = name + '^' + func_where_called_func_resides->name;
+
     // Get the function from the variables map
     // lookup the function in the functions map
-    //std::cout << "Function name: " << name << std::endl;
     function* called_func = func_where_called_func_resides->functions[name];
     if(called_func == nullptr){
         interpretation_error("Function not found: " + name, nullptr);
@@ -396,22 +413,19 @@ void interpret_op(Node* node, function* func){
                 interpretation_error("Invalid child type for OP Node", node);
                 break;
         }
-        
+
+        // Operator
         switch(node->get_value()[0]){
             case '+':
-                //bc.code[bc.count++] = OpCode::OP_ADD;
                 WRITE_BYTE(OpCode::OP_ADD, func);
                 break;
             case '-':
-                //bc.code[bc.count++] = OpCode::OP_SUB;
                 WRITE_BYTE(OpCode::OP_SUB, func);
                 break;
             case '*':
-                //bc.code[bc.count++] = OpCode::OP_MUL;
                 WRITE_BYTE(OpCode::OP_MUL, func);
                 break;
             case '/':
-                //bc.code[bc.count++] = OpCode::OP_DIV;
                 WRITE_BYTE(OpCode::OP_DIV, func);
                 break;
             default:
@@ -426,22 +440,22 @@ void interpret_op(Node* node, function* func){
 
 void interpret_expr(Node* node, function* func){
     if(node->get_type() == NodeType::EXPR){
-        if(node->get_child(0)->get_type() == NodeType::OP){
+        if(node->get_child(0)->get_type() == NodeType::OP){ // Expression with operator
             interpret_op(node->get_child(0), func);
         }
-        else if(node->get_child(0)->get_type() == NodeType::NUM){
-            vals.values[vals.count++] = std::stod(node->get_child(0)->get_value());
+        else if(node->get_child(0)->get_type() == NodeType::NUM){ // Single number
+            WRITE_VALUE(std::stod(node->get_child(0)->get_value()));
             WRITE_BYTE(OpCode::OP_LOAD, func);
             WRITE_BYTE(vals.count - 1, func);
         }
-        else if(node->get_child(0)->get_type() == NodeType::VAR){
+        else if(node->get_child(0)->get_type() == NodeType::VAR){ // Single variable
             WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
             if(get_variable_index(node->get_child(0)->get_value()) == -1){
                 interpretation_error("Variable not found", node);
             }
             WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
         }
-        else if(node->get_child(0)->get_type() == NodeType::FUNCTION_CALL){
+        else if(node->get_child(0)->get_type() == NodeType::FUNCTION_CALL){ // Single function call
             interpret_function_call(node->get_child(0), func);
         }
         else{
@@ -458,9 +472,8 @@ void interpret_return(Node* node, function* func){
         interpretation_error("Return doesn't start with RETURN Node", node);
     }
 
-    interpret_expr(node->get_child(0), func);
+    interpret_expr(node->get_child(0), func); // Expression to return
 
-    //bc.code[bc.count++] = OpCode::OP_RETURN;
     WRITE_BYTE(OpCode::OP_RETURN, func);
 }
 
@@ -483,6 +496,7 @@ void interpret_if(Node* node, function* func){
     int jump_offset = func->count - jump_index;
     func->code[jump_index] = jump_offset;
 
+    // check if there is an else block
     if(node->get_children().size() == 3){
         func->code[jump_index] = jump_offset + 2; 
 
@@ -508,12 +522,9 @@ void interpret_function(Node* node, function* func, std::string name){
 
     function* new_func = create_function(1000, name, func);
 
-    function_definitions[name] = new_func;
-
     // add the arguments to the variables map
     for(int i = 0; i < (int)node->get_child(0)->get_children().size(); i++){
         std::string arg_name = node->get_child(0)->get_child(i)->get_value();
-        //std::cout << "arg_name: " << arg_name << std::endl;
         WRITE_VAR_NAME(arg_name);
 
         new_func->arguments.push_back(arg_name);
@@ -541,20 +552,16 @@ void interpret_assign(Node* node, function* func){
         interpretation_error("Assign doesn't have a VAR Node as the first child", node);
     }
 
-    if(node->get_child(1)->get_type() == NodeType::EXPR){
+    if(node->get_child(1)->get_type() == NodeType::EXPR){ // Assigning a value to a variable
         interpret_expr(node->get_child(1), func);
 
         WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        if(get_variable_index(node->get_child(0)->get_value()) == -1){
+        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
             WRITE_VAR_NAME(node->get_child(0)->get_value());
-            // print the variables map
-            // for(int i = 0; i < variable_names.count; i++){
-            //     std::cout << variable_names.names[i] << std::endl;
-            // }
         }
         WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
     }
-    else if(node->get_child(1)->get_type() == NodeType::FUNCTION){
+    else if(node->get_child(1)->get_type() == NodeType::FUNCTION){ // Assigning a function to a variable
         interpret_function(node->get_child(1), func, std::string(node->get_child(0)->get_value()));
     }
     else{
@@ -571,13 +578,15 @@ void interpret_update(Node* node, function* func){
         interpretation_error("Update doesn't have a VAR Node as the first child", node);
     }
 
-    interpret_expr(node->get_child(1), func);
+    interpret_expr(node->get_child(1), func); // Expression to update variable with 
 
     WRITE_BYTE(OpCode::OP_UPDATE_VAR, func); // takes the value from the stack and updates the value in the variables map
-    if(get_variable_index(node->get_child(0)->get_value()) == -1){
-        
+    int index = get_variable_index(node->get_child(0)->get_value());
+    if(index == -1){
+        // Should never happen because the variable should already exist
+        interpretation_error("Trying to update a variable that hasn't been defined", node);
     }
-    WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+    WRITE_BYTE(index, func);
 }
 
 void interpret_print(Node* node, function* func){
@@ -585,7 +594,7 @@ void interpret_print(Node* node, function* func){
         interpretation_error("Print doesn't start with PRINT Node", node);
     }
 
-    interpret_expr(node->get_child(0), func);
+    interpret_expr(node->get_child(0), func); // Expression to print
 
     WRITE_BYTE(OpCode::OP_PRINT, func);
 }
@@ -660,11 +669,6 @@ void interpret_stmt(Node* node, function* func){
     else{
         interpretation_error("Statement doesn't start with STMT Node", node);
     }
-
-    //print the function's functions map
-    // for(auto it = func->functions.begin(); it != func->functions.end(); it++){
-    //     std::cout << it->first << std::endl;
-    // }
 }
 
 void interpret_stmt_list(Node* node, function* func){
