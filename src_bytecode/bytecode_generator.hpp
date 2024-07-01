@@ -96,10 +96,16 @@ double VALUE_AS_NUMBER(Value value){
 std::string VALUE_AS_STRING(Value value){
     switch(value.type){
         case NUMBER:
-            if(std::get<double>(value.data) == (int)std::get<double>(value.data)){
-                return std::to_string((int)std::get<double>(value.data));
+        {
+            std::string str = std::to_string(std::get<double>(value.data));
+            if(str.find('.') != std::string::npos){
+                str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+                if(str[str.size() - 1] == '.'){
+                    str.pop_back();
+                }
             }
-            return std::to_string(std::get<double>(value.data));
+            return str;
+        }
         case BOOL:
             return std::get<bool>(value.data) ? "true" : "false";
         case STRING:
