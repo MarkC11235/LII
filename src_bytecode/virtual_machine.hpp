@@ -167,8 +167,12 @@ void run_vm(bool verbose = false){
                 Value a = pop();
                 Value b = pop();
                 if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
-                    push({Value_Type::NUMBER, {a.data.number + b.data.number}});
-                } else {
+                    push({Value_Type::NUMBER, std::get<double>(a.data) + std::get<double>(b.data)});
+                }
+                else if(a.type == Value_Type::STRING || b.type == Value_Type::STRING){
+                    push({Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
+                } 
+                else {
                     vm_error("Invalid types for addition");
                 }
                 break;
@@ -178,7 +182,7 @@ void run_vm(bool verbose = false){
                 Value a = pop();
                 Value b = pop();
                 if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
-                    push({Value_Type::NUMBER, {a.data.number - b.data.number}});
+                    push({Value_Type::NUMBER, std::get<double>(a.data) - std::get<double>(b.data)});
                 } else {
                     vm_error("Invalid types for subtraction");
                 }
@@ -189,7 +193,7 @@ void run_vm(bool verbose = false){
                 Value a = pop();
                 Value b = pop();
                 if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
-                    push({Value_Type::NUMBER, {a.data.number * b.data.number}});
+                    push({Value_Type::NUMBER, std::get<double>(a.data) * std::get<double>(b.data)});
                 } else {
                     vm_error("Invalid types for multiplication");
                 }
@@ -200,10 +204,10 @@ void run_vm(bool verbose = false){
                 Value a = pop();
                 Value b = pop();
                 if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
-                    if(b.data.number == 0){
+                    if(std::get<double>(b.data) == 0){
                         vm_error("Division by zero");
                     }
-                    push({Value_Type::NUMBER, {a.data.number / b.data.number}});
+                    push({Value_Type::NUMBER, std::get<double>(a.data) / std::get<double>(b.data)});
                 } else {
                     vm_error("Invalid types for division");
                 }

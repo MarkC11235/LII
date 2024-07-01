@@ -62,27 +62,19 @@ enum Value_Type{
     STRUCT,
 };
 
-struct Data{
-    double number;
-    bool boolean;
-    std::string string;
-};
-
 struct Value{
     Value_Type type;
-    Data data;
+    std::variant<double, bool, std::string> data;
 };
 
 bool VALUE_AS_BOOL(Value value){
     switch(value.type){
-        case Value_Type::NUMBER:
-            return value.data.number != 0;
-        case Value_Type::BOOL:
-            return value.data.boolean;
-        case Value_Type::STRING:
-            return value.data.string == "true";
-        case Value_Type::STRUCT:
-            return false;
+        case BOOL:
+            return std::get<bool>(value.data);
+        case NUMBER:
+            return std::get<double>(value.data) != 0;
+        case STRING:
+            return std::get<std::string>(value.data) != "";
         default:
             return false; // Should never reach here, but to avoid warnings
     }
@@ -90,14 +82,12 @@ bool VALUE_AS_BOOL(Value value){
 
 double VALUE_AS_NUMBER(Value value){
     switch(value.type){
-        case Value_Type::NUMBER:
-            return value.data.number;
-        case Value_Type::BOOL:
-            return value.data.boolean ? 1 : 0;
-        case Value_Type::STRING:
-            return std::stod(value.data.string);
-        case Value_Type::STRUCT:
-            return 0;
+        case NUMBER:
+            return std::get<double>(value.data);
+        case BOOL:
+            return std::get<bool>(value.data);
+        case STRING:
+            return std::stod(std::get<std::string>(value.data));
         default:
             return 0; // Should never reach here, but to avoid warnings
     }
@@ -105,36 +95,22 @@ double VALUE_AS_NUMBER(Value value){
 
 std::string VALUE_AS_STRING(Value value){
     switch(value.type){
-        case Value_Type::NUMBER:
-            return std::to_string(value.data.number);
-        case Value_Type::BOOL:
-            return value.data.boolean ? "true" : "false";
-        case Value_Type::STRING:
-            return value.data.string;
-        case Value_Type::STRUCT:
-            return "STRUCT";
+        case NUMBER:
+            if(std::get<double>(value.data) == (int)std::get<double>(value.data)){
+                return std::to_string((int)std::get<double>(value.data));
+            }
+            return std::to_string(std::get<double>(value.data));
+        case BOOL:
+            return std::get<bool>(value.data) ? "true" : "false";
+        case STRING:
+            return std::get<std::string>(value.data);
         default:
             return "UNKNOWN"; // Should never reach here, but to avoid warnings
     }
 }
 
 void print_value(Value value){
-    switch(value.type){
-        case Value_Type::NUMBER:
-            std::cout << value.data.number;
-            break;
-        case Value_Type::BOOL:
-            std::cout << (value.data.boolean ? "true" : "false");
-            break;
-        case Value_Type::STRING:
-            std::cout << value.data.string;
-            break;
-        case Value_Type::STRUCT:
-            std::cout << "STRUCT";
-            break;
-        default:
-            std::cout << "UNKNOWN"; // Should never reach here, but to avoid warnings
-    }
+    std::cout << VALUE_AS_STRING(value);
 }
 
 
@@ -269,15 +245,15 @@ inline void WRITE_BYTE(int8_t byte, function* func){
 }
 
 inline void WRITE_VALUE(double value){
-    vals.values[vals.count++] = Value{NUMBER, Data{value}};
+    vals.values[vals.count++] = {NUMBER, value};
 }
 
 inline void WRITE_VALUE(bool value){
-    vals.values[vals.count++] = Value{BOOL, Data{0, value}};
+    vals.values[vals.count++] = {BOOL, value};
 }
 
 inline void WRITE_VALUE(const std::string& value){
-    vals.values[vals.count++] = Value{STRING, Data{0, false, value}};
+    vals.values[vals.count++] = {STRING, value};
 }
 
 inline void WRITE_VALUE(Value value){
@@ -431,6 +407,12 @@ void interpret_op(Node* node, function* func){
             case NodeType::EXPR_NODE:
                 interpret_expr(l_child, func);
                 break;
+            case NodeType::STRING_NODE:
+                //std::cout << l_child->get_value() << std::endl;
+                WRITE_VALUE(l_child->get_value());
+                WRITE_BYTE(OpCode::OP_LOAD, func);
+                WRITE_BYTE(vals.count - 1, func);
+                break;
             default:
                 interpretation_error("Invalid child type for OP Node", node);
                 break;
@@ -458,6 +440,12 @@ void interpret_op(Node* node, function* func){
                 break;
             case NodeType::EXPR_NODE:
                 interpret_expr(r_child, func);
+                break;
+            case NodeType::STRING_NODE:
+                //std::cout << r_child->get_value() << std::endl;
+                WRITE_VALUE(r_child->get_value());
+                WRITE_BYTE(OpCode::OP_LOAD, func);
+                WRITE_BYTE(vals.count - 1, func);
                 break;
             default:
                 interpretation_error("Invalid child type for OP Node", node);
