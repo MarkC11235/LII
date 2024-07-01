@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <variant>
 
 #include "parser.hpp"
 
@@ -54,11 +55,94 @@ struct function {
 std::map<std::string, function*> function_definitions; // Dynamically allocated because multiple functions can be created
                                                         // This vector stores the functions
 
+enum Value_Type{
+    NUMBER,
+    BOOL,
+    STRING,
+    STRUCT,
+};
+
+struct Data{
+    double number;
+    bool boolean;
+    std::string string;
+};
+
+struct Value{
+    Value_Type type;
+    Data data;
+};
+
+bool VALUE_AS_BOOL(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            return value.data.number != 0;
+        case Value_Type::BOOL:
+            return value.data.boolean;
+        case Value_Type::STRING:
+            return value.data.string == "true";
+        case Value_Type::STRUCT:
+            return false;
+        default:
+            return false; // Should never reach here, but to avoid warnings
+    }
+}
+
+double VALUE_AS_NUMBER(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            return value.data.number;
+        case Value_Type::BOOL:
+            return value.data.boolean ? 1 : 0;
+        case Value_Type::STRING:
+            return std::stod(value.data.string);
+        case Value_Type::STRUCT:
+            return 0;
+        default:
+            return 0; // Should never reach here, but to avoid warnings
+    }
+}
+
+std::string VALUE_AS_STRING(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            return std::to_string(value.data.number);
+        case Value_Type::BOOL:
+            return value.data.boolean ? "true" : "false";
+        case Value_Type::STRING:
+            return value.data.string;
+        case Value_Type::STRUCT:
+            return "STRUCT";
+        default:
+            return "UNKNOWN"; // Should never reach here, but to avoid warnings
+    }
+}
+
+void print_value(Value value){
+    switch(value.type){
+        case Value_Type::NUMBER:
+            std::cout << value.data.number;
+            break;
+        case Value_Type::BOOL:
+            std::cout << (value.data.boolean ? "true" : "false");
+            break;
+        case Value_Type::STRING:
+            std::cout << value.data.string;
+            break;
+        case Value_Type::STRUCT:
+            std::cout << "STRUCT";
+            break;
+        default:
+            std::cout << "UNKNOWN"; // Should never reach here, but to avoid warnings
+    }
+}
+
+
 // Constants struct
 // This is so constants can be stored in the bytecode as indices
 // The array will probably get changed to be Values instead of doubles
 struct values{
-    double* values;
+    Value* values;
     int count;
     int capacity;
 };
@@ -103,7 +187,7 @@ void display_bytecode(function* func){
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Value: " << vals.values[(int)func->code[i]] << std::endl;
+                std::cout << "Value: " << VALUE_AS_STRING(vals.values[(int)func->code[i]]) << std::endl;
                 break;
             case OpCode::OP_STORE_VAR:
                 std::cout << "OP_STORE_VAR";
@@ -168,7 +252,7 @@ void display_bytecode(function* func){
 
 void display_constants(){
     for(int i = 0; i < vals.count; i++){
-        std::cout << i << ": " << vals.values[i] << std::endl;
+        std::cout << i << ": " << VALUE_AS_STRING(vals.values[i]) << std::endl;
     }
 }
 
@@ -185,6 +269,18 @@ inline void WRITE_BYTE(int8_t byte, function* func){
 }
 
 inline void WRITE_VALUE(double value){
+    vals.values[vals.count++] = Value{NUMBER, Data{value}};
+}
+
+inline void WRITE_VALUE(bool value){
+    vals.values[vals.count++] = Value{BOOL, Data{0, value}};
+}
+
+inline void WRITE_VALUE(const std::string& value){
+    vals.values[vals.count++] = Value{STRING, Data{0, false, value}};
+}
+
+inline void WRITE_VALUE(Value value){
     vals.values[vals.count++] = value;
 }
 
@@ -238,7 +334,7 @@ function* create_function(int capacity, std::string name = "", function* parent 
     return func;
 }
 
-double get_constant(int index){
+Value get_constant(int index){
     return vals.values[index];
 }
 // -------------------------------------------------------------------
@@ -259,7 +355,7 @@ void interpretation_error(std::string message, Node* node){
 }
 
 void interpret_function_call(Node* node, function* func){
-    if(node->get_type() != NodeType::FUNCTION_CALL){
+    if(node->get_type() != NodeType::FUNCTION_CALL_NODE){
         interpretation_error("Function call doesn't start with FUNCTION_CALL Node", node);
     }
 
@@ -308,30 +404,31 @@ void interpret_function_call(Node* node, function* func){
 }
 
 void interpret_op(Node* node, function* func){
-    if(node->get_type() == NodeType::OP){
+    if(node->get_type() == NodeType::OP_NODE){
         Node* l_child = node->get_child(0);
         Node* r_child = node->get_child(1);
 
         switch(l_child->get_type()){
-            case NodeType::OP:
+            case NodeType::OP_NODE:
                 interpret_op(l_child, func);
                 break;
-            case NodeType::NUM:
-                vals.values[vals.count++] = std::stod(l_child->get_value());
+            case NodeType::NUM_NODE:
+                //vals.values[vals.count++] = std::stod(l_child->get_value());
+                WRITE_VALUE(std::stod(l_child->get_value()));
                 WRITE_BYTE(OpCode::OP_LOAD, func);
                 WRITE_BYTE(vals.count - 1, func);
                 break;
-            case NodeType::VAR:
+            case NodeType::VAR_NODE:
                 WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
                 if(get_variable_index(l_child->get_value()) == -1){
                     interpretation_error("Variable not found", node);
                 }
                 WRITE_BYTE(get_variable_index(l_child->get_value()), func);
                 break;
-            case NodeType::FUNCTION_CALL:
+            case NodeType::FUNCTION_CALL_NODE:
                 interpret_function_call(l_child, func);
                 break;
-            case NodeType::EXPR:
+            case NodeType::EXPR_NODE:
                 interpret_expr(l_child, func);
                 break;
             default:
@@ -340,25 +437,26 @@ void interpret_op(Node* node, function* func){
         }
 
         switch(r_child->get_type()){
-            case NodeType::OP:
+            case NodeType::OP_NODE:
                 interpret_op(r_child, func);
                 break;
-            case NodeType::NUM:
-                vals.values[vals.count++] = std::stod(r_child->get_value());
+            case NodeType::NUM_NODE:
+                //vals.values[vals.count++] = std::stod(r_child->get_value());
+                WRITE_VALUE(std::stod(r_child->get_value()));
                 WRITE_BYTE(OpCode::OP_LOAD, func);
                 WRITE_BYTE(vals.count - 1, func);
                 break;
-            case NodeType::VAR:
+            case NodeType::VAR_NODE:
                 WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
                 if(get_variable_index(r_child->get_value()) == -1){
                     interpretation_error("Variable not found", node);
                 }
                 WRITE_BYTE(get_variable_index(r_child->get_value()), func);
                 break;
-            case NodeType::FUNCTION_CALL:
+            case NodeType::FUNCTION_CALL_NODE:
                 interpret_function_call(r_child, func);
                 break;
-            case NodeType::EXPR:
+            case NodeType::EXPR_NODE:
                 interpret_expr(r_child, func);
                 break;
             default:
@@ -391,27 +489,33 @@ void interpret_op(Node* node, function* func){
 }
 
 void interpret_expr(Node* node, function* func){
-    if(node->get_type() == NodeType::EXPR){
-        if(node->get_child(0)->get_type() == NodeType::OP){ // Expression with operator
+    if(node->get_type() == NodeType::EXPR_NODE){
+        if(node->get_child(0)->get_type() == NodeType::OP_NODE){ // Expression with operator
             interpret_op(node->get_child(0), func);
         }
-        else if(node->get_child(0)->get_type() == NodeType::NUM){ // Single number
+        else if(node->get_child(0)->get_type() == NodeType::NUM_NODE){ // Single number
             WRITE_VALUE(std::stod(node->get_child(0)->get_value()));
             WRITE_BYTE(OpCode::OP_LOAD, func);
             WRITE_BYTE(vals.count - 1, func);
         }
-        else if(node->get_child(0)->get_type() == NodeType::VAR){ // Single variable
+        else if(node->get_child(0)->get_type() == NodeType::VAR_NODE){ // Single variable
             WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
             if(get_variable_index(node->get_child(0)->get_value()) == -1){
                 interpretation_error("Variable not found", node);
             }
             WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
         }
-        else if(node->get_child(0)->get_type() == NodeType::FUNCTION_CALL){ // Single function call
+        else if(node->get_child(0)->get_type() == NodeType::FUNCTION_CALL_NODE){ // Single function call
             interpret_function_call(node->get_child(0), func);
         }
+        else if(node->get_child(0)->get_type() == NodeType::STRING_NODE){ // Single string
+            //std::cout << node->get_child(0)->get_value() << std::endl;
+            WRITE_VALUE(node->get_child(0)->get_value());
+            WRITE_BYTE(OpCode::OP_LOAD, func);
+            WRITE_BYTE(vals.count - 1, func);
+        }
         else{
-            interpretation_error("Expression doesn't start with OP Node", node);
+            interpretation_error("Expression doesn't start with OP Node, NUM Node, VAR Node, FUNCTION CALL Node, or STRING Node", node);
         }
     }
     else{
@@ -420,7 +524,7 @@ void interpret_expr(Node* node, function* func){
 }
 
 void interpret_return(Node* node, function* func){
-    if(node->get_type() != NodeType::RETURN){
+    if(node->get_type() != NodeType::RETURN_NODE){
         interpretation_error("Return doesn't start with RETURN Node", node);
     }
 
@@ -430,7 +534,7 @@ void interpret_return(Node* node, function* func){
 }
 
 void interpret_if(Node* node, function* func){
-    if(node->get_type() != NodeType::IF){
+    if(node->get_type() != NodeType::IF_NODE){
         interpretation_error("If doesn't start with IF Node", node);
     }
 
@@ -468,7 +572,7 @@ void interpret_if(Node* node, function* func){
 }
 
 void interpret_function(Node* node, function* func, std::string name){
-    if(node->get_type() != NodeType::FUNCTION){
+    if(node->get_type() != NodeType::FUNCTION_NODE){
         interpretation_error("Function doesn't start with FUNCTION Node", node);
     }
 
@@ -496,15 +600,15 @@ void interpret_function(Node* node, function* func, std::string name){
 }
 
 void interpret_assign(Node* node, function* func){
-    if(node->get_type() != NodeType::ASSIGN){
+    if(node->get_type() != NodeType::ASSIGN_NODE){
         interpretation_error("Assign doesn't start with ASSIGN Node", node);
     }
 
-    if(node->get_child(0)->get_type() != NodeType::VAR){
+    if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
         interpretation_error("Assign doesn't have a VAR Node as the first child", node);
     }
 
-    if(node->get_child(1)->get_type() == NodeType::EXPR){ // Assigning a value to a variable
+    if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a variable
         interpret_expr(node->get_child(1), func);
 
         WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
@@ -513,7 +617,7 @@ void interpret_assign(Node* node, function* func){
         }
         WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
     }
-    else if(node->get_child(1)->get_type() == NodeType::FUNCTION){ // Assigning a function to a variable
+    else if(node->get_child(1)->get_type() == NodeType::FUNCTION_NODE){ // Assigning a function to a variable
         interpret_function(node->get_child(1), func, std::string(node->get_child(0)->get_value()));
     }
     else{
@@ -522,11 +626,11 @@ void interpret_assign(Node* node, function* func){
 }
 
 void interpret_update(Node* node, function* func){
-    if(node->get_type() != NodeType::UPDATE){
+    if(node->get_type() != NodeType::UPDATE_NODE){
         interpretation_error("Update doesn't start with UPDATE Node", node);
     }
 
-    if(node->get_child(0)->get_type() != NodeType::VAR){
+    if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
         interpretation_error("Update doesn't have a VAR Node as the first child", node);
     }
 
@@ -542,7 +646,7 @@ void interpret_update(Node* node, function* func){
 }
 
 void interpret_print(Node* node, function* func){
-    if(node->get_type() != NodeType::PRINT){
+    if(node->get_type() != NodeType::PRINT_NODE){
         interpretation_error("Print doesn't start with PRINT Node", node);
     }
 
@@ -552,7 +656,7 @@ void interpret_print(Node* node, function* func){
 }
 
 void interpret_for(Node* node, function* func){
-    if(node->get_type() != NodeType::FOR){
+    if(node->get_type() != NodeType::FOR_NODE){
         interpretation_error("For doesn't start with FOR Node", node);
     }
 
@@ -589,28 +693,28 @@ void interpret_for(Node* node, function* func){
 }
 
 void interpret_stmt(Node* node, function* func){
-    if(node->get_type() == NodeType::STMT){
+    if(node->get_type() == NodeType::STMT_NODE){
         Node* child = node->get_child(0);
         switch(child->get_type()){
-            case NodeType::EXPR:
+            case NodeType::EXPR_NODE:
                 interpret_expr(child, func);
                 break;
-            case NodeType::RETURN:
+            case NodeType::RETURN_NODE:
                 interpret_return(child, func);
                 break;
-            case NodeType::IF:
+            case NodeType::IF_NODE:
                 interpret_if(child, func);
                 break;
-            case NodeType::ASSIGN:
+            case NodeType::ASSIGN_NODE:
                 interpret_assign(child, func);
                 break;
-            case NodeType::UPDATE:
+            case NodeType::UPDATE_NODE:
                 interpret_update(child, func);
                 break;
-            case NodeType::PRINT:
+            case NodeType::PRINT_NODE:
                 interpret_print(child, func);
                 break;
-            case NodeType::FOR:
+            case NodeType::FOR_NODE:
                 interpret_for(child, func);
                 break;
             default:
@@ -628,7 +732,7 @@ void interpret_stmt_list(Node* node, function* func){
         return;
     }
 
-    if(node->get_type() != NodeType::STMT_LIST){
+    if(node->get_type() != NodeType::STMT_LIST_NODE){
         interpretation_error("Statement List doesn't start with STMT_LIST Node", node);
     }
 
@@ -639,7 +743,7 @@ void interpret_stmt_list(Node* node, function* func){
 }
 
 void interpret(Node* node, function* func){
-    if(node->get_type() != NodeType::STMT_LIST){
+    if(node->get_type() != NodeType::STMT_LIST_NODE){
         interpretation_error("Program doesn't start with STMT_LIST Node", node);
     }
     
@@ -651,7 +755,7 @@ void generate_bytecode(Node* ast) {
 
     function_definitions["main"] = func;
 
-    vals.values = new double[255]; // Allocate 1000 doubles for the values
+    vals.values = new Value[255]; // Allocate 1000 doubles for the values
                                     // this is the maximum number of constants because it fits into a byte for the bytecode
     vals.count = 0;
     vals.capacity = 255;

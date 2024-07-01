@@ -1,7 +1,7 @@
 CC = g++
 CXXFLAGS = -Wall -std=c++17 
 INPUT_FILE = tester.calc
-EXE = ./lii.exe
+EXE = ./lii
 
 VERSION = BYTECODE
 

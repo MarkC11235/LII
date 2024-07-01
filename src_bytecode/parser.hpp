@@ -11,30 +11,31 @@
 
 enum NodeType {
     // PROGRAM
-    PROGRAM,
-    FUNCTION,
-    STMT_LIST,
-    STMT,
+    PROGRAM_NODE,
+    FUNCTION_NODE,
+    STMT_LIST_NODE,
+    STMT_NODE,
     // CONTROL FLOW
-    WHILE,
-    FOR,
-    IF,
-    RETURN,
+    WHILE_NODE,
+    FOR_NODE,
+    IF_NODE,
+    RETURN_NODE,
     // ASSIGNMENTS
-    ASSIGN,
-    UPDATE,
+    ASSIGN_NODE,
+    UPDATE_NODE,
     // ARITHMETIC
-    EXPR,
-    TERM,
-    FACTOR,
-    VAR,
-    NUM,
-    OP,
+    EXPR_NODE,
+    TERM_NODE,
+    FACTOR_NODE,
+    VAR_NODE,
+    NUM_NODE,
+    OP_NODE,
+    STRING_NODE,
 
     // OTHERS
-    LIST,
-    PRINT,
-    FUNCTION_CALL
+    LIST_NODE,
+    PRINT_NODE,
+    FUNCTION_CALL_NODE
 };
 
 
@@ -47,43 +48,45 @@ int parsing_error(std::string message, Token token){
 
 std::string node_type_to_string(NodeType type){
     switch(type){
-        case NodeType::PROGRAM:
+        case NodeType::PROGRAM_NODE:
             return "PROGRAM";
-        case NodeType::FUNCTION:
+        case NodeType::FUNCTION_NODE:
             return "FUNCTION";
-        case NodeType::STMT_LIST:
+        case NodeType::STMT_LIST_NODE:
             return "STMT_LIST";
-        case NodeType::STMT:
+        case NodeType::STMT_NODE:
             return "STMT";
-        case NodeType::WHILE:
+        case NodeType::WHILE_NODE:
             return "WHILE";
-        case NodeType::FOR:
+        case NodeType::FOR_NODE:
             return "FOR";
-        case NodeType::ASSIGN:
-            return "ASSIGN";
-        case NodeType::UPDATE:
-            return "UPDATE";
-        case NodeType::EXPR:
-            return "EXPR";
-        case NodeType::IF:
+        case NodeType::IF_NODE:
             return "IF";
-        case NodeType::RETURN:
+        case NodeType::RETURN_NODE:
             return "RETURN";
-        case NodeType::TERM:
+        case NodeType::ASSIGN_NODE:
+            return "ASSIGN";
+        case NodeType::UPDATE_NODE:
+            return "UPDATE";
+        case NodeType::EXPR_NODE:
+            return "EXPR";
+        case NodeType::TERM_NODE:
             return "TERM";
-        case NodeType::FACTOR:
+        case NodeType::FACTOR_NODE:
             return "FACTOR";
-        case NodeType::VAR:
+        case NodeType::VAR_NODE:
             return "VAR";
-        case NodeType::NUM:
+        case NodeType::NUM_NODE:
             return "NUM";
-        case NodeType::OP:
+        case NodeType::OP_NODE:
             return "OP";
-        case NodeType::LIST:
+        case NodeType::STRING_NODE:
+            return "STRING";
+        case NodeType::LIST_NODE:
             return "LIST";
-        case NodeType::PRINT:   
+        case NodeType::PRINT_NODE:
             return "PRINT";
-        case NodeType::FUNCTION_CALL:
+        case NodeType::FUNCTION_CALL_NODE:
             return "FUNCTION_CALL";
     }
     return "UNKNOWN";
@@ -217,7 +220,8 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
         if((token.get_type() != TokenType::NUMBER_TOKEN 
             && token.get_type() != TokenType::OPERATOR_TOKEN
             && token.get_type() != TokenType::IDENTIFIER_TOKEN
-            && token.get_type() != TokenType::OPENPAR_TOKEN)
+            && token.get_type() != TokenType::OPENPAR_TOKEN
+            && token.get_type() != TokenType::STRING_TOKEN)
             || token.get_type() == TokenType::EOF_TOKEN){
             break;
         }
@@ -225,24 +229,24 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
 
 
         if(token.get_type() == TokenType::NUMBER_TOKEN){
-            Node* num = new Node(NodeType::NUM, token.get_value());
+            Node* num = new Node(NodeType::NUM_NODE, token.get_value());
             values.push(num);
         } 
         else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
             // Check if it is a function call
             if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){
                 place_token_back(tokens, token);
-                Node* function_call = new Node(NodeType::FUNCTION_CALL, "");
+                Node* function_call = new Node(NodeType::FUNCTION_CALL_NODE, "");
                 parse_function_call(tokens, function_call);
 
                 values.push(function_call);
             } else {
-                Node* var = new Node(NodeType::VAR, token.get_value());
+                Node* var = new Node(NodeType::VAR_NODE, token.get_value());
                 values.push(var);
             }   
         }
         else if(token.get_type() == TokenType::OPERATOR_TOKEN){
-            Node* op = new Node(NodeType::OP, token.get_value());
+            Node* op = new Node(NodeType::OP_NODE, token.get_value());
             while(ops.size() > 0 && precedence(ops.top()->get_value()) >= precedence(op->get_value())){
                 Node* top = ops.top();
                 ops.pop();
@@ -255,9 +259,13 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
             ops.push(op);
         }
         else if(token.get_type() == TokenType::OPENPAR_TOKEN){
-            Node* expr = new Node(NodeType::EXPR, "");
+            Node* expr = new Node(NodeType::EXPR_NODE, "");
             parse_expr(tokens, expr, true); // Nested expression
             values.push(expr);
+        }
+        else if(token.get_type() == TokenType::STRING_TOKEN){
+            Node* str = new Node(NodeType::STRING_NODE, token.get_value());
+            values.push(str);
         }
 
     }
@@ -289,12 +297,12 @@ void parse_function_call(std::vector<Token>& tokens, Node* current){
     }
 
     // Parse the parameters
-    Node* list = new Node(NodeType::LIST, "");
+    Node* list = new Node(NodeType::LIST_NODE, "");
     current->add_child(list);
     token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
         for(;;){ // Can have 0 or more parameters
-            Node* expr = new Node(NodeType::EXPR, "");
+            Node* expr = new Node(NodeType::EXPR_NODE, "");
             list->add_child(expr);
             parse_expr(tokens, expr);
 
@@ -318,18 +326,18 @@ void parse_function_call(std::vector<Token>& tokens, Node* current){
 }
 
 void parse_function(std::vector<Token>& tokens, Node* current){
-    Node* function = new Node(NodeType::FUNCTION, "");
+    Node* function = new Node(NodeType::FUNCTION_NODE, "");
     current->add_child(function);
 
     // Parse the parameters
-    Node* list = new Node(NodeType::LIST, "");
+    Node* list = new Node(NodeType::LIST_NODE, "");
     function->add_child(list);
     Token token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
         for(;;){ // Can have 0 or more parameters
             token = pop(tokens);
             if(token.get_type() == TokenType::IDENTIFIER_TOKEN){ // Identifier
-                Node* var = new Node(NodeType::VAR, token.get_value());
+                Node* var = new Node(NodeType::VAR_NODE, token.get_value());
                 list->add_child(var);
             } else {
                 parsing_error("Syntax error: expected identifier", token);
@@ -362,7 +370,7 @@ void parse_function(std::vector<Token>& tokens, Node* current){
         return; // Empty function
     }
 
-    Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+    Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
     function->add_child(stmt_list);
     parse_stmt_list(tokens, stmt_list);
 
@@ -375,16 +383,16 @@ void parse_function(std::vector<Token>& tokens, Node* current){
 // This is called when the let keyword is encountered
 void parse_assignment(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
-    Node* assign = new Node(NodeType::ASSIGN, "");
+    Node* assign = new Node(NodeType::ASSIGN_NODE, "");
     current->add_child(assign);
 
     if(token.get_type() == TokenType::IDENTIFIER_TOKEN){ 
-        Node* var = new Node(NodeType::VAR, token.get_value()); 
+        Node* var = new Node(NodeType::VAR_NODE, token.get_value()); 
         assign->add_child(var);
         token = pop(tokens);
 
         if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){ // Expression assignment
-            Node* expr = new Node(NodeType::EXPR, "");
+            Node* expr = new Node(NodeType::EXPR_NODE, "");
             assign->add_child(expr);
             parse_expr(tokens, expr);
         } 
@@ -405,7 +413,7 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
 }
 
 void parse_if(std::vector<Token>& tokens, Node* current){
-    Node* if_node = new Node(NodeType::IF, "");
+    Node* if_node = new Node(NodeType::IF_NODE, "");
     current->add_child(if_node);
 
     Token token = pop(tokens);
@@ -414,7 +422,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
     }
 
     // Parse the condition
-    Node* expr = new Node(NodeType::EXPR, "");
+    Node* expr = new Node(NodeType::EXPR_NODE, "");
     if_node->add_child(expr);
     parse_expr(tokens, expr);
 
@@ -430,7 +438,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
     }
 
     if(peek(tokens).get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are statements inside the if block
-        Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+        Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
         if_node->add_child(stmt_list);
         parse_stmt_list(tokens, stmt_list);
     }
@@ -464,7 +472,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
     }
 
     // Parse else block
-    Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+    Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
     if_node->add_child(stmt_list);
     parse_stmt_list(tokens, stmt_list);
 
@@ -477,11 +485,11 @@ void parse_if(std::vector<Token>& tokens, Node* current){
 }
 
 void parse_return(std::vector<Token>& tokens, Node* current){
-    Node* return_node = new Node(NodeType::RETURN, "");
+    Node* return_node = new Node(NodeType::RETURN_NODE, "");
     current->add_child(return_node);
 
     // Expression to return
-    Node* expr = new Node(NodeType::EXPR, "");
+    Node* expr = new Node(NodeType::EXPR_NODE, "");
     return_node->add_child(expr);
     parse_expr(tokens, expr);
 
@@ -498,10 +506,10 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected identifier", token);
     }
 
-    Node* update = new Node(NodeType::UPDATE, "");
+    Node* update = new Node(NodeType::UPDATE_NODE, "");
     current->add_child(update);
 
-    Node* var = new Node(NodeType::VAR, token.get_value()); // Variable to update
+    Node* var = new Node(NodeType::VAR_NODE, token.get_value()); // Variable to update
     update->add_child(var);
 
     token = pop(tokens);
@@ -509,7 +517,7 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected assignment operator", token);
     }
 
-    Node* expr = new Node(NodeType::EXPR, ""); // Expression to assign
+    Node* expr = new Node(NodeType::EXPR_NODE, ""); // Expression to assign
     update->add_child(expr);
     parse_expr(tokens, expr);
 
@@ -520,10 +528,10 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
 }
 
 void parse_print(std::vector<Token>& tokens, Node* current){
-    Node* print = new Node(NodeType::PRINT, "");
+    Node* print = new Node(NodeType::PRINT_NODE, "");
     current->add_child(print);
 
-    Node* expr = new Node(NodeType::EXPR, ""); // Expression to print
+    Node* expr = new Node(NodeType::EXPR_NODE, ""); // Expression to print
     print->add_child(expr);
     parse_expr(tokens, expr);
 
@@ -535,7 +543,7 @@ void parse_print(std::vector<Token>& tokens, Node* current){
 
 void parse_for(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
-    Node* for_node = new Node(NodeType::FOR, "");
+    Node* for_node = new Node(NodeType::FOR_NODE, "");
     current->add_child(for_node);
     if(token.get_type() != TokenType::OPENPAR_TOKEN){
         parsing_error("Syntax error: expected '('", token);
@@ -547,7 +555,7 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     // -----------------------------------------------------------
 
     // Parse the condition 
-    Node* condition = new Node(NodeType::EXPR, "");
+    Node* condition = new Node(NodeType::EXPR_NODE, "");
     for_node->add_child(condition);
     parse_expr(tokens, condition);
 
@@ -580,7 +588,7 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     }
 
     // Parse for block
-    Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+    Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
     for_node->add_child(stmt_list);
     parse_stmt_list(tokens, stmt_list);
 
@@ -627,7 +635,7 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current){
         return;
     }
 
-    Node* stmt = new Node(NodeType::STMT, "");
+    Node* stmt = new Node(NodeType::STMT_NODE, "");
     current->add_child(stmt);
     parse_stmt(tokens, stmt);
 
@@ -636,13 +644,13 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current){
         return;
     }
 
-    Node* stmt_list = new Node(NodeType::STMT_LIST, "");
+    Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
     current->add_child(stmt_list); 
     parse_stmt_list(tokens, stmt_list);
 }
 
 Node* parse(std::vector<Token> tokens, bool verbose = false){
-    Node* root = new Node(NodeType::STMT_LIST, "");
+    Node* root = new Node(NodeType::STMT_LIST_NODE, "");
     parse_stmt_list(tokens, root);
 
     // Print the AST

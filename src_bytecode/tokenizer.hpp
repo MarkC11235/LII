@@ -142,6 +142,12 @@ public:
 
 // -------------------------------------------------------------------
 
+void tokenization_error(std::string error_message, int line_number, Token token){
+    std::cout << "Error on line " << line_number << ": " << error_message << std::endl;
+    token.print();
+    exit(1);
+}
+
 // Tokenizer ---------------------------------------------------------
 std::vector<Token> analyze(std::string input, int line_number){
     std::vector<Token> tokens;
@@ -235,13 +241,11 @@ std::vector<Token> analyze(std::string input, int line_number){
             {
                 std::string string = "";
                 i++;
-                while(i < int(input.length()) && input[i] != '"'){
-                    std::cout << input[i] << std::endl;
-                    std::cout << i << std::endl;
+                while(input[i] != '"'){
                     string += input[i];
                     i++;
                 }
-                std::cout << string << std::endl;
+                //std::cout << string << std::endl;
                 tokens.push_back(Token(TokenType::STRING_TOKEN, string, line_number));
             }
                 break;
@@ -257,9 +261,13 @@ std::vector<Token> analyze(std::string input, int line_number){
                 }
                 else if(isalpha(input[i])){
                     std::string identifier = "";
-                    while(i < int(input.length()) && (isalnum(input[i]) || input[i] == '_')){
+                    while(  i < int(input.length()) 
+                            && (isalnum(input[i]) || input[i] == '_')
+                            && input[i] != ' ')
+                    {
                         identifier += input[i];
                         i++;
+                        //std::cout << identifier << std::endl;
                     }
                     i--;
                     if(identifier == "if"){
@@ -287,9 +295,6 @@ std::vector<Token> analyze(std::string input, int line_number){
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
                     }
                 }
-                else if(input[i] != ' '){
-                    return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "error", line_number)};
-                }
         }
     }
     return tokens;
@@ -303,49 +308,18 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false){
         return std::vector<Token>();
     }
 
-    std::string token;
+    std::string current_line;
     std::vector<Token> tokens;
     int line_number = 0;
 
-    while (std::getline(File, token)) {
-        // Remove the newline character from the end of the line
-        if(token.find("\n") == token.length() - 1){
-            token = token.substr(0, token.length() - 1);
-        }
-       
-        //If there is a comment in the line, remove the comment
-        size_t comment_pos = token.find("#");
-        if(comment_pos != std::string::npos){
-            token = token.substr(0, comment_pos);
-        }
-
-        while(token.length() > 0){
-            // Find the next space in the line, everything before the space is a token
-            size_t pos = token.find(" ");
-            std::string token_value;
-            if(pos != std::string::npos){
-                token_value = token.substr(0, pos);
-                token = token.substr(pos + 1);
-            } else {
-                token_value = token;
-                token = "";
-            }
-
-            // Remove whitespace from the token
-            token_value = removeWhitespace(token_value);
-
-            // Analyze the token, 
-            std::vector<Token> analyzed_tokens = analyze(token_value, line_number);
-            if(analyzed_tokens.size() == 1 && analyzed_tokens[0].get_type() == TokenType::ERROR_TOKEN){ //analyze returns a single error token if there is an error
-                std::cout << "Error: Invalid token " << token_value << " on line " << line_number << std::endl;
-                return std::vector<Token>();
-            }
-
-            for(Token token : analyzed_tokens){
-                tokens.push_back(token);
-            }
-        }
+    // create a vector of non-empty lines
+    while (std::getline(File, current_line)) {
         line_number++;
+        std::vector<Token> line_tokens = analyze(current_line, line_number);
+        if(line_tokens.size() == 1 && line_tokens[0].get_type() == TokenType::ERROR_TOKEN){
+            tokenization_error("Invalid token", line_number, line_tokens[0]);
+        }
+        tokens.insert(tokens.end(), line_tokens.begin(), line_tokens.end());
     }
 
     // Add an EOF token to the end of the file

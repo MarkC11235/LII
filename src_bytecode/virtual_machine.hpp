@@ -6,24 +6,6 @@
 #include "bytecode_generator.hpp"
 
 // Data Structures ---------------------------------------------------
-enum Value_Type{
-    NUMBER,
-    BOOL,
-    STRING,
-    STRUCT,
-};
-
-struct Data{
-    double number;
-    bool boolean;
-    std::string string;
-};
-
-struct Value{
-    Value_Type type;
-    Data data;
-};
-
 struct function_frame{
     function* func;
     int current_scope;
@@ -99,70 +81,6 @@ bool increase_ip(int offset){
     frame->ip += offset;
 
     return true;
-}
-
-bool VALUE_AS_BOOL(Value value){
-    switch(value.type){
-        case Value_Type::NUMBER:
-            return value.data.number != 0;
-        case Value_Type::BOOL:
-            return value.data.boolean;
-        case Value_Type::STRING:
-            return value.data.string == "true";
-        case Value_Type::STRUCT:
-            return false;
-        default:
-            return false; // Should never reach here, but to avoid warnings
-    }
-}
-
-double VALUE_AS_NUMBER(Value value){
-    switch(value.type){
-        case Value_Type::NUMBER:
-            return value.data.number;
-        case Value_Type::BOOL:
-            return value.data.boolean ? 1 : 0;
-        case Value_Type::STRING:
-            return std::stod(value.data.string);
-        case Value_Type::STRUCT:
-            return 0;
-        default:
-            return 0; // Should never reach here, but to avoid warnings
-    }
-}
-
-std::string VALUE_AS_STRING(Value value){
-    switch(value.type){
-        case Value_Type::NUMBER:
-            return std::to_string(value.data.number);
-        case Value_Type::BOOL:
-            return value.data.boolean ? "true" : "false";
-        case Value_Type::STRING:
-            return value.data.string;
-        case Value_Type::STRUCT:
-            return "STRUCT";
-        default:
-            return "UNKNOWN"; // Should never reach here, but to avoid warnings
-    }
-}
-
-void print_value(Value value){
-    switch(value.type){
-        case Value_Type::NUMBER:
-            std::cout << value.data.number;
-            break;
-        case Value_Type::BOOL:
-            std::cout << (value.data.boolean ? "true" : "false");
-            break;
-        case Value_Type::STRING:
-            std::cout << value.data.string;
-            break;
-        case Value_Type::STRUCT:
-            std::cout << "STRUCT";
-            break;
-        default:
-            std::cout << "UNKNOWN"; // Should never reach here, but to avoid warnings
-    }
 }
 
 //get ip from the current function frame
@@ -295,7 +213,7 @@ void run_vm(bool verbose = false){
             // Memory operations
             case OpCode::OP_LOAD:
                 //push(vals.values[get_ip()[1]]);
-                push(Value{Value_Type::NUMBER, {get_constant(get_ip()[1])}});
+                push(get_constant(get_ip()[1]));
                 increase_ip(1);
                 break;
             case OpCode::OP_STORE_VAR:
