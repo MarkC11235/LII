@@ -1,8 +1,5 @@
-let test(x){
-    return x;
-};
+print $str_len("Hello, World!"); # Output: 13
 
-print test(3); # 3
-print $test(); # 3.14
+print $str_concat("Hello, ", "World!"); # Output: Hello, World!
 
-print $inc(3); # 4
+print $str_substr("Hello, World!", 7, 5); # Output: World

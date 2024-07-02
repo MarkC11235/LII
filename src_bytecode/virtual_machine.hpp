@@ -373,6 +373,39 @@ void run_vm(bool verbose = false){
                     case 1:
                         push({Value_Type::NUMBER, inc(VALUE_AS_NUMBER(pop()))});
                         break;
+                    case 2:
+                    {
+                        Value a = pop();
+                        Value b = pop();
+                        if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
+                            push({Value_Type::STRING, str_concat(VALUE_AS_STRING(b), VALUE_AS_STRING(a))}); // reverse order because of the stack
+                        } else {
+                            vm_error("Invalid types for string concatenation");
+                        }
+                        break;
+                    }
+                    case 3:
+                    {
+                        Value length = pop();
+                        Value start = pop();
+                        Value str = pop();
+                        if(str.type == Value_Type::STRING && start.type == Value_Type::NUMBER && length.type == Value_Type::NUMBER){
+                            push({Value_Type::STRING, str_substr(VALUE_AS_STRING(str), (int)VALUE_AS_NUMBER(start), (int)VALUE_AS_NUMBER(length))});
+                        } else {
+                            vm_error("Invalid types for string slicing");
+                        }
+                        break;
+                    }
+                    case 4:
+                    {
+                        Value str = pop();
+                        if(str.type == Value_Type::STRING){
+                            push({Value_Type::NUMBER, (double)str_len(VALUE_AS_STRING(str))});
+                        } else {
+                            vm_error("Invalid types for string length");
+                        }
+                        break;
+                    }
                     default:
                         vm_error("Unknown std lib function");
                 }
