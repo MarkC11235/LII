@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <variant>
+#include <unordered_map>
 
 #include "parser.hpp"
 
@@ -16,6 +17,13 @@ enum OpCode{
     OP_SUB,
     OP_MUL,
     OP_DIV,
+    //Comparison
+    OP_EQ,
+    OP_NEQ,
+    OP_GT,
+    OP_LT,
+    OP_GTEQ,
+    OP_LTEQ,
     // Variables
     OP_LOAD, // push a value from the values array to the stack, index is the next byte
     OP_STORE_VAR, // store a value from the stack to the variables map
@@ -31,6 +39,20 @@ enum OpCode{
     OP_DEC_SCOPE,
     // Output
     OP_PRINT
+};
+
+// For athritmetic and comparison operations
+std::unordered_map<std::string, OpCode> opCodeMap = { 
+    {"+", OpCode::OP_ADD},
+    {"-", OpCode::OP_SUB},
+    {"*", OpCode::OP_MUL},
+    {"/", OpCode::OP_DIV},
+    {"==", OpCode::OP_EQ},
+    {"!=", OpCode::OP_NEQ},
+    {">", OpCode::OP_GT},
+    {"<", OpCode::OP_LT},
+    {">=", OpCode::OP_GTEQ},
+    {"<=", OpCode::OP_LTEQ}
 };
 
 
@@ -95,7 +117,9 @@ double VALUE_AS_NUMBER(Value value){
 
 std::string VALUE_AS_STRING(Value value){
     switch(value.type){
-        case NUMBER:
+        case NUMBER: // TODO: Improve this to be faster, this is just a quick fix to remove trailing zeros
+                     // This is because the tests expect the output to not have trailing zeros
+                     // Could use some fancy math things to remove trailing zeros
         {
             std::string str = std::to_string(std::get<double>(value.data));
             if(str.find('.') != std::string::npos){
@@ -161,6 +185,26 @@ void display_bytecode(function* func){
                 break;
             case OpCode::OP_DIV:
                 std::cout << "OP_DIV" << std::endl;
+                break;
+
+            // Comparison
+            case OpCode::OP_EQ:
+                std::cout << "OP_EQ" << std::endl;
+                break;
+            case OpCode::OP_NEQ:
+                std::cout << "OP_NEQ" << std::endl;
+                break;
+            case OpCode::OP_GT: 
+                std::cout << "OP_GT" << std::endl;
+                break;
+            case OpCode::OP_LT:
+                std::cout << "OP_LT" << std::endl;
+                break;
+            case OpCode::OP_GTEQ:
+                std::cout << "OP_GTEQ" << std::endl;
+                break;
+            case OpCode::OP_LTEQ:
+                std::cout << "OP_LTEQ" << std::endl;
                 break;
 
             // Variables
@@ -458,24 +502,14 @@ void interpret_op(Node* node, function* func){
                 break;
         }
 
-        // Operator
-        switch(node->get_value()[0]){
-            case '+':
-                WRITE_BYTE(OpCode::OP_ADD, func);
-                break;
-            case '-':
-                WRITE_BYTE(OpCode::OP_SUB, func);
-                break;
-            case '*':
-                WRITE_BYTE(OpCode::OP_MUL, func);
-                break;
-            case '/':
-                WRITE_BYTE(OpCode::OP_DIV, func);
-                break;
-            default:
-                interpretation_error("Invalid operator", node);
-                break;
+
+        std::string opStr = node->get_value();
+        
+        if(opCodeMap.find(opStr) == opCodeMap.end()){
+            interpretation_error("Invalid operator", node);
         }
+
+        WRITE_BYTE(opCodeMap[opStr], func);
     }
     else{
         interpretation_error("Operator doesn't start with OP Node", node);

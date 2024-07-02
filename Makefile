@@ -20,7 +20,12 @@ endif
 
 run:
 	@echo -e "Running $(INPUT_FILE)\n"
+	@$(EXE) $(INPUT_FILE) 
+
+runv:
+	@echo -e "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -v
+
 
 test:
 	@for i in tests_2/*.calc; do \

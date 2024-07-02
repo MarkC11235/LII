@@ -185,7 +185,7 @@ std::vector<Token> analyze(std::string input, int line_number){
                 break;
             case '=':
                 if(i + 1 < int(input.length()) && input[i + 1] == '='){
-                    tokens.push_back(Token(TokenType::EQUALS_TOKEN, "==", line_number));
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "==", line_number));
                     i++;
                 }
                 else{
@@ -212,25 +212,25 @@ std::vector<Token> analyze(std::string input, int line_number){
                 break;
             case '<':
                 if(i + 1 < int(input.length()) && input[i + 1] == '='){
-                    tokens.push_back(Token(TokenType::LESS_THAN_OR_EQUAL_TOKEN, "<=", line_number));
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "<=", line_number));
                     i++;
                 }
                 else{
-                    tokens.push_back(Token(TokenType::LESS_THAN_TOKEN, "<", line_number));
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "<", line_number));
                 }
                 break;
             case '>':
                 if(i + 1 < int(input.length()) && input[i + 1] == '='){
-                    tokens.push_back(Token(TokenType::GREATER_THAN_OR_EQUAL_TOKEN, ">=", line_number));
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, ">=", line_number));
                     i++;
                 }
                 else{
-                    tokens.push_back(Token(TokenType::GREATER_THAN_TOKEN, ">", line_number));
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, ">", line_number));
                 }
                 break;
             case '!':
                 if(i + 1 < int(input.length()) && input[i + 1] == '='){
-                    tokens.push_back(Token(TokenType::NOT_EQUAL_TOKEN, "!=", line_number));
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "!=", line_number));
                     i++;
                 }
                 else{

@@ -214,6 +214,76 @@ void run_vm(bool verbose = false){
                 break;
             }
 
+            // Comparison operations
+            // Can only compare numbers
+            case OpCode::OP_EQ:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)){
+                    vm_error("Invalid types for comparison");
+                }
+                    
+                push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) == VALUE_AS_NUMBER(b))});
+                break;
+            }
+            case OpCode::OP_NEQ:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)){
+                    vm_error("Invalid types for comparison");
+                }
+
+                push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) != VALUE_AS_NUMBER(b))});
+                break;
+            }
+            case OpCode::OP_GT:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)){
+                    vm_error("Invalid types for comparison");
+                }
+                
+                push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) > VALUE_AS_NUMBER(b))});
+                break;
+            }
+            case OpCode::OP_LT:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)){
+                    vm_error("Invalid types for comparison");
+                }
+                
+                push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) < VALUE_AS_NUMBER(b))});
+                break;
+            }
+            case OpCode::OP_GTEQ:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)){
+                    vm_error("Invalid types for comparison");
+                }
+                
+                push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) >= VALUE_AS_NUMBER(b))});
+                break;
+            }
+            case OpCode::OP_LTEQ:
+            {
+                Value a = pop();
+                Value b = pop();
+                if(!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)){
+                    vm_error("Invalid types for comparison");
+                }
+                
+                push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) <= VALUE_AS_NUMBER(b))});
+                break;
+            }
+
+
             // Memory operations
             case OpCode::OP_LOAD:
                 //push(vals.values[get_ip()[1]]);

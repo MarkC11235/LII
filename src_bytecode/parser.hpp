@@ -115,10 +115,14 @@ void place_token_back(std::vector<Token>& tokens, Token token){
 }
 
 int precedence(std::string op){
-    if(op == "+" || op == "-"){
-        return 1;
-    } else if(op == "*" || op == "/"){
-        return 2;
+    if(op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!="){
+        return 7;
+    }
+    else if(op == "+" || op == "-"){
+        return 9;
+    } 
+    else if(op == "*" || op == "/"){
+        return 10;
     }
     return 0;
 }
@@ -211,63 +215,66 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
     std::stack<Node*> ops;
     std::stack<Node*> values;
 
-    for(;;){
-        Token token = peek(tokens);
+    bool loop = true;
+
+    while(loop){
+        Token token = pop(tokens);
         if(token.get_type() == TokenType::CLOSEPAR_TOKEN && nested){ // End of nested expression
-            pop(tokens);
             break;
         }
-        if((token.get_type() != TokenType::NUMBER_TOKEN 
-            && token.get_type() != TokenType::OPERATOR_TOKEN
-            && token.get_type() != TokenType::IDENTIFIER_TOKEN
-            && token.get_type() != TokenType::OPENPAR_TOKEN
-            && token.get_type() != TokenType::STRING_TOKEN)
-            || token.get_type() == TokenType::EOF_TOKEN){
-            break;
-        }
-        token = pop(tokens);
 
+        TokenType type = token.get_type();
+        std::string value = token.get_value();
 
-        if(token.get_type() == TokenType::NUMBER_TOKEN){
-            Node* num = new Node(NodeType::NUM_NODE, token.get_value());
-            values.push(num);
-        } 
-        else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-            // Check if it is a function call
-            if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){
-                place_token_back(tokens, token);
-                Node* function_call = new Node(NodeType::FUNCTION_CALL_NODE, "");
-                parse_function_call(tokens, function_call);
-
-                values.push(function_call);
-            } else {
-                Node* var = new Node(NodeType::VAR_NODE, token.get_value());
-                values.push(var);
-            }   
-        }
-        else if(token.get_type() == TokenType::OPERATOR_TOKEN){
-            Node* op = new Node(NodeType::OP_NODE, token.get_value());
-            while(ops.size() > 0 && precedence(ops.top()->get_value()) >= precedence(op->get_value())){
-                Node* top = ops.top();
-                ops.pop();
-                top->add_child(values.top());
-                values.pop();
-                top->add_child(values.top());
-                values.pop();
-                values.push(top);
+        switch(type){
+            case TokenType::NUMBER_TOKEN: {
+                Node* num = new Node(NodeType::NUM_NODE, value);
+                values.push(num);
+                break;
             }
-            ops.push(op);
+            case TokenType::IDENTIFIER_TOKEN: {
+                if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){
+                    place_token_back(tokens, token);
+                    Node* function_call = new Node(NodeType::FUNCTION_CALL_NODE, "");
+                    parse_function_call(tokens, function_call);
+                    values.push(function_call);
+                } else {
+                    Node* var = new Node(NodeType::VAR_NODE, value);
+                    values.push(var);
+                }
+                break;
+            }
+            case TokenType::OPERATOR_TOKEN: {
+                Node* op = new Node(NodeType::OP_NODE, value);
+                while(ops.size() > 0 && precedence(ops.top()->get_value()) >= precedence(op->get_value())){
+                    Node* top = ops.top();
+                    ops.pop();
+                    top->add_child(values.top());
+                    values.pop();
+                    top->add_child(values.top());
+                    values.pop();
+                    values.push(top);
+                }
+                ops.push(op);
+                break;
+            }
+            case TokenType::OPENPAR_TOKEN: {
+                Node* expr = new Node(NodeType::EXPR_NODE, "");
+                parse_expr(tokens, expr, true); // Nested expression
+                values.push(expr);
+                break;
+            }
+            case TokenType::STRING_TOKEN: {
+                Node* str = new Node(NodeType::STRING_NODE, value);
+                values.push(str);
+                break;
+            }
+            default: {
+                place_token_back(tokens, token);
+                loop = false;
+                break;
+            }
         }
-        else if(token.get_type() == TokenType::OPENPAR_TOKEN){
-            Node* expr = new Node(NodeType::EXPR_NODE, "");
-            parse_expr(tokens, expr, true); // Nested expression
-            values.push(expr);
-        }
-        else if(token.get_type() == TokenType::STRING_TOKEN){
-            Node* str = new Node(NodeType::STRING_NODE, token.get_value());
-            values.push(str);
-        }
-
     }
 
     while(ops.size() > 0){

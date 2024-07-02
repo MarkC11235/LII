@@ -1,3 +1,4 @@
 If an expr evaluates to 0 then its false, else its true.
 
-All variables are currently global.
+Booleans should just be syntactic sugar for 0 and 1.
+No need to implement currently.
