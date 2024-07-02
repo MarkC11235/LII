@@ -527,11 +527,6 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
     Node* expr = new Node(NodeType::EXPR_NODE, ""); // Expression to assign
     update->add_child(expr);
     parse_expr(tokens, expr);
-
-    token = pop(tokens);
-    if(token.get_type() != TokenType::SEMICOLON_TOKEN){
-        parsing_error("Syntax error: expected ';'", token);
-    }
 }
 
 void parse_print(std::vector<Token>& tokens, Node* current){
@@ -627,6 +622,11 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
         case TokenType::IDENTIFIER_TOKEN:
             place_token_back(tokens, token);
             parse_variable_update(tokens, current);
+            // Check if the statement ends with a semicolon
+            token = pop(tokens);
+            if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+                parsing_error("Syntax error: expected ';'", token);
+            }
             break;
         case TokenType::FOR_TOKEN:
             parse_for(tokens, current);
