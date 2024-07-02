@@ -4,6 +4,7 @@
 #include <cstdint> // int8_t
 
 #include "bytecode_generator.hpp"
+#include "std_lib.hpp"
 
 // Data Structures ---------------------------------------------------
 struct function_frame{
@@ -356,6 +357,28 @@ void run_vm(bool verbose = false){
 
                 get_current_function_frame()->ip = func->code - 1; // -1 because the ip will be increased by 1
               
+                break;
+            }
+            
+            case OpCode::OP_STD_LIB_CALL:
+            {
+                if(verbose){
+                    std::cout << "Calling std lib function: " << STD_LIB_FUNCTION_NAMES[get_ip()[1]] << std::endl;
+                }
+
+                switch(get_ip()[1]){
+                    case 0:
+                        push({Value_Type::NUMBER, test()});
+                        break;
+                    case 1:
+                        push({Value_Type::NUMBER, inc(VALUE_AS_NUMBER(pop()))});
+                        break;
+                    default:
+                        vm_error("Unknown std lib function");
+                }
+
+                increase_ip(1);
+
                 break;
             }
 

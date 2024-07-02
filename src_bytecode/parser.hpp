@@ -13,6 +13,7 @@ enum NodeType {
     // PROGRAM
     PROGRAM_NODE,
     FUNCTION_NODE,
+    STD_LIB_CALL_NODE,
     STMT_LIST_NODE,
     STMT_NODE,
     // CONTROL FLOW
@@ -52,6 +53,8 @@ std::string node_type_to_string(NodeType type){
             return "PROGRAM";
         case NodeType::FUNCTION_NODE:
             return "FUNCTION";
+        case NodeType::STD_LIB_CALL_NODE:
+            return "STD_LIB_CALL";
         case NodeType::STMT_LIST_NODE:
             return "STMT_LIST";
         case NodeType::STMT_NODE:
@@ -204,6 +207,7 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current);
 void parse_stmt(std::vector<Token>& tokens, Node* current);
 void parse_expr(std::vector<Token>& tokens, Node* current, bool nested); 
 void parse_function_call(std::vector<Token>& tokens, Node* current);
+void parse_std_lib_call(std::vector<Token>& tokens, Node* current);
 void parse_function(std::vector<Token>& tokens, Node* current);
 void parse_assignment(std::vector<Token>& tokens, Node* current);
 void parse_if(std::vector<Token>& tokens, Node* current);
@@ -230,6 +234,14 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
             case TokenType::NUMBER_TOKEN: {
                 Node* num = new Node(NodeType::NUM_NODE, value);
                 values.push(num);
+                break;
+            }
+            case TokenType::STD_LIB_TOKEN: {
+                Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, value);
+                Token next_token = peek(tokens); 
+                
+                parse_std_lib_call(tokens, std_lib);
+                values.push(std_lib);
                 break;
             }
             case TokenType::IDENTIFIER_TOKEN: {
@@ -330,6 +342,46 @@ void parse_function_call(std::vector<Token>& tokens, Node* current){
     }
 
 
+}
+
+void parse_std_lib_call(std::vector<Token>& tokens, Node* current){
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
+    }
+
+    current->add_value(token.get_value());
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+        parsing_error("Syntax error: expected '('", token);
+    }
+
+    // Parse the parameters
+    Node* list = new Node(NodeType::LIST_NODE, "");
+    current->add_child(list);
+    token = peek(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
+        for(;;){ // Can have 0 or more parameters
+            Node* expr = new Node(NodeType::EXPR_NODE, "");
+            list->add_child(expr);
+            parse_expr(tokens, expr);
+
+            token = peek(tokens);
+            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
+                break;
+            } else if(token.get_type() == TokenType::COMMA_TOKEN){
+                pop(tokens);
+            } else {
+                parsing_error("Syntax error: expected ',' or ')'", token);
+            }
+        }
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
+    }
 }
 
 void parse_function(std::vector<Token>& tokens, Node* current){

@@ -35,6 +35,7 @@ enum TokenType {
     IDENTIFIER_TOKEN,
     STRING_TOKEN,
     FUNCTION_TOKEN,
+    STD_LIB_TOKEN,
     DIRECTIVE_TOKEN,
     ERROR_TOKEN,
     EOF_TOKEN
@@ -97,6 +98,8 @@ std::string token_type_to_string(TokenType type){
             return "STRING";
         case TokenType::FUNCTION_TOKEN:
             return "FUNCTION";
+        case TokenType::STD_LIB_TOKEN:
+            return "STD_LIB";
         case TokenType::DIRECTIVE_TOKEN:
             return "DIRECTIVE";
         case TokenType::ERROR_TOKEN:
@@ -156,7 +159,7 @@ std::vector<Token> analyze(std::string input, int line_number){
             case '#':
                 return tokens; // Ignore the rest of the line if a comment is found
             case '$':
-                tokens.push_back(Token(TokenType::FUNCTION_TOKEN, "$", line_number));
+                tokens.push_back(Token(TokenType::STD_LIB_TOKEN, "$", line_number));
                 break;
             case ',':
                 tokens.push_back(Token(TokenType::COMMA_TOKEN, ",", line_number));

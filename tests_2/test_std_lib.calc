@@ -3,6 +3,7 @@ let test(x){
 };
 
 print test(3); # 3
-print $test(); # 3.14
 
+
+print $test(); # 3.14
 print $inc(3); # 4

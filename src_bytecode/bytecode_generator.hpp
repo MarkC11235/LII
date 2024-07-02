@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 #include "parser.hpp"
+#include "std_lib.hpp"
 
 enum OpCode{
     // Arithmetic
@@ -38,7 +39,9 @@ enum OpCode{
     OP_INC_SCOPE,
     OP_DEC_SCOPE,
     // Output
-    OP_PRINT
+    OP_PRINT,
+    // Stdlib
+    OP_STD_LIB_CALL
 };
 
 // For athritmetic and comparison operations
@@ -268,6 +271,14 @@ void display_bytecode(function* func){
                 std::cout << "OP_PRINT" << std::endl;
                 break;
 
+            // Stdlib
+            case OpCode::OP_STD_LIB_CALL:
+                std::cout << "OP_STD_LIB_CALL";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)func->code[++i];
+                std::cout << "          ";
+                std::cout << "Name: " << STD_LIB_FUNCTION_NAMES[(int)func->code[i]] << std::endl;                
+                break;
 
             default:
                 std::cout << "Unknown opcode" << std::endl;
@@ -429,79 +440,77 @@ void interpret_function_call(Node* node, function* func){
     WRITE_BYTE(get_variable_index(name), func);
 }
 
+void interpret_std_lib_call(Node* node, function* func){
+    if(node->get_type() != NodeType::STD_LIB_CALL_NODE){
+        interpretation_error("Std Lib call doesn't start with STD_LIB_CALL Node", node);
+    }
+
+    //get the name of the function
+    std::string name = node->get_value(1);
+
+    //push the arguments to the stack
+    for(int i = 0; i < (int)node->get_child(0)->get_children().size(); i++){
+        interpret_expr(node->get_child(0)->get_child(i), func);
+    }
+
+    WRITE_BYTE(OpCode::OP_STD_LIB_CALL, func);
+    // look up the function in the std lib function names array
+    for(int i = 0; i < (int)STD_LIB_FUNCTION_NAMES.size(); i++){
+        if(name == STD_LIB_FUNCTION_NAMES[i]){
+            WRITE_BYTE(i, func);
+            return;
+        }
+    }
+    interpretation_error("Std Lib function not found: " + name, node);
+}
+
+void choose_expr_operand(Node* node, function* func){
+    switch(node->get_type()){
+            case NodeType::OP_NODE:
+                interpret_op(node, func);
+                break;
+            case NodeType::NUM_NODE:
+                //vals.values[vals.count++] = std::stod(l_child->get_value());
+                WRITE_VALUE(std::stod(node->get_value()));
+                WRITE_BYTE(OpCode::OP_LOAD, func);
+                WRITE_BYTE(vals.count - 1, func);
+                break;
+            case NodeType::VAR_NODE:
+                WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
+                if(get_variable_index(node->get_value()) == -1){
+                    interpretation_error("Variable not found", node);
+                }
+                WRITE_BYTE(get_variable_index(node->get_value()), func);
+                break;
+            case NodeType::FUNCTION_CALL_NODE:
+                interpret_function_call(node, func);
+                break;
+            case NodeType::STD_LIB_CALL_NODE:
+                interpret_std_lib_call(node, func);
+                break;
+            case NodeType::EXPR_NODE:
+                interpret_expr(node, func);
+                break;
+            case NodeType::STRING_NODE:
+                //std::cout << l_child->get_value() << std::endl;
+                WRITE_VALUE(node->get_value());
+                WRITE_BYTE(OpCode::OP_LOAD, func);
+                WRITE_BYTE(vals.count - 1, func);
+                break;
+            default:
+                interpretation_error("Invalid child type for OP Node", node);
+                break;
+        }
+}
+
 void interpret_op(Node* node, function* func){
     if(node->get_type() == NodeType::OP_NODE){
         Node* l_child = node->get_child(0);
         Node* r_child = node->get_child(1);
 
-        switch(l_child->get_type()){
-            case NodeType::OP_NODE:
-                interpret_op(l_child, func);
-                break;
-            case NodeType::NUM_NODE:
-                //vals.values[vals.count++] = std::stod(l_child->get_value());
-                WRITE_VALUE(std::stod(l_child->get_value()));
-                WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(vals.count - 1, func);
-                break;
-            case NodeType::VAR_NODE:
-                WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
-                if(get_variable_index(l_child->get_value()) == -1){
-                    interpretation_error("Variable not found", node);
-                }
-                WRITE_BYTE(get_variable_index(l_child->get_value()), func);
-                break;
-            case NodeType::FUNCTION_CALL_NODE:
-                interpret_function_call(l_child, func);
-                break;
-            case NodeType::EXPR_NODE:
-                interpret_expr(l_child, func);
-                break;
-            case NodeType::STRING_NODE:
-                //std::cout << l_child->get_value() << std::endl;
-                WRITE_VALUE(l_child->get_value());
-                WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(vals.count - 1, func);
-                break;
-            default:
-                interpretation_error("Invalid child type for OP Node", node);
-                break;
-        }
+        choose_expr_operand(l_child, func);
 
-        switch(r_child->get_type()){
-            case NodeType::OP_NODE:
-                interpret_op(r_child, func);
-                break;
-            case NodeType::NUM_NODE:
-                //vals.values[vals.count++] = std::stod(r_child->get_value());
-                WRITE_VALUE(std::stod(r_child->get_value()));
-                WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(vals.count - 1, func);
-                break;
-            case NodeType::VAR_NODE:
-                WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
-                if(get_variable_index(r_child->get_value()) == -1){
-                    interpretation_error("Variable not found", node);
-                }
-                WRITE_BYTE(get_variable_index(r_child->get_value()), func);
-                break;
-            case NodeType::FUNCTION_CALL_NODE:
-                interpret_function_call(r_child, func);
-                break;
-            case NodeType::EXPR_NODE:
-                interpret_expr(r_child, func);
-                break;
-            case NodeType::STRING_NODE:
-                //std::cout << r_child->get_value() << std::endl;
-                WRITE_VALUE(r_child->get_value());
-                WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(vals.count - 1, func);
-                break;
-            default:
-                interpretation_error("Invalid child type for OP Node", node);
-                break;
-        }
-
+        choose_expr_operand(r_child, func);
 
         std::string opStr = node->get_value();
         
@@ -518,33 +527,7 @@ void interpret_op(Node* node, function* func){
 
 void interpret_expr(Node* node, function* func){
     if(node->get_type() == NodeType::EXPR_NODE){
-        if(node->get_child(0)->get_type() == NodeType::OP_NODE){ // Expression with operator
-            interpret_op(node->get_child(0), func);
-        }
-        else if(node->get_child(0)->get_type() == NodeType::NUM_NODE){ // Single number
-            WRITE_VALUE(std::stod(node->get_child(0)->get_value()));
-            WRITE_BYTE(OpCode::OP_LOAD, func);
-            WRITE_BYTE(vals.count - 1, func);
-        }
-        else if(node->get_child(0)->get_type() == NodeType::VAR_NODE){ // Single variable
-            WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
-            if(get_variable_index(node->get_child(0)->get_value()) == -1){
-                interpretation_error("Variable not found", node);
-            }
-            WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
-        }
-        else if(node->get_child(0)->get_type() == NodeType::FUNCTION_CALL_NODE){ // Single function call
-            interpret_function_call(node->get_child(0), func);
-        }
-        else if(node->get_child(0)->get_type() == NodeType::STRING_NODE){ // Single string
-            //std::cout << node->get_child(0)->get_value() << std::endl;
-            WRITE_VALUE(node->get_child(0)->get_value());
-            WRITE_BYTE(OpCode::OP_LOAD, func);
-            WRITE_BYTE(vals.count - 1, func);
-        }
-        else{
-            interpretation_error("Expression doesn't start with OP Node, NUM Node, VAR Node, FUNCTION CALL Node, or STRING Node", node);
-        }
+        choose_expr_operand(node->get_child(0), func);
     }
     else{
         interpretation_error("Expression doesn't start with EXPR Node", node);
