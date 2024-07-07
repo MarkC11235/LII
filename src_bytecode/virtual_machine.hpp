@@ -4,7 +4,7 @@
 #include <cstdint> // int8_t
 
 #include "bytecode_generator.hpp"
-#include "std_lib.hpp"
+#include "./std_lib/std_lib.hpp"
 
 // Data Structures ---------------------------------------------------
 struct function_frame{
@@ -367,13 +367,17 @@ void run_vm(bool verbose = false){
                 }
 
                 switch(get_ip()[1]){
-                    case 0:
+                    //tests ------------------------------------------------
+                    case 0: // test
                         push({Value_Type::NUMBER, test()});
                         break;
-                    case 1:
+                    case 1: // inc
                         push({Value_Type::NUMBER, inc(VALUE_AS_NUMBER(pop()))});
                         break;
-                    case 2:
+                    // -----------------------------------------------------
+
+                    // string functions -----------------------------------
+                    case 2: // str_concat
                     {
                         Value a = pop();
                         Value b = pop();
@@ -384,7 +388,7 @@ void run_vm(bool verbose = false){
                         }
                         break;
                     }
-                    case 3:
+                    case 3: // str_substr
                     {
                         Value length = pop();
                         Value start = pop();
@@ -396,7 +400,7 @@ void run_vm(bool verbose = false){
                         }
                         break;
                     }
-                    case 4:
+                    case 4: // str_len
                     {
                         Value str = pop();
                         if(str.type == Value_Type::STRING){
@@ -406,7 +410,7 @@ void run_vm(bool verbose = false){
                         }
                         break;
                     }
-                    case 5:
+                    case 5: // char_at
                     {
                         Value index = pop();
                         Value str = pop();
@@ -417,7 +421,7 @@ void run_vm(bool verbose = false){
                         }
                         break;
                     }
-                    case 6:
+                    case 6: // replace_char
                     {
                         Value c = pop();
                         Value index = pop();
@@ -429,6 +433,22 @@ void run_vm(bool verbose = false){
                         }
                         break;
                     }
+                    // -----------------------------------------------------
+
+                    // custom functions -----------------------------------
+                    case 7: // print_colored_text
+                    {
+                        Value color = pop();
+                        Value text = pop();
+                        if(text.type == Value_Type::STRING && color.type == Value_Type::STRING){
+                            print_colored_text(VALUE_AS_STRING(text), VALUE_AS_STRING(color));
+                        } else {
+                            vm_error("Invalid types for colored text printing");
+                        }
+                        break;
+                    }
+                    // -----------------------------------------------------
+                    
                     default:
                         vm_error("Unknown std lib function");
                 }

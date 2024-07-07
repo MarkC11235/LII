@@ -238,8 +238,6 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
             }
             case TokenType::STD_LIB_TOKEN: {
                 Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, value);
-                Token next_token = peek(tokens); 
-                
                 parse_std_lib_call(tokens, std_lib);
                 values.push(std_lib);
                 break;
@@ -682,6 +680,15 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             break;
         case TokenType::FOR_TOKEN:
             parse_for(tokens, current);
+            break;
+        case TokenType::STD_LIB_TOKEN:
+            // parse_expr
+            place_token_back(tokens, token);
+            parse_expr(tokens, current);
+            token = pop(tokens);
+            if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+                parsing_error("Syntax error: expected ';'", token);
+            }
             break;
         default:
             parsing_error("Syntax error: expected statement", token);

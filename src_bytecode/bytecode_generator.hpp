@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 #include "parser.hpp"
-#include "std_lib.hpp"
+#include "./std_lib/std_lib.hpp"
 
 enum OpCode{
     // Arithmetic
@@ -727,6 +727,9 @@ void interpret_stmt(Node* node, function* func){
                 break;
             case NodeType::FOR_NODE:
                 interpret_for(child, func);
+                break;
+            case NodeType::STD_LIB_CALL_NODE:
+                interpret_std_lib_call(child, func);
                 break;
             default:
                 interpretation_error("Invalid statement type", node);

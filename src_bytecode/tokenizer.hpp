@@ -7,6 +7,8 @@
 #include <vector>
 #include <algorithm> // Include the algorithm library to use the remove_if function
 
+class Token;
+
 enum TokenType {
     PRINT_TOKEN,
     LET_TOKEN,
@@ -144,6 +146,13 @@ public:
 };
 
 // -------------------------------------------------------------------
+
+void print_tokens(std::vector<Token> tokens){
+    for(Token token : tokens){
+        token.print();
+    }
+    std::cout << std::endl;
+}
 
 void tokenization_error(std::string error_message, int line_number, Token token){
     std::cout << "Error on line " << line_number << ": " << error_message << std::endl;

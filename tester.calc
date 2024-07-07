@@ -1,4 +1,3 @@
-print $char_at("Hello, World!", 25); # Output: W
+$print_colored_text("Hello, World!", "red"); # Output: Hello, World! in red
 
-print $replace_char("Hello, World!", 0, "J"); # Output: Jello, World!
-
+print "\n";
