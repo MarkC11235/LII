@@ -406,6 +406,29 @@ void run_vm(bool verbose = false){
                         }
                         break;
                     }
+                    case 5:
+                    {
+                        Value index = pop();
+                        Value str = pop();
+                        if(str.type == Value_Type::STRING && index.type == Value_Type::NUMBER){
+                            push({Value_Type::STRING, char_at(VALUE_AS_STRING(str), (int)VALUE_AS_NUMBER(index))});
+                        } else {
+                            vm_error("Invalid types for character access");
+                        }
+                        break;
+                    }
+                    case 6:
+                    {
+                        Value c = pop();
+                        Value index = pop();
+                        Value str = pop();
+                        if(str.type == Value_Type::STRING && index.type == Value_Type::NUMBER && c.type == Value_Type::STRING){
+                            push({Value_Type::STRING, replace_char(VALUE_AS_STRING(str), (int)VALUE_AS_NUMBER(index), VALUE_AS_STRING(c))});
+                        } else {
+                            vm_error("Invalid types for character replacement");
+                        }
+                        break;
+                    }
                     default:
                         vm_error("Unknown std lib function");
                 }

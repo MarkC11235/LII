@@ -6,8 +6,14 @@
 
 // array of the function names
 const std::vector<std::string> STD_LIB_FUNCTION_NAMES = {"test", "inc",     // test functions       
-                                                         "str_concat", "str_substr", "str_len" // string functions
+                                                         "str_concat", "str_substr", "str_len", "char_at", "replace_char" // string functions
                                                         };         
+
+void std_lib_error(const std::string &function, const std::string &error){
+    std::cerr << "Error in function " << function << ": " << error << std::endl;
+
+    exit(1); // not the best way to handle errors, but it's fine for now
+}
 
 // test functions --------------------------------------------
 double test(){
@@ -32,6 +38,22 @@ std::string str_substr(std::string a, int start, int length){ // start is 0-base
 
 int str_len(std::string a){
     return a.length();
+}
+
+std::string char_at(std::string a, int index){ // index is 0-based
+    if(index < 0 || index >= a.length()){
+        std_lib_error("char_at", "index [" + std::to_string(index) + "] out of bounds");
+    }
+
+    return std::string(1, a[index]);
+}
+
+std::string replace_char(std::string a, int index, std::string c){ // index is 0-based
+    if(index < 0 || index >= a.length()){
+        std_lib_error("replace_char", "index [" + std::to_string(index) + "] out of bounds");
+    }
+    a[index] = c[0];
+    return a;
 }
 
 #endif // STD_LIB_HPP
