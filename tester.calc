@@ -1,3 +1,11 @@
-$print_colored_text("Hello, World!", "red"); # Output: Hello, World! in red
+let x[5] = [1, 2, 3, 4, 5];
 
-print "\n";
+#let y[5] = [0]; # will be filled with zeros
+
+#let w[5] = [1]; # will be filled with ones
+
+#let z[5] = [0, 1]; # error, not enough values
+
+#let w<NUM>[5] = [0]; # will be filled with zeros, maybe this so that the array type gets defined
+
+# if you don't give enough values, the last value will be repeated

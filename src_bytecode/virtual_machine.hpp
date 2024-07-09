@@ -130,11 +130,8 @@ void update_variable(const std::string& name, Value value){
 }
 
 Value get_variable(const std::string& name){ 
-    //std::cout << "Getting variable: " << name << std::endl;
     function_frame* frame = get_current_function_frame();
-    //std::cout << "Current scope: " << frame->current_scope << std::endl;
     for(int i = frame->current_scope; i >= 0; i--){
-        //std::cout << "Checking scope: " << i << std::endl;
         if(frame->variables[i].find(name) != frame->variables[i].end()){
             return frame->variables[i][name];
         }

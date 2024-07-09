@@ -181,17 +181,6 @@ std::vector<Token> analyze(std::string input, int line_number){
             case ']':
                 tokens.push_back(Token(TokenType::CLOSESQUAREBRACKET_TOKEN, "]", line_number));
                 break;
-            case '@':
-            {
-                std::string directive = "";
-                while(i < int(input.length()) && input[i] != ' '){
-                    directive += input[i];
-                    i++;
-                }
-                i--;
-                tokens.push_back(Token(TokenType::DIRECTIVE_TOKEN, directive, line_number));
-            }
-                break;
             case ';':
                 tokens.push_back(Token(TokenType::SEMICOLON_TOKEN, ";", line_number));
                 break;

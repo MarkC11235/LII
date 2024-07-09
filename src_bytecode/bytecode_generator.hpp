@@ -620,13 +620,20 @@ void interpret_assign(Node* node, function* func){
     }
 
     if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a variable
-        interpret_expr(node->get_child(1), func);
-
-        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        if(node->get_children().size() == 3){ // TODO: array assign
+            interpretation_error("Array assign not implemented", node);
+            //put array size on the stack
+            interpret_expr(node->get_child(1), func);
         }
-        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+        else{ // normal assign
+            interpret_expr(node->get_child(1), func);
+
+            WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+            if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+                WRITE_VAR_NAME(node->get_child(0)->get_value());
+            }
+            WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+        }
     }
     else if(node->get_child(1)->get_type() == NodeType::FUNCTION_NODE){ // Assigning a function to a variable
         interpret_function(node->get_child(1), func, std::string(node->get_child(0)->get_value()));
