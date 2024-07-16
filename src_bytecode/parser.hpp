@@ -437,6 +437,60 @@ void parse_function(std::vector<Token>& tokens, Node* current){
     }
 }
 
+void parse_array_assignment(std::vector<Token>& tokens, Node* current){
+    //Get the array size
+    Token token = peek(tokens);
+    if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
+        parsing_error("Syntax error: expected array size", token);
+    }
+
+    // Parse expression
+    Node* size = new Node(NodeType::EXPR_NODE, "");
+    current->add_child(size);
+    parse_expr(tokens, size);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
+        parsing_error("Syntax error: expected ']'", token);
+    }
+
+    // Parse the assignment
+    token = pop(tokens);
+    if(token.get_type() != TokenType::ASSIGNMENT_TOKEN){
+        parsing_error("Syntax error: expected assignment operator", token);
+    }
+
+    Node* list = new Node(NodeType::LIST_NODE, "");
+    current->add_child(list);
+
+    //check for open bracket
+    print_tokens(tokens);
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENSQUAREBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '['", token);
+    }
+
+    
+    token = peek(tokens);
+    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){ // Check if there are elements in the array
+        for(;;){ // Can have 0 or more elements
+            Node* expr = new Node(NodeType::EXPR_NODE, "");
+            list->add_child(expr);
+            parse_expr(tokens, expr);
+
+            token = peek(tokens);
+            if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){ // End of array elements
+                pop(tokens);//remove the close bracket
+                break;
+            } else if(token.get_type() == TokenType::COMMA_TOKEN){
+                pop(tokens);
+            } else {
+                parsing_error("Syntax error: expected ',' or ']'", token);
+            }
+        }
+    }
+}
+
 // This is called when the let keyword is encountered
 void parse_assignment(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
@@ -455,6 +509,9 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
         } 
         else if(token.get_type() == TokenType::OPENPAR_TOKEN){ // Function definition
             parse_function(tokens, assign);
+        }
+        else if(token.get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){
+            parse_array_assignment(tokens, assign);
         }
         else {
             parsing_error("Syntax error: expected assignment operator", token);
