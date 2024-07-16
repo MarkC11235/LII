@@ -437,57 +437,43 @@ void parse_function(std::vector<Token>& tokens, Node* current){
     }
 }
 
-void parse_array_assignment(std::vector<Token>& tokens, Node* current){
-    //Get the array size
-    Token token = peek(tokens);
-    if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
-        parsing_error("Syntax error: expected array size", token);
-    }
-
-    // Parse expression
-    Node* size = new Node(NodeType::EXPR_NODE, "");
-    current->add_child(size);
-    parse_expr(tokens, size);
-
-    token = pop(tokens);
-    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
-        parsing_error("Syntax error: expected ']'", token);
-    }
-
-    // Parse the assignment
-    token = pop(tokens);
-    if(token.get_type() != TokenType::ASSIGNMENT_TOKEN){
-        parsing_error("Syntax error: expected assignment operator", token);
-    }
-
+void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
+    pop(tokens); // Skip the '['
     Node* list = new Node(NodeType::LIST_NODE, "");
     current->add_child(list);
-
-    //check for open bracket
-    print_tokens(tokens);
-    token = pop(tokens);
-    if(token.get_type() != TokenType::OPENSQUAREBRACKET_TOKEN){
-        parsing_error("Syntax error: expected '['", token);
+    //check if the list is empty
+    if(peek(tokens).get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
+        pop(tokens);
+        return;
     }
 
-    
-    token = peek(tokens);
-    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){ // Check if there are elements in the array
-        for(;;){ // Can have 0 or more elements
+    // Parse the elements, allow nested lists
+    bool prev_was_comma = false;
+    for(;;){
+        Token token = peek(tokens);
+        if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
+            pop(tokens);
+            break;
+        }
+        if(token.get_type() == TokenType::COMMA_TOKEN){
+            if(prev_was_comma){
+                parsing_error("Syntax error: expected expression", token);
+            }
+            pop(tokens);
+            prev_was_comma = true;
+            continue;
+        }
+
+        if(token.get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){
+            Node* nested_list = new Node(NodeType::LIST_NODE, "");
+            list->add_child(nested_list);
+            parse_list(tokens, nested_list, level + 1);
+        } else {
             Node* expr = new Node(NodeType::EXPR_NODE, "");
             list->add_child(expr);
             parse_expr(tokens, expr);
-
-            token = peek(tokens);
-            if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){ // End of array elements
-                pop(tokens);//remove the close bracket
-                break;
-            } else if(token.get_type() == TokenType::COMMA_TOKEN){
-                pop(tokens);
-            } else {
-                parsing_error("Syntax error: expected ',' or ']'", token);
-            }
         }
+        prev_was_comma = false;
     }
 }
 
@@ -503,15 +489,17 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
         token = pop(tokens);
 
         if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){ // Expression assignment
-            Node* expr = new Node(NodeType::EXPR_NODE, "");
-            assign->add_child(expr);
-            parse_expr(tokens, expr);
+            if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array assignment
+                parse_list(tokens, assign);
+            }
+            else{ // Normal assignment
+                Node* expr = new Node(NodeType::EXPR_NODE, "");
+                assign->add_child(expr);
+                parse_expr(tokens, expr);
+            }
         } 
         else if(token.get_type() == TokenType::OPENPAR_TOKEN){ // Function definition
             parse_function(tokens, assign);
-        }
-        else if(token.get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){
-            parse_array_assignment(tokens, assign);
         }
         else {
             parsing_error("Syntax error: expected assignment operator", token);
