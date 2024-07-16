@@ -326,6 +326,38 @@ void run_vm(bool verbose = false){
                 increase_ip(1);
                 break;
             }
+            case OpCode::OP_UPDATE_VECTOR_ELEMENT:
+            {
+                Value index = pop();
+                Value value = pop();
+                Value vector = get_variable(variable_names.names[get_ip()[1]]);
+                if(vector.type != Value_Type::VECTOR || index.type != Value_Type::NUMBER){
+                    vm_error("Invalid types for vector element update");
+                }
+                std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+                if(VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size()){
+                    vm_error("Index out of bounds");
+                }
+                vec[(int)VALUE_AS_NUMBER(index)] = value;
+                update_variable(variable_names.names[get_ip()[1]], {Value_Type::VECTOR, vec});
+                increase_ip(1);
+                break;
+            }
+            case OpCode::OP_LOAD_VECTOR_ELEMENT:
+            {
+                Value index = pop();
+                Value vector = get_variable(variable_names.names[get_ip()[1]]);
+                if(vector.type != Value_Type::VECTOR || index.type != Value_Type::NUMBER){
+                    vm_error("Invalid types for vector element access");
+                }
+                if(VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= VALUE_AS_VECTOR(vector).size()){
+                    vm_error("Index out of bounds");
+                }
+                std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+                push(vec[(int)VALUE_AS_NUMBER(index)]);
+                increase_ip(1);
+                break;
+            }
 
             // Control flow operations
             case OpCode::OP_RETURN:

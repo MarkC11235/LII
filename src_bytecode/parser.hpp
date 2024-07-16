@@ -248,7 +248,23 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                     Node* function_call = new Node(NodeType::FUNCTION_CALL_NODE, "");
                     parse_function_call(tokens, function_call);
                     values.push(function_call);
-                } else {
+                }
+                else if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){
+                    pop(tokens); // Skip the '['
+                    Node* var = new Node(NodeType::VAR_NODE, value);
+                    Node* index = new Node(NodeType::EXPR_NODE, "");
+                    var->add_child(index);
+                    parse_expr(tokens, index);
+
+                    values.push(var);
+
+                    // check for closing bracket
+                    Token token = pop(tokens);
+                    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
+                        parsing_error("Syntax error: expected ']'", token);
+                    }
+                }
+                else {
                     Node* var = new Node(NodeType::VAR_NODE, value);
                     values.push(var);
                 }
@@ -613,6 +629,18 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
     update->add_child(var);
 
     token = pop(tokens);
+    if(token.get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array update
+        Node* index = new Node(NodeType::EXPR_NODE, ""); // Index
+        update->add_child(index);
+        parse_expr(tokens, index); // Index
+        token = pop(tokens);
+        if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
+            parsing_error("Syntax error: expected ']'", token);
+        }
+
+        token = pop(tokens);
+    }
+
     if(token.get_type() != TokenType::ASSIGNMENT_TOKEN){
         parsing_error("Syntax error: expected assignment operator", token);
     }

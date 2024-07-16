@@ -276,23 +276,24 @@ void display_bytecode(function* func){
             case OpCode::OP_CREATE_VECTOR:
                 std::cout << "OP_CREATE_VECTOR";
                 std::cout << "          ";
-                std::cout << "Index: " << (int)func->code[++i];
-                std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                std::cout << "Name: " << variable_names.names[(int)func->code[++i]] << std::endl;
                 break;
             case OpCode::OP_VECTOR_PUSH:
                 std::cout << "OP_VECTOR_PUSH";
                 std::cout << "          ";
-                std::cout << "Index: " << (int)func->code[++i];
-                std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                std::cout << "Name: " << variable_names.names[(int)func->code[++i]] << std::endl;
                 break;
             case OpCode::OP_LOAD_VECTOR_ELEMENT:
                 std::cout << "OP_LOAD_VECTOR_ELEMENT";
                 std::cout << "          ";
-                std::cout << "Vector Index: " << (int)func->code[++i];
+                std::cout << "Vector Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << std::endl;
+                break;
+            case OpCode::OP_UPDATE_VECTOR_ELEMENT:
+                std::cout << "OP_UPDATE_VECTOR_ELEMENT";
                 std::cout << "          ";
-                std::cout << "Element Index: " << (int)func->code[++i] << std::endl;
+                std::cout << "Vector Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << std::endl;
                 break;
             
             // Control flow
@@ -530,11 +531,24 @@ void choose_expr_operand(Node* node, function* func){
                 WRITE_BYTE(consts.count - 1, func);
                 break;
             case NodeType::VAR_NODE:
-                WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
-                if(get_variable_index(node->get_value()) == -1){
-                    interpretation_error("Variable not found", node);
+                if(node->get_children().size() == 0){
+                    WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
+                    if(get_variable_index(node->get_value()) == -1){
+                        interpretation_error("Variable not found", node);
+                    }
+                    WRITE_BYTE(get_variable_index(node->get_value()), func);
                 }
-                WRITE_BYTE(get_variable_index(node->get_value()), func);
+                else if(node->get_children().size() == 1){ // Array access
+                    interpret_expr(node->get_child(0), func); // Expression for array index, first on the stack
+                    WRITE_BYTE(OpCode::OP_LOAD_VECTOR_ELEMENT, func); // Load the value from the vector
+                    if(get_variable_index(node->get_value()) == -1){
+                        interpretation_error("Variable not found", node);
+                    }
+                    WRITE_BYTE(get_variable_index(node->get_value()), func); // Index of the vector in the variables map
+                }
+                else{
+                    interpretation_error("Invalid number of children for VAR Node", node);
+                }
                 break;
             case NodeType::FUNCTION_CALL_NODE:
                 interpret_function_call(node, func);
@@ -719,15 +733,34 @@ void interpret_update(Node* node, function* func){
         interpretation_error("Update doesn't have a VAR Node as the first child", node);
     }
 
-    interpret_expr(node->get_child(1), func); // Expression to update variable with 
+    if(node->get_children().size() == 2){ // Normal update
+        interpret_expr(node->get_child(1), func); // Expression to update variable with 
 
-    WRITE_BYTE(OpCode::OP_UPDATE_VAR, func); // takes the value from the stack and updates the value in the variables map
-    int index = get_variable_index(node->get_child(0)->get_value());
-    if(index == -1){
-        // Should never happen because the variable should already exist
-        interpretation_error("Trying to update a variable that hasn't been defined", node);
+        WRITE_BYTE(OpCode::OP_UPDATE_VAR, func); // takes the value from the stack and updates the value in the variables map
+        int index = get_variable_index(node->get_child(0)->get_value());
+        if(index == -1){
+            // Should never happen because the variable should already exist
+            interpretation_error("Trying to update a variable that hasn't been defined", node);
+        }
+        WRITE_BYTE(index, func);
     }
-    WRITE_BYTE(index, func);
+    else if(node->get_children().size() == 3){ // Update an array index
+        interpret_expr(node->get_child(2), func); // Expression to update array index with, left on the stack
+        interpret_expr(node->get_child(1), func); // Expression for array index, first on the stack
+        WRITE_BYTE(OpCode::OP_UPDATE_VECTOR_ELEMENT, func); // Update the value in the vector
+
+        int index = get_variable_index(node->get_child(0)->get_value());
+        if(index == -1){
+            // Should never happen because the variable should already exist
+            interpretation_error("Trying to update a variable that hasn't been defined", node);
+        }
+        WRITE_BYTE(index, func); // Index of the vector in the variables map
+    }
+    else{
+        interpretation_error("Invalid number of children for UPDATE Node", node);
+    }
+
+    
 }
 
 void interpret_print(Node* node, function* func){
