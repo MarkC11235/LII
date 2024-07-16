@@ -2,6 +2,7 @@
 #define BYTECODE_GENERATOR_HPP
 
 #include <cstdint> // int8_t
+#include <limits> // std::numeric_limits
 #include <iostream>
 #include <string>
 #include <vector>
@@ -11,6 +12,8 @@
 
 #include "parser.hpp"
 #include "./std_lib/std_lib.hpp"
+
+typedef int8_t CODE_SIZE; // Bytecode size, only 8 bits for pointers will be too small for large programs
 
 enum OpCode{
     // Arithmetic
@@ -26,7 +29,7 @@ enum OpCode{
     OP_GTEQ,
     OP_LTEQ,
     // Variables
-    OP_LOAD, // push a value from the values array to the stack, index is the next byte
+    OP_LOAD, // push a value from the constants array to the stack, index is the next byte
     OP_STORE_VAR, // store a value from the stack to the variables map
     OP_UPDATE_VAR, // update a value in the variables map
     OP_LOAD_VAR, // push a value from the variables map to the stack
@@ -63,7 +66,7 @@ std::unordered_map<std::string, OpCode> opCodeMap = {
 struct function; // Forward declaration
 
 struct function {
-    int8_t* code; // Bytecode array
+    CODE_SIZE* code; // Bytecode array
     int count;
     int capacity;
 
@@ -84,12 +87,13 @@ enum Value_Type{
     NUMBER,
     BOOL,
     STRING,
+    // ARRAY, // This will be added later
     STRUCT,
 };
 
 struct Value{
     Value_Type type;
-    std::variant<double, bool, std::string> data;
+    std::variant<double, bool, std::string /*, std::vector<Value> This will be the array type, so can be created dynamically with any value type*/> data;
 };
 
 bool VALUE_AS_BOOL(Value value){
@@ -149,15 +153,14 @@ void print_value(Value value){
 
 // Constants struct
 // This is so constants can be stored in the bytecode as indices
-// The array will probably get changed to be Values instead of doubles
-struct values{
-    Value* values;
+struct constants{
+    Value* constants;
     int count;
     int capacity;
 };
 
-values vals; // Statically allocated because only one values array is needed
-             // This array stores constant values
+constants consts; // Statically allocated because only one constants array is needed
+                  // This array stores constant values Ex: let x = 5; 5 is a constant
 
 // Variable names struct
 // This is so variable names can be stored in the bytecode as indices
@@ -168,7 +171,7 @@ struct varible_names{
 };
 
 varible_names variable_names; // Statically allocated because only one variable names array is needed
-                              // This array stores the names of the variables
+                              // This array stores the names of the variables, functions are included in this array
 // -------------------------------------------------------------------
 
 // Visual Representation for debugging -------------------------------
@@ -216,7 +219,7 @@ void display_bytecode(function* func){
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Value: " << VALUE_AS_STRING(vals.values[(int)func->code[i]]) << std::endl;
+                std::cout << "Value: " << VALUE_AS_STRING(consts.constants[(int)func->code[i]]) << std::endl;
                 break;
             case OpCode::OP_STORE_VAR:
                 std::cout << "OP_STORE_VAR";
@@ -288,8 +291,8 @@ void display_bytecode(function* func){
 }
 
 void display_constants(){
-    for(int i = 0; i < vals.count; i++){
-        std::cout << i << ": " << VALUE_AS_STRING(vals.values[i]) << std::endl;
+    for(int i = 0; i < consts.count; i++){
+        std::cout << i << ": " << VALUE_AS_STRING(consts.constants[i]) << std::endl;
     }
 }
 
@@ -301,24 +304,24 @@ void display_variables(){
 // -------------------------------------------------------------------
 
 // Helper functions --------------------------------------------------
-inline void WRITE_BYTE(int8_t byte, function* func){
+inline void WRITE_BYTE(CODE_SIZE byte, function* func){
     func->code[func->count++] = byte;
 }
 
 inline void WRITE_VALUE(double value){
-    vals.values[vals.count++] = {NUMBER, value};
+    consts.constants[consts.count++] = {NUMBER, value};
 }
 
 inline void WRITE_VALUE(bool value){
-    vals.values[vals.count++] = {BOOL, value};
+    consts.constants[consts.count++] = {BOOL, value};
 }
 
 inline void WRITE_VALUE(const std::string& value){
-    vals.values[vals.count++] = {STRING, value};
+    consts.constants[consts.count++] = {STRING, value};
 }
 
 inline void WRITE_VALUE(Value value){
-    vals.values[vals.count++] = value;
+    consts.constants[consts.count++] = value;
 }
 
 inline void WRITE_VAR_NAME(const std::string& name){
@@ -341,7 +344,7 @@ std::string get_variable_name(int index){
 // Constructor for the function struct
 function* create_function(int capacity, std::string name = "", function* parent = nullptr){
     function* func = new function;
-    func->code = new int8_t[capacity]; 
+    func->code = new CODE_SIZE[capacity]; 
     func->count = 0;
     func->capacity = capacity;
 
@@ -371,8 +374,8 @@ function* create_function(int capacity, std::string name = "", function* parent 
     return func;
 }
 
-Value get_constant(int index){
-    return vals.values[index];
+inline Value get_constant(int index){
+    return consts.constants[index];
 }
 // -------------------------------------------------------------------
 
@@ -470,10 +473,9 @@ void choose_expr_operand(Node* node, function* func){
                 interpret_op(node, func);
                 break;
             case NodeType::NUM_NODE:
-                //vals.values[vals.count++] = std::stod(l_child->get_value());
                 WRITE_VALUE(std::stod(node->get_value()));
                 WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(vals.count - 1, func);
+                WRITE_BYTE(consts.count - 1, func);
                 break;
             case NodeType::VAR_NODE:
                 WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
@@ -492,10 +494,9 @@ void choose_expr_operand(Node* node, function* func){
                 interpret_expr(node, func);
                 break;
             case NodeType::STRING_NODE:
-                //std::cout << l_child->get_value() << std::endl;
                 WRITE_VALUE(node->get_value());
                 WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(vals.count - 1, func);
+                WRITE_BYTE(consts.count - 1, func);
                 break;
             default:
                 interpretation_error("Invalid child type for OP Node", node);
@@ -769,15 +770,17 @@ void generate_bytecode(Node* ast) {
 
     function_definitions["main"] = func;
 
-    vals.values = new Value[255]; // Allocate 1000 doubles for the values
-                                    // this is the maximum number of constants because it fits into a byte for the bytecode
-    vals.count = 0;
-    vals.capacity = 255;
+    CODE_SIZE max = std::numeric_limits<CODE_SIZE>::max();
 
-    variable_names.names = new std::string[255]; // Allocate 255 strings for the variable names
-                                                  // this is the maximum number of variables because it fits into a byte for the bytecode
+    consts.constants = new Value[(int)max]; // Allocate the max number allowed in the CODE_SIZE type (EX: int8_t, 255)
+                                            // This is so the constants can be stored in the bytecode as indices
+    consts.count = 0;
+    consts.capacity = (int)max;
+
+    variable_names.names = new std::string[(int)max];   // Allocate the max number allowed in the CODE_SIZE type (EX: int8_t, 255)
+                                                        // This is so the variable names can be stored in the bytecode as indices
     variable_names.count = 0;
-    variable_names.capacity = 255;
+    variable_names.capacity = (int)max;
 
     interpret(ast, func);
 }

@@ -1,3 +1,7 @@
-$print_colored_text("Hello, World!", "red"); # Output: Hello, World! in red
+let var = 1;
 
-print "\n";
+let x(){
+    return var;
+};
+
+print x();

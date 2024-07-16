@@ -117,7 +117,7 @@ void place_token_back(std::vector<Token>& tokens, Token token){
     tokens.insert(tokens.begin(), token);
 }
 
-int precedence(std::string op){
+int precedence(std::string op){ // TODO: Could be speed up with a map
     if(op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!="){
         return 7;
     }
@@ -488,7 +488,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected ')'", token);
     }
 
-    // if block -----------------------------------
+    // if block 
     token = pop(tokens);
     if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
         parsing_error("Syntax error: expected '{'", token);
@@ -505,9 +505,8 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected '}'", token);
     }
 
-    // --------------------------------------------
 
-    // else block ---------------------------------
+    // else block 
     // Check for else
     token = peek(tokens);
     if(token.get_type() != TokenType::ELSE_TOKEN){
@@ -538,7 +537,6 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected '}'", token); 
     }
 
-    // --------------------------------------------
 }
 
 void parse_return(std::vector<Token>& tokens, Node* current){
@@ -601,12 +599,11 @@ void parse_for(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected '('", token);
     }
 
-    // Parse the initialization -----------------------------------
+    // Parse the initialization 
     pop(tokens); // Skip the let keyword(usally done in the parse_stmt function)
     parse_assignment(tokens, for_node);
-    // -----------------------------------------------------------
 
-    // Parse the condition 
+    // Parse the condition
     Node* condition = new Node(NodeType::EXPR_NODE, "");
     for_node->add_child(condition);
     parse_expr(tokens, condition);
@@ -615,19 +612,16 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
         parsing_error("Syntax error: expected ';'", token);
     }
-    // -----------------------------------------------------------
 
-    // Parse the update ------------------------------------------
+    // Parse the variable update 
     parse_variable_update(tokens, for_node);
 
     token = pop(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
         parsing_error("Syntax error: expected ')'", token);
     }
-    // -----------------------------------------------------------
 
-
-    // for body -----------------------------------------------
+    // for body 
     token = pop(tokens);
     if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
         parsing_error("Syntax error: expected '{'", token);
@@ -648,15 +642,13 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
         parsing_error("Syntax error: expected '}'", token);
     }
-
-    // -----------------------------------------------------------
 }
 
 void parse_stmt(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     switch(token.get_type()){
         case TokenType::EOF_TOKEN:
-            return; // End of file
+            parsing_error("Syntax error: expected statement", token);
         case TokenType::IF_TOKEN:
             parse_if(tokens, current);
             break;
@@ -673,6 +665,8 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             place_token_back(tokens, token);
             parse_variable_update(tokens, current);
             // Check if the statement ends with a semicolon
+            // Have to check here because the parse_variable_update function does not check for it because
+            // it is also used in for loops and didn't want the semicolon to be mandatory there
             token = pop(tokens);
             if(token.get_type() != TokenType::SEMICOLON_TOKEN){
                 parsing_error("Syntax error: expected ';'", token);
@@ -682,8 +676,7 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             parse_for(tokens, current);
             break;
         case TokenType::STD_LIB_TOKEN:
-            // parse_expr
-            place_token_back(tokens, token);
+            place_token_back(tokens, token); // parse_expr expects the std lib token
             parse_expr(tokens, current);
             token = pop(tokens);
             if(token.get_type() != TokenType::SEMICOLON_TOKEN){
@@ -697,7 +690,7 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
 
 void parse_stmt_list(std::vector<Token>& tokens, Node* current){
     Token token = peek(tokens);
-    if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){ // End of block
+    if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){ // End of block (function, if, for, etc)
         return;
     }
 

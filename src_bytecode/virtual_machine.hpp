@@ -11,7 +11,7 @@ struct function_frame{
     function* func;
     int current_scope;
 
-    int8_t* ip; // Pointer to the current instruction
+    CODE_SIZE* ip; // Pointer to the current instruction
     int end_of_function;
     int current_instruction;
 
@@ -51,10 +51,10 @@ function_frame* create_function_frame(function* func){
 }
 
 // Initializes the virtual machine ----------------------------------
-void init_vm(){
-    vm.stack = new Value[256]; 
+void init_vm(int stack_capacity = 256){
+    vm.stack = new Value[stack_capacity]; 
     vm.stack_count = 0;
-    vm.stack_capacity = 256;
+    vm.stack_capacity = stack_capacity;
 
     vm.function_frames.clear();
     vm.function_frames.push_back(create_function_frame(function_definitions["main"]));
@@ -71,7 +71,7 @@ void vm_error(const std::string& message){
 bool increase_ip(int offset){
     function_frame* frame = get_current_function_frame();
     
-    if(frame->ip + offset >= frame->func->code + frame->end_of_function){
+    if(frame->ip + offset >= frame->func->code + frame->end_of_function){ // Probably slow  
         //if in the main function just return
         if(vm.function_frames.size() == 1){
             return false;
@@ -85,7 +85,7 @@ bool increase_ip(int offset){
 }
 
 //get ip from the current function frame
-int8_t* get_ip(){
+CODE_SIZE* get_ip(){
     return get_current_function_frame()->ip;
 }
 
@@ -111,13 +111,14 @@ void print_stack(){
 
 // Map operations -----------------------------------------------------
 
-// Will never go outside of the scope of the function
-// Will climb the scope stack from the current scope to the first scope looking for the variable
+// Creates a new variable in the current scope
 void set_variable(const std::string& name, Value value){
     function_frame* frame = get_current_function_frame();
     frame->variables[frame->current_scope][name] = value;
 }
 
+// Updates a variable in the current function frame, does not look in the parent frames
+// Looks for the variable in the closest scope, so climbs out of ifs, loops, etc.
 void update_variable(const std::string& name, Value value){
     function_frame* frame = get_current_function_frame();
     for(int i = frame->current_scope; i >= 0; i--){
@@ -129,18 +130,17 @@ void update_variable(const std::string& name, Value value){
     vm_error("Variable not found");
 }
 
+// Gets a variable in the current function frame, does not look in the parent frames
+// Looks for the variable in the closest scope, so climbs out of ifs, loops, etc.
 Value get_variable(const std::string& name){ 
-    //std::cout << "Getting variable: " << name << std::endl;
     function_frame* frame = get_current_function_frame();
-    //std::cout << "Current scope: " << frame->current_scope << std::endl;
     for(int i = frame->current_scope; i >= 0; i--){
-        //std::cout << "Checking scope: " << i << std::endl;
         if(frame->variables[i].find(name) != frame->variables[i].end()){
             return frame->variables[i][name];
         }
     }
     vm_error("Variable not found");
-    return Value();
+    return Value(); // To avoid warning, but this line will never be reached because of vm_error
 }
 
 // -------------------------------------------------------------------

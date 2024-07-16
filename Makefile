@@ -27,7 +27,7 @@ runv:
 	@$(EXE) $(INPUT_FILE) -v
 
 
-test:
+test : build
 	@for i in tests_2/*.calc; do \
 		echo "Running test $$i"; \
 		$(EXE) $$i > $${i}.temp; \
