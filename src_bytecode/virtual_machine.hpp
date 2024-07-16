@@ -306,6 +306,27 @@ void run_vm(bool verbose = false){
                 increase_ip(1);
                 break;
 
+            // Array operations
+            case OpCode::OP_CREATE_VECTOR:
+            {
+                set_variable(variable_names.names[get_ip()[1]], {Value_Type::VECTOR, std::vector<Value>()});
+                increase_ip(1);
+                break;
+            }
+            case OpCode::OP_VECTOR_PUSH:
+            {
+                Value value = pop();
+                Value vector = get_variable(variable_names.names[get_ip()[1]]);
+                if(vector.type != Value_Type::VECTOR){
+                    vm_error("Invalid type for vector push");
+                }
+                std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+                vec.push_back(value);
+                update_variable(variable_names.names[get_ip()[1]], {Value_Type::VECTOR, vec});
+                increase_ip(1);
+                break;
+            }
+
             // Control flow operations
             case OpCode::OP_RETURN:
             {

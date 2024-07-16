@@ -33,6 +33,11 @@ enum OpCode{
     OP_STORE_VAR, // store a value from the stack to the variables map
     OP_UPDATE_VAR, // update a value in the variables map
     OP_LOAD_VAR, // push a value from the variables map to the stack
+    // Arrays
+    OP_CREATE_VECTOR, // make empty vector, needs to be followed by an index to store the vector in the variables map
+    OP_VECTOR_PUSH, // insert value from stack into vector, needs to be followed by the index of the vector in the variables map
+    OP_LOAD_VECTOR_ELEMENT, // followed by the index of the vector in the variables map, and the index into the vector
+    OP_UPDATE_VECTOR_ELEMENT, // insert value from stack, followed by the index of the vector in the variables map, the index into the vector
     // Control flow
     OP_RETURN,
     OP_JUMP,
@@ -87,13 +92,13 @@ enum Value_Type{
     NUMBER,
     BOOL,
     STRING,
-    // ARRAY, // This will be added later
+    VECTOR,
     STRUCT,
 };
 
 struct Value{
     Value_Type type;
-    std::variant<double, bool, std::string /*, std::vector<Value> This will be the array type, so can be created dynamically with any value type*/> data;
+    std::variant<double, bool, std::string, std::vector<Value>> data;
 };
 
 bool VALUE_AS_BOOL(Value value){
@@ -141,8 +146,32 @@ std::string VALUE_AS_STRING(Value value){
             return std::get<bool>(value.data) ? "true" : "false";
         case STRING:
             return std::get<std::string>(value.data);
+        case VECTOR:
+        {
+            std::string str = "[";
+
+            std::vector<Value> vec = std::get<std::vector<Value>>(value.data);
+            for(int i = 0; i < (int)vec.size(); i++){
+                str += VALUE_AS_STRING(vec[i]);
+                if(i != (int)vec.size() - 1){
+                    str += ", ";
+                }
+            }
+
+            str += "]";
+            return str;
+        }
         default:
             return "UNKNOWN"; // Should never reach here, but to avoid warnings
+    }
+}
+
+std::vector<Value> VALUE_AS_VECTOR(Value value){
+    switch(value.type){
+        case VECTOR:
+            return std::get<std::vector<Value>>(value.data);
+        default:
+            return {}; // Should never reach here, but to avoid warnings
     }
 }
 
@@ -241,6 +270,29 @@ void display_bytecode(function* func){
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
                 std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                break;
+
+            // Arrays
+            case OpCode::OP_CREATE_VECTOR:
+                std::cout << "OP_CREATE_VECTOR";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)func->code[++i];
+                std::cout << "          ";
+                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                break;
+            case OpCode::OP_VECTOR_PUSH:
+                std::cout << "OP_VECTOR_PUSH";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)func->code[++i];
+                std::cout << "          ";
+                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                break;
+            case OpCode::OP_LOAD_VECTOR_ELEMENT:
+                std::cout << "OP_LOAD_VECTOR_ELEMENT";
+                std::cout << "          ";
+                std::cout << "Vector Index: " << (int)func->code[++i];
+                std::cout << "          ";
+                std::cout << "Element Index: " << (int)func->code[++i] << std::endl;
                 break;
             
             // Control flow
@@ -611,6 +663,20 @@ void interpret_function(Node* node, function* func, std::string name){
     interpret_stmt_list(node->get_child(1), new_func);
 }
 
+void interpret_list(Node* node, function* func){
+    if(node->get_type() != NodeType::LIST_NODE){
+        interpretation_error("List doesn't start with LIST Node", node);
+    }
+
+    // TODO: add support for nested lists
+
+    for(int i = 0; i < (int)node->get_children().size(); i++){
+        interpret_expr(node->get_child(i), func);
+        WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func); // Insert the value into the vector
+        WRITE_BYTE(variable_names.count - 1, func); // Index of the vector in the variables map
+    }
+}
+
 void interpret_assign(Node* node, function* func){
     if(node->get_type() != NodeType::ASSIGN_NODE){
         interpretation_error("Assign doesn't start with ASSIGN Node", node);
@@ -621,23 +687,23 @@ void interpret_assign(Node* node, function* func){
     }
 
     if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a variable
-        if(node->get_children().size() == 3){ // TODO: array assign
-            interpretation_error("Array assign not implemented", node);
-            //put array size on the stack
-            interpret_expr(node->get_child(1), func);
-        }
-        else{ // normal assign
-            interpret_expr(node->get_child(1), func);
+        interpret_expr(node->get_child(1), func);
 
-            WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-            if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-                WRITE_VAR_NAME(node->get_child(0)->get_value());
-            }
-            WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(node->get_child(0)->get_value());
         }
+        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
     }
     else if(node->get_child(1)->get_type() == NodeType::FUNCTION_NODE){ // Assigning a function to a variable
         interpret_function(node->get_child(1), func, std::string(node->get_child(0)->get_value()));
+    }
+    else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a variable
+        WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector
+        WRITE_BYTE(variable_names.count, func); // Index to store the vector in the variables map
+        WRITE_VAR_NAME(node->get_child(0)->get_value());
+
+        interpret_list(node->get_child(1), func);
     }
     else{
         interpretation_error("Invalid child type for ASSIGN Node", node);
