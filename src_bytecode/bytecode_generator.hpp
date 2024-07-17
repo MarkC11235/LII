@@ -531,22 +531,22 @@ void choose_expr_operand(Node* node, function* func){
                 WRITE_BYTE(consts.count - 1, func);
                 break;
             case NodeType::VAR_NODE:
-                if(node->get_children().size() == 0){
+                if(node->get_children().size() == 0){ // Variable access
                     WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
                     if(get_variable_index(node->get_value()) == -1){
                         interpretation_error("Variable not found", node);
                     }
                     WRITE_BYTE(get_variable_index(node->get_value()), func);
                 }
-                else if(node->get_children().size() == 1){ // Array access
-                    interpret_expr(node->get_child(0), func); // Expression for array index, first on the stack
+                else if(node->get_children().size() == 1){ // Vector access
+                    interpret_expr(node->get_child(0), func); // Expression for vector index, first on the stack
                     WRITE_BYTE(OpCode::OP_LOAD_VECTOR_ELEMENT, func); // Load the value from the vector
                     if(get_variable_index(node->get_value()) == -1){
                         interpretation_error("Variable not found", node);
                     }
                     WRITE_BYTE(get_variable_index(node->get_value()), func); // Index of the vector in the variables map
                 }
-                else{
+                else{ 
                     interpretation_error("Invalid number of children for VAR Node", node);
                 }
                 break;
@@ -575,7 +575,7 @@ void interpret_op(Node* node, function* func){
         Node* l_child = node->get_child(0);
         Node* r_child = node->get_child(1);
 
-        choose_expr_operand(l_child, func);
+        choose_expr_operand(l_child, func); 
 
         choose_expr_operand(r_child, func);
 
