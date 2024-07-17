@@ -399,13 +399,22 @@ void parse_std_lib_call(std::vector<Token>& tokens, Node* current){
 }
 
 void parse_function(std::vector<Token>& tokens, Node* current){
+    pop(tokens); // Skip the 'func' keyword
     Node* function = new Node(NodeType::FUNCTION_NODE, "");
     current->add_child(function);
+
+    //std::cout << "Parsing function..." << std::endl;
+
+    // check for opening parenthesis
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+        parsing_error("Syntax error: expected '('", token);
+    }
 
     // Parse the parameters
     Node* list = new Node(NodeType::LIST_NODE, "");
     function->add_child(list);
-    Token token = peek(tokens);
+    token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
         for(;;){ // Can have 0 or more parameters
             token = pop(tokens);
@@ -495,9 +504,10 @@ void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
 
 // This is called when the let keyword is encountered
 void parse_assignment(std::vector<Token>& tokens, Node* current){
-    Token token = pop(tokens);
     Node* assign = new Node(NodeType::ASSIGN_NODE, "");
     current->add_child(assign);
+
+    Token token = pop(tokens);
 
     if(token.get_type() == TokenType::IDENTIFIER_TOKEN){ 
         Node* var = new Node(NodeType::VAR_NODE, token.get_value()); 
@@ -508,15 +518,15 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
             if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array assignment
                 parse_list(tokens, assign);
             }
+            else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function definition
+                parse_function(tokens, assign);
+            }
             else{ // Normal assignment
                 Node* expr = new Node(NodeType::EXPR_NODE, "");
                 assign->add_child(expr);
                 parse_expr(tokens, expr);
             }
         } 
-        else if(token.get_type() == TokenType::OPENPAR_TOKEN){ // Function definition
-            parse_function(tokens, assign);
-        }
         else {
             parsing_error("Syntax error: expected assignment operator", token);
         }

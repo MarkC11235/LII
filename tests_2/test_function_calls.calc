@@ -1,8 +1,8 @@
-let add(x, y){
+let add = func(x, y){
     return x + y;
 };
 
-let sub(x, y){
+let sub = func(x, y){
     return x - y;
 };
 

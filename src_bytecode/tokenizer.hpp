@@ -13,6 +13,7 @@ enum TokenType {
     PRINT_TOKEN,
     LET_TOKEN,
     ASSIGNMENT_TOKEN,
+    FUNC_TOKEN,
     WHILE_TOKEN,
     FOR_TOKEN,
     IF_TOKEN,
@@ -52,6 +53,8 @@ std::string token_type_to_string(TokenType type){
             return "LET";
         case TokenType::ASSIGNMENT_TOKEN:
             return "ASSIGNMENT";
+        case TokenType::FUNC_TOKEN:
+            return "FUNC";
         case TokenType::WHILE_TOKEN:
             return "WHILE";
         case TokenType::FOR_TOKEN:
@@ -291,6 +294,9 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "print"){
                         tokens.push_back(Token(TokenType::PRINT_TOKEN, "print", line_number));
+                    }
+                    else if(identifier == "func"){
+                        tokens.push_back(Token(TokenType::FUNC_TOKEN, "func", line_number));
                     }
                     else{
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
