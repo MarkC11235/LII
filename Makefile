@@ -13,19 +13,34 @@ ifeq ($(VERSION), BASE)
 	@echo "Base version compiled"
 else ifeq ($(VERSION), BYTECODE)
 	$(CC) $(CXXFLAGS) ./src_bytecode/main.cpp -o $(EXE)
-	@echo -e "Bytecode version compiled\n"
+	@echo "Bytecode version compiled\n"
 else
 	$(error Invalid version: $(VERSION))
 endif
 
 run:
-	@echo -e "Running $(INPUT_FILE)\n"
+	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) 
 
 runv:
-	@echo -e "Running $(INPUT_FILE)\n"
+	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -v
 
+runvT:
+	@echo "Running $(INPUT_FILE)\n"
+	@$(EXE) $(INPUT_FILE) -vT
+
+runvP:
+	@echo "Running $(INPUT_FILE)\n"
+	@$(EXE) $(INPUT_FILE) -vP
+
+runvB:
+	@echo "Running $(INPUT_FILE)\n"
+	@$(EXE) $(INPUT_FILE) -vB
+
+runvV:
+	@echo "Running $(INPUT_FILE)\n"
+	@$(EXE) $(INPUT_FILE) -vV
 
 test : build
 	@for i in tests_2/*.calc; do \
