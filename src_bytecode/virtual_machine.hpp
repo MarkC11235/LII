@@ -3,7 +3,7 @@
 
 #include <cstdint> // int8_t
 
-#include "bytecode_generator.hpp"
+#include "Value.hpp"
 #include "./std_lib/std_lib.hpp"
 
 // Data Structures ---------------------------------------------------
