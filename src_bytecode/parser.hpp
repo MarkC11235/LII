@@ -243,13 +243,13 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 break;
             }
             case TokenType::IDENTIFIER_TOKEN: {
-                if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){
+                if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){ // Function call
                     place_token_back(tokens, token);
                     Node* function_call = new Node(NodeType::FUNCTION_CALL_NODE, "");
                     parse_function_call(tokens, function_call);
                     values.push(function_call);
                 }
-                else if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){
+                else if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array access
                     pop(tokens); // Skip the '['
                     Node* var = new Node(NodeType::VAR_NODE, value);
                     Node* index = new Node(NodeType::EXPR_NODE, "");
@@ -264,7 +264,7 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                         parsing_error("Syntax error: expected ']'", token);
                     }
                 }
-                else {
+                else { // Variable
                     Node* var = new Node(NodeType::VAR_NODE, value);
                     values.push(var);
                 }
@@ -403,8 +403,6 @@ void parse_function(std::vector<Token>& tokens, Node* current){
     Node* function = new Node(NodeType::FUNCTION_NODE, "");
     current->add_child(function);
 
-    //std::cout << "Parsing function..." << std::endl;
-
     // check for opening parenthesis
     Token token = pop(tokens);
     if(token.get_type() != TokenType::OPENPAR_TOKEN){
@@ -493,7 +491,8 @@ void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
             Node* nested_list = new Node(NodeType::LIST_NODE, "");
             list->add_child(nested_list);
             parse_list(tokens, nested_list, level + 1);
-        } else {
+        } 
+        else {
             Node* expr = new Node(NodeType::EXPR_NODE, "");
             list->add_child(expr);
             parse_expr(tokens, expr);
@@ -508,30 +507,28 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
     current->add_child(assign);
 
     Token token = pop(tokens);
-
-    if(token.get_type() == TokenType::IDENTIFIER_TOKEN){ 
-        Node* var = new Node(NodeType::VAR_NODE, token.get_value()); 
-        assign->add_child(var);
-        token = pop(tokens);
-
-        if(token.get_type() == TokenType::ASSIGNMENT_TOKEN){ // Expression assignment
-            if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array assignment
-                parse_list(tokens, assign);
-            }
-            else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function definition
-                parse_function(tokens, assign);
-            }
-            else{ // Normal assignment
-                Node* expr = new Node(NodeType::EXPR_NODE, "");
-                assign->add_child(expr);
-                parse_expr(tokens, expr);
-            }
-        } 
-        else {
-            parsing_error("Syntax error: expected assignment operator", token);
-        }
-    } else {
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){ 
         parsing_error("Syntax error: expected identifier", token);
+    } 
+    Node* var = new Node(NodeType::VAR_NODE, token.get_value()); 
+    assign->add_child(var);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::ASSIGNMENT_TOKEN){ 
+        parsing_error("Syntax error: expected assignment operator", token);  
+    } 
+
+    //Find type of assignment
+    if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array assignment
+        parse_list(tokens, assign);
+    }
+    else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
+        parse_function(tokens, assign);
+    }
+    else{ // Expression assignment
+        Node* expr = new Node(NodeType::EXPR_NODE, "");
+        assign->add_child(expr);
+        parse_expr(tokens, expr);
     }
 
     token = pop(tokens);
