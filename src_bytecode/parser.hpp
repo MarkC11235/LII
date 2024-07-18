@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stack>
 
+#include "./std_lib/std_lib.hpp"
 #include "tokenizer.hpp"
 
 enum NodeType {
@@ -390,6 +391,13 @@ void parse_std_lib_call(std::vector<Token>& tokens, Node* current){
                 parsing_error("Syntax error: expected ',' or ')'", token);
             }
         }
+    }
+
+    // Check if the std_lib call has the correct number of parameters TODO: FIND A BETTER WAY TO DO THIS, DON'T LIKE IT BEING IN THE PARSER
+    std::string std_lib_name = current->get_value(1);
+    int num_params = list->get_children().size();
+    if(is_correct_number_of_parameters(std_lib_name, num_params) == false){
+        parsing_error("Syntax error: invalid number of parameters for std lib call: " + std_lib_name, token);
     }
 
     token = pop(tokens);

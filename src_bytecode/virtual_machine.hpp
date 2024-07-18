@@ -99,6 +99,10 @@ Value pop(){
     return vm.stack[--vm.stack_count];
 }
 
+Value top(){
+    return vm.stack[vm.stack_count - 1];
+}
+
 void print_stack(){
     for(int i = 0; i < vm.stack_count; i++){
         print_value(vm.stack[i]);
@@ -161,6 +165,7 @@ void run_vm(bool verbose = false){
             std::cout << "IP: " << instruction << std::endl;
         }
 
+        // Meat of the VM
         switch(*get_ip()){
             // Arithmetic operations
             case OpCode::OP_ADD:
@@ -415,98 +420,48 @@ void run_vm(bool verbose = false){
             
             case OpCode::OP_STD_LIB_CALL:
             {
-                if(verbose){
-                    std::cout << "Calling std lib function: " << STD_LIB_FUNCTION_NAMES[get_ip()[1]] << std::endl;
-                }
-
-                switch(get_ip()[1]){
-                    //tests ------------------------------------------------
-                    case 0: // test
-                        push({Value_Type::NUMBER, test()});
-                        break;
-                    case 1: // inc
-                        push({Value_Type::NUMBER, inc(VALUE_AS_NUMBER(pop()))});
-                        break;
-                    // -----------------------------------------------------
-
-                    // string functions -----------------------------------
-                    case 2: // str_concat
-                    {
-                        Value a = pop();
-                        Value b = pop();
-                        if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
-                            push({Value_Type::STRING, str_concat(VALUE_AS_STRING(b), VALUE_AS_STRING(a))}); // reverse order because of the stack
-                        } else {
-                            vm_error("Invalid types for string concatenation");
-                        }
-                        break;
-                    }
-                    case 3: // str_substr
-                    {
-                        Value length = pop();
-                        Value start = pop();
-                        Value str = pop();
-                        if(str.type == Value_Type::STRING && start.type == Value_Type::NUMBER && length.type == Value_Type::NUMBER){
-                            push({Value_Type::STRING, str_substr(VALUE_AS_STRING(str), (int)VALUE_AS_NUMBER(start), (int)VALUE_AS_NUMBER(length))});
-                        } else {
-                            vm_error("Invalid types for string slicing");
-                        }
-                        break;
-                    }
-                    case 4: // str_len
-                    {
-                        Value str = pop();
-                        if(str.type == Value_Type::STRING){
-                            push({Value_Type::NUMBER, (double)str_len(VALUE_AS_STRING(str))});
-                        } else {
-                            vm_error("Invalid types for string length");
-                        }
-                        break;
-                    }
-                    case 5: // char_at
-                    {
-                        Value index = pop();
-                        Value str = pop();
-                        if(str.type == Value_Type::STRING && index.type == Value_Type::NUMBER){
-                            push({Value_Type::STRING, char_at(VALUE_AS_STRING(str), (int)VALUE_AS_NUMBER(index))});
-                        } else {
-                            vm_error("Invalid types for character access");
-                        }
-                        break;
-                    }
-                    case 6: // replace_char
-                    {
-                        Value c = pop();
-                        Value index = pop();
-                        Value str = pop();
-                        if(str.type == Value_Type::STRING && index.type == Value_Type::NUMBER && c.type == Value_Type::STRING){
-                            push({Value_Type::STRING, replace_char(VALUE_AS_STRING(str), (int)VALUE_AS_NUMBER(index), VALUE_AS_STRING(c))});
-                        } else {
-                            vm_error("Invalid types for character replacement");
-                        }
-                        break;
-                    }
-                    // -----------------------------------------------------
-
-                    // custom functions -----------------------------------
-                    case 7: // print_colored_text
-                    {
-                        Value color = pop();
-                        Value text = pop();
-                        if(text.type == Value_Type::STRING && color.type == Value_Type::STRING){
-                            print_colored_text(VALUE_AS_STRING(text), VALUE_AS_STRING(color));
-                        } else {
-                            vm_error("Invalid types for colored text printing");
-                        }
-                        break;
-                    }
-                    // -----------------------------------------------------
-                    
-                    default:
-                        vm_error("Unknown std lib function");
-                }
-
                 increase_ip(1);
+                
+                STD_LIB_FUNCTION_INFO func = STD_LIB_FUNCTIONS_DEFINITIONS[*get_ip()];
+
+                //Get the arguments
+                std::vector<std::any> args;
+                for(int i = 0; i < (int)func.arg_types.size(); i++){
+                    //check if the argument is the correct type
+                    int index = (int)func.arg_types.size() - i - 1;
+                    if(!LII_type_matches_cpp_type(top(), func.arg_types[index])){
+                        vm_error("Invalid argument type. Expected: " + func.arg_types[index] + ", Got: " + get_value_type_string(top()));
+                    } 
+                    //cast the argument to the c++ type
+                    args.push_back(cast_LII_type_to_cpp_type(pop(), func.arg_types[index]));
+                }
+
+                //reverse the arguments
+                std::reverse(args.begin(), args.end());
+
+                //Call the function
+                auto result = func.function(args, func.arg_types);
+
+                //Return value
+                if(func.return_type != "void"){
+                    //check if the return value is the correct type
+                    if(!any_type_check(result, func.return_type)){
+                        vm_error("Invalid return type");
+                    }
+
+                    //cast the any type to the LII type
+                    if(func.return_type == "int"){
+                        push({Value_Type::NUMBER, (double)std::any_cast<int>(result)});
+                    }else if(func.return_type == "double"){
+                        push({Value_Type::NUMBER, std::any_cast<double>(result)});
+                    }else if(func.return_type == "bool"){
+                        push({Value_Type::BOOL, std::any_cast<bool>(result)});
+                    }else if(func.return_type == "std::string"){
+                        push({Value_Type::STRING, std::any_cast<std::string>(result)});
+                    }else if(func.return_type == "std::vector<Value>"){
+                        push({Value_Type::VECTOR, std::any_cast<std::vector<Value>>(result)});
+                    }
+                }
 
                 break;
             }
@@ -533,6 +488,7 @@ void run_vm(bool verbose = false){
                 std::cout << "ERROR: Unknown opcode" << std::endl;
                 return;
         }
+        
         bool ok = increase_ip(1);
         if(!ok){
             break;

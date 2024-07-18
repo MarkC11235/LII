@@ -3,6 +3,8 @@
 #include <map>
 #include <vector>
 
+#include "Value.hpp"
+#include "./std_lib/std_lib.hpp" // Include the standard library, first so that the objects are declared before they are used
 #include "tokenizer.hpp"
 #include "parser.hpp"
 #include "bytecode_generator.hpp"

@@ -1,12 +1,12 @@
-let test = func(x){
+let str_len = func(x){
     return x;
 };
 
-print test(3); # 3
+print str_len("tester.calc"); # Output: tester.calc
 
-
-print $test(); # 3.14
-print $inc(3); # 4
+$do_nothing();
+print $test(); # Output: 42
+print $inc(1); # Output: 2
 
 # String functions
 

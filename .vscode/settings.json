@@ -63,6 +63,7 @@
         "span": "cpp",
         "stop_token": "cpp",
         "variant": "cpp",
-        "text_encoding": "cpp"
+        "text_encoding": "cpp",
+        "any": "cpp"
     }
 }

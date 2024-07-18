@@ -11,13 +11,37 @@ enum Value_Type{
     BOOL,
     STRING,
     VECTOR,
-    STRUCT,
+    //STRUCT, Not implemented
 };
 
 struct Value{
     Value_Type type;
-    std::variant<double, bool, std::string, std::vector<Value>> data;
+    std::variant<
+                double, // NUMBER
+                bool, // BOOL
+                std::string, // STRING
+                std::vector<Value> // VECTOR
+                > data;
 };
+
+Value_Type get_value_type(Value value){
+    return value.type;
+}
+
+std::string get_value_type_string(Value value){
+    switch(value.type){
+        case NUMBER:
+            return "number";
+        case BOOL:
+            return "bool";
+        case STRING:
+            return "string";
+        case VECTOR:
+            return "vector";
+        default:
+            return "unknown"; // Should never reach here, but to avoid warnings
+    }
+}
 
 bool VALUE_AS_BOOL(Value value){
     switch(value.type){

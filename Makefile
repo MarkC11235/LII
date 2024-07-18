@@ -1,5 +1,5 @@
 CC = g++
-CXXFLAGS = -Wall -std=c++17 
+CXXFLAGS = -Wall -std=c++17
 INPUT_FILE = tester.calc
 EXE = ./lii
 

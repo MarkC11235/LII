@@ -243,7 +243,7 @@ void display_bytecode(function* func){
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Name: " << STD_LIB_FUNCTION_NAMES[(int)func->code[i]] << std::endl;                
+                std::cout << "Name: " << STD_LIB_FUNCTIONS_DEFINITIONS[(int)func->code[i]].name << std::endl;                
                 break;
 
             default:
@@ -421,8 +421,8 @@ void interpret_std_lib_call(Node* node, function* func){
 
     WRITE_BYTE(OpCode::OP_STD_LIB_CALL, func);
     // look up the function in the std lib function names array
-    for(int i = 0; i < (int)STD_LIB_FUNCTION_NAMES.size(); i++){
-        if(name == STD_LIB_FUNCTION_NAMES[i]){
+    for(int i = 0; i < (int)STD_LIB_FUNCTIONS_DEFINITIONS.size(); i++){
+        if(name == STD_LIB_FUNCTIONS_DEFINITIONS[i].name){
             WRITE_BYTE(i, func);
             return;
         }
