@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 
+#include "../Value.hpp"
+
 #define RED_TEXT "\033[1;31m"
 #define GREEN_TEXT "\033[1;32m"
 #define YELLOW_TEXT "\033[1;33m"

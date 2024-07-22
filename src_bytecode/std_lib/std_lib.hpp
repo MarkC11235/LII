@@ -10,6 +10,7 @@
 #include <utility> // std::index_sequence, std::make_index_sequence
 
 #include "strings.hpp" // include the string functions
+#include "vectors.hpp" // include the vector functions
 
 //Allowed mappings of LII types to C++ types
 // LII -> C++
@@ -56,8 +57,11 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"str_len", make_std_lib_function(str_len), "int", {"std::string"}},
     {"char_at", make_std_lib_function(char_at), "std::string", {"std::string", "int"}},
     {"replace_char", make_std_lib_function(replace_char), "std::string", {"std::string", "int", "std::string"}},
-    // custom functions
-    {"print_colored_text", make_std_lib_function(print_colored_text), "void", {"std::string", "std::string"}}
+    {"print_colored_text", make_std_lib_function(print_colored_text), "void", {"std::string", "std::string"}},
+    // vector functions
+    {"vector_len", make_std_lib_function(vector_len), "int", {"std::vector<Value>"}},
+    {"vector_push", make_std_lib_function(vector_push), "std::vector<Value>", {"std::vector<Value>", "Value"}},
+    {"vector_pop", make_std_lib_function(vector_pop), "std::vector<Value>", {"std::vector<Value>"}},
 };  
 
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){
@@ -99,6 +103,10 @@ bool LII_type_matches_cpp_type(Value value, std::string type){
             break;
     }
 
+    if(type == "Value"){ 
+        return true; // Value can be used as a generic type
+    }
+
     return false;
 }
 
@@ -113,7 +121,11 @@ bool any_type_check(std::any value, std::string type){
         return value.type() == typeid(std::string);
     }else if(type == "std::vector<Value>"){
         return value.type() == typeid(std::vector<Value>);
-    }else{
+    }
+    else if(type == "Value"){
+        return true; // Value can be used as a generic type
+    }
+    else{
         std_lib_error("any_type_check", "invalid type [" + type + "]");
         return false;
     }
@@ -130,7 +142,10 @@ std::any cast_LII_type_to_cpp_type(Value value, std::string type){
         return VALUE_AS_STRING(value);
     }else if(type == "std::vector<Value>"){
         return VALUE_AS_VECTOR(value);
-    }else{
+    }else if(type == "Value"){
+        return std::any(value);
+    }
+    else{
         std_lib_error("cast_LII_type_to_cpp_type", "invalid type [" + type + "]");
         return std::any();
     }

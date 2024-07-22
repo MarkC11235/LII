@@ -1,1 +1,10 @@
-$print_colored_text("Hello, World!", "red");
+let vec = [1, 2, 3, 4, 5];
+print $vector_len(vec);
+
+vec = $vector_push(vec, 6);
+print $vector_len(vec);
+print vec;
+
+vec = $vector_pop(vec);
+print $vector_len(vec);
+print vec;
