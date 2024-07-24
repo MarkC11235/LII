@@ -5,18 +5,32 @@ EXE = ./lii
 
 VERSION = BYTECODE
 
-all: build runv
+all: build_bytecode runv
 
 build:
 ifeq ($(VERSION), BASE)
-	$(CC) $(CXXFLAGS) ./src_base/main.cpp -o $(EXE)
+	time -f "%e seconds to compile" $(CC) $(CXXFLAGS) ./src_base/main.cpp -o $(EXE)
 	@echo "Base version compiled"
 else ifeq ($(VERSION), BYTECODE)
-	$(CC) $(CXXFLAGS) ./src_bytecode/main.cpp -o $(EXE)
+	time -f "%e seconds to compile" $(CC) $(CXXFLAGS) ./src_bytecode/main.cpp -o $(EXE)
 	@echo "Bytecode version compiled\n"
 else
 	$(error Invalid version: $(VERSION))
 endif
+
+build_base:
+	@start_time=$$(date +%s); \
+	$(CC) $(CXXFLAGS) ./src_base/main.cpp -o $(EXE); \
+	end_time=$$(date +%s); \
+	elapsed_time=$$((end_time - start_time)); \
+	echo "Bytecode version compiled in $$elapsed_time seconds"
+
+build_bytecode:
+	@start_time=$$(date +%s); \
+	$(CC) $(CXXFLAGS) ./src_bytecode/main.cpp -o $(EXE); \
+	end_time=$$(date +%s); \
+	elapsed_time=$$((end_time - start_time)); \
+	echo "Bytecode version compiled in $$elapsed_time seconds"
 
 run:
 	@echo "Running $(INPUT_FILE)\n"
