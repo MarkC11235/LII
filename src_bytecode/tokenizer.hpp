@@ -169,7 +169,10 @@ std::vector<Token> analyze(std::string input, int line_number){
     for(int i = 0; i < int(input.length()); i++){
         switch(input[i]){
             case '#':
-                return tokens; // Ignore the rest of the line if a comment is found
+                // This will be used for importing files
+                // Example: #include "file_name"
+                // right now throw an error
+                return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "error", line_number)};
             case '$':
                 tokens.push_back(Token(TokenType::STD_LIB_TOKEN, "$", line_number));
                 break;
@@ -211,7 +214,12 @@ std::vector<Token> analyze(std::string input, int line_number){
             case '+':
             case '-':
             case '*':
+                tokens.push_back(Token(TokenType::OPERATOR_TOKEN, std::string(1, input[i]), line_number));
+                break;
             case '/':
+                if(i + 1 < int(input.length()) && input[i + 1] == '/'){
+                    return tokens; // Ignore the rest of the line if a comment is found
+                }
                 tokens.push_back(Token(TokenType::OPERATOR_TOKEN, std::string(1, input[i]), line_number));
                 break;
             case '<':

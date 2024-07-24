@@ -56,7 +56,7 @@ runvV:
 	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -vV
 
-test : build
+test : build_bytecode
 	@for i in tests_2/*.calc; do \
 		echo "Running test $$i"; \
 		$(EXE) $$i > $${i}.temp; \

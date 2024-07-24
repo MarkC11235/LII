@@ -2,29 +2,29 @@ let str_len = func(x){
     return x;
 };
 
-print str_len("tester.calc"); # Output: tester.calc
+print str_len("tester.calc"); // Output: tester.calc
 
 $do_nothing();
-print $test(); # Output: 42
-print $inc(1); # Output: 2
+print $test(); // Output: 42
+print $inc(1); // Output: 2
 
-# String functions
+// String functions
 
-print $str_len("Hello, World!"); # Output: 13
-print $str_concat("Hello, ", "World!"); # Output: Hello, World!
-print $str_substr("Hello, World!", 7, 5); # Output: World
-print $char_at("Hello, World!", 7); # Output: W
-print $replace_char("Hello, World!", 0, "J"); # Output: Jello, World!
+print $str_len("Hello, World!"); // Output: 13
+print $str_concat("Hello, ", "World!"); // Output: Hello, World!
+print $str_substr("Hello, World!", 7, 5); // Output: World
+print $char_at("Hello, World!", 7); // Output: W
+print $replace_char("Hello, World!", 0, "J"); // Output: Jello, World!
 
-# Vector functions
+// Vector functions
 
 let vec = [1, 2, 3, 4, 5];
-print $vector_len(vec); # Output: 5
+print $vector_len(vec); // Output: 5
 
 vec = $vector_push(vec, 6);
-print $vector_len(vec); # Output: 6
-print vec; # Output: [1, 2, 3, 4, 5, 6]
+print $vector_len(vec); // Output: 6
+print vec; // Output: [1, 2, 3, 4, 5, 6]
 
 vec = $vector_pop(vec);
-print $vector_len(vec); # Output: 5
-print vec; # Output: [1, 2, 3, 4, 5]
+print $vector_len(vec); // Output: 5
+print vec; // Output: [1, 2, 3, 4, 5]

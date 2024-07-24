@@ -14,4 +14,4 @@ let a = func(){
 
 print a();
 
-print p(); # error
+print p(); // error

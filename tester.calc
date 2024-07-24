@@ -1,3 +1,5 @@
-let vec = [];
+// hello
 
-print vec;
+let x = 5; // x is a number
+
+print x; // 5
