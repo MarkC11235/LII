@@ -62,6 +62,14 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"vector_len", make_std_lib_function(vector_len), "int", {"std::vector<Value>"}},
     {"vector_push", make_std_lib_function(vector_push), "std::vector<Value>", {"std::vector<Value>", "Value"}},
     {"vector_pop", make_std_lib_function(vector_pop), "std::vector<Value>", {"std::vector<Value>"}},
+    {"vector_insert", make_std_lib_function(vector_insert), "std::vector<Value>", {"std::vector<Value>", "int", "Value"}},
+    {"vector_remove", make_std_lib_function(vector_remove), "std::vector<Value>", {"std::vector<Value>", "int"}},
+    {"vector_clear", make_std_lib_function(vector_clear), "std::vector<Value>", {"std::vector<Value>"}},
+    {"vector_get", make_std_lib_function(vector_get), "Value", {"std::vector<Value>", "int"}},
+    {"vector_set", make_std_lib_function(vector_set), "std::vector<Value>", {"std::vector<Value>", "int", "Value"}},
+    {"vector_slice", make_std_lib_function(vector_slice), "std::vector<Value>", {"std::vector<Value>", "int", "int"}},
+    {"vector_reverse", make_std_lib_function(vector_reverse), "std::vector<Value>", {"std::vector<Value>"}},
+    {"vector_concat", make_std_lib_function(vector_concat), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
 };  
 
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){

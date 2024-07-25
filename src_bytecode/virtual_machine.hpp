@@ -460,6 +460,8 @@ void run_vm(bool verbose = false){
                         push({Value_Type::STRING, std::any_cast<std::string>(result)});
                     }else if(func.return_type == "std::vector<Value>"){
                         push({Value_Type::VECTOR, std::any_cast<std::vector<Value>>(result)});
+                    }else if(func.return_type == "Value"){
+                        push(std::any_cast<Value>(result));
                     }
                 }
 
