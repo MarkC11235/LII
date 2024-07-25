@@ -52,12 +52,14 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"test", make_std_lib_function(test), "double", {}},
     {"inc", make_std_lib_function(inc), "double", {"double"}},
     // string functions
-    {"str_concat", make_std_lib_function(str_concat), "std::string", {"std::string", "std::string"}},
-    {"str_substr", make_std_lib_function(str_substr), "std::string", {"std::string", "int", "int"}},
-    {"str_len", make_std_lib_function(str_len), "int", {"std::string"}},
+    {"string_concat", make_std_lib_function(string_concat), "std::string", {"std::string", "std::string"}},
+    {"string_substr", make_std_lib_function(string_substr), "std::string", {"std::string", "int", "int"}},
+    {"string_len", make_std_lib_function(string_len), "int", {"std::string"}},
     {"char_at", make_std_lib_function(char_at), "std::string", {"std::string", "int"}},
     {"replace_char", make_std_lib_function(replace_char), "std::string", {"std::string", "int", "std::string"}},
     {"print_colored_text", make_std_lib_function(print_colored_text), "void", {"std::string", "std::string"}},
+    {"string_to_vector", make_std_lib_function(string_to_vector), "std::vector<Value>", {"std::string"}},
+    {"string_split", make_std_lib_function(string_split), "std::vector<Value>", {"std::string", "std::string"}},
     // vector functions
     {"vector_len", make_std_lib_function(vector_len), "int", {"std::vector<Value>"}},
     {"vector_push", make_std_lib_function(vector_push), "std::vector<Value>", {"std::vector<Value>", "Value"}},

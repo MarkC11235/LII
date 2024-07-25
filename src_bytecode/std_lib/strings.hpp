@@ -35,18 +35,18 @@ void print_colored_text(std::string text, std::string color){
     std::cout << text << std::endl << RESET_TEXT;
 }
 
-std::string str_concat(std::string a, std::string b){
+std::string string_concat(std::string a, std::string b){
     return a + b;
 }
 
 // start is 0-based, 
 // if start + length is greater than the length of the string, it will return the substring from start to the end of the string
-std::string str_substr(std::string a, int start, int length){ 
+std::string string_substr(std::string a, int start, int length){ 
     return a.substr(start, length);
 }
 
 // returns the length of the string
-int str_len(std::string a){
+int string_len(std::string a){
     return a.length();
 }
 
@@ -69,6 +69,27 @@ std::string replace_char(std::string a, int index, std::string c){
     }
     a[index] = c[0];
     return a;
+}
+
+std::vector<Value> string_to_vector(std::string a){
+    std::vector<Value> v;
+    for(int i = 0; i < (int)a.length(); i++){
+        v.push_back({Value_Type::STRING, std::string(1, a[i])});
+    }
+    return v;
+}
+
+std::vector<Value> string_split(std::string a, std::string delimiter){
+    std::vector<Value> v;
+    size_t pos = 0;
+    std::string token;
+    while ((pos = a.find(delimiter)) != std::string::npos) {
+        token = a.substr(0, pos);
+        v.push_back({Value_Type::STRING, token});
+        a.erase(0, pos + delimiter.length());
+    }
+    v.push_back({Value_Type::STRING, a});
+    return v;
 }
 
 
