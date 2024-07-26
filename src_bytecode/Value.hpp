@@ -87,7 +87,24 @@ std::string VALUE_AS_STRING(Value value){
         case BOOL:
             return std::get<bool>(value.data) ? "true" : "false";
         case STRING:
-            return std::get<std::string>(value.data);
+        {
+            //replace all \\n with \n
+            std::string str = std::get<std::string>(value.data);
+            size_t pos = 0;
+            while((pos = str.find("\\n", pos)) != std::string::npos){
+                str.replace(pos, 2, "\n");
+                pos += 1;
+            }
+
+            //replace all \\t with \t
+            pos = 0;
+            while((pos = str.find("\\t", pos)) != std::string::npos){
+                str.replace(pos, 2, "\t");
+                pos += 1;
+            }
+
+            return str;
+        }
         case VECTOR:
         {
             std::string str = "[";

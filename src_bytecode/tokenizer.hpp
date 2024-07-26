@@ -253,9 +253,12 @@ std::vector<Token> analyze(std::string input, int line_number){
             {
                 std::string string = "";
                 i++;
-                while(input[i] != '"'){
+                while(input[i] != '"' && i < int(input.length())){
                     string += input[i];
                     i++;
+                }
+                if(i == int(input.length())){
+                    return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "No closing quotes", line_number)};
                 }
                 //std::cout << string << std::endl;
                 tokens.push_back(Token(TokenType::STRING_TOKEN, string, line_number));
