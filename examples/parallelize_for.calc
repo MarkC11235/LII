@@ -1,6 +1,0 @@
-@p16,0,100000 # This is to parallelize the loop with 16 threads from 0 to 100000
-for(i = 0; i < 100000; i = i + 1) {
-    i
-}
-
-i

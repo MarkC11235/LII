@@ -41,5 +41,10 @@ void file_write(std::string file_path, std::string content){
 //     return vals_vector;
 // }
 
+void run_python_file(std::string file_path){
+    std::string command = "python3 " + file_path;
+    system(command.c_str());
+}
+
 
 #endif // FILES_HPP
