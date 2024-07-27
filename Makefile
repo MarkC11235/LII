@@ -1,6 +1,6 @@
 CC = g++
 CXXFLAGS = -Wall -std=c++17
-INPUT_FILE = tester.calc
+INPUT_FILE = tester.cl
 EXE = ./lii
 
 VERSION = BYTECODE
@@ -50,7 +50,7 @@ debug:
 	@$(EXE) $(INPUT_FILE) -d -vV
 
 test : build_bytecode
-	@for i in $$(find tests_2 -type f -name '*.calc'); do \
+	@for i in $$(find tests_2 -type f -name '*.cl'); do \
 		echo "Running test $$i"; \
 		$(EXE) $$i > $${i}.temp; \
 		diff -b -w $${i}.temp $${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; \

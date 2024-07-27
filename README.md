@@ -2,7 +2,7 @@
 
 ### **Intro**
 
-The Castle Vitual Machine runs .cast files. These files are written in the CastleLang programming language. 
+The Castle Vitual Machine runs .cl files. These files are written in the CastleLang programming language. 
 
 To Use:
 

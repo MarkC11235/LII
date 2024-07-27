@@ -13,10 +13,16 @@
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
     if(argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file.calc> -d -v [-vT -vP -vB -vV]" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file.cl> -d -v [-vT -vP -vB -vV]" << std::endl;
         return 1;
     }
     std::string input_file = argv[1];
+    // Check if the input file has the correct extension
+    if(input_file.substr(input_file.find_last_of(".") + 1) != "cl") {
+        std::cout << "Input file must have a .cl extension." << std::endl;
+        return 1;
+    }
+
     bool verboseT = false;
     bool verboseP = false;
     bool verboseB = false;
