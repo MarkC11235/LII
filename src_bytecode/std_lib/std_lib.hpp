@@ -11,6 +11,7 @@
 
 #include "strings.hpp" // include the string functions
 #include "vectors.hpp" // include the vector functions
+#include "files.hpp" 
 
 //Allowed mappings of LII types to C++ types
 // LII -> C++
@@ -72,6 +73,9 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"vector_slice", make_std_lib_function(vector_slice), "std::vector<Value>", {"std::vector<Value>", "int", "int"}},
     {"vector_reverse", make_std_lib_function(vector_reverse), "std::vector<Value>", {"std::vector<Value>"}},
     {"vector_concat", make_std_lib_function(vector_concat), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
+    // file functions
+    {"file_write", make_std_lib_function(file_write), "void", {"std::string", "std::string"}},
+    //{"file_read", make_std_lib_function(file_read), "Value", {"std::string"}},
 };  
 
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){

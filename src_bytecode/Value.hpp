@@ -22,6 +22,18 @@ struct Value{
                 std::string, // STRING
                 std::vector<Value> // VECTOR
                 > data;
+
+    Value(){}
+
+    Value(Value_Type t, std::variant<double, bool, std::string, std::vector<Value>> d){
+        type = t;
+        data = d;
+    }
+
+    Value(const Value& other){
+        type = other.type;
+        data = other.data; 
+    }
 };
 
 Value_Type get_value_type(Value value){
@@ -70,6 +82,7 @@ double VALUE_AS_NUMBER(Value value){
 }
 
 std::string VALUE_AS_STRING(Value value){
+    //std::cout << "VALUE AS STRING | Value_Type: " << get_value_type_string(value) << std::endl;
     switch(value.type){
         case NUMBER: // TODO: Improve this to be faster, this is just a quick fix to remove trailing zeros
                      // This is because the tests expect the output to not have trailing zeros
@@ -134,7 +147,8 @@ std::vector<Value> VALUE_AS_VECTOR(Value value){
     }
 }
 
-void print_value(Value value){
+void print_value(Value value, bool verbose = false){
+    if(verbose) std::cout << "Type: " << get_value_type_string(value) << " | ";
     std::cout << VALUE_AS_STRING(value);
 }
 

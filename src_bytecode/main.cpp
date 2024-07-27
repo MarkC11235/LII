@@ -13,7 +13,7 @@
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
     if(argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file.calc> -v [-vT -vP -vB -vV]" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file.calc> -d -v [-vT -vP -vB -vV]" << std::endl;
         return 1;
     }
     std::string input_file = argv[1];
@@ -21,6 +21,8 @@ int main(int argc, char *argv[]) {
     bool verboseP = false;
     bool verboseB = false;
     bool verboseV = false;
+
+    bool debug = false;
 
     // Check for flags
     for(int i = 2; i < argc; i++) {
@@ -37,6 +39,8 @@ int main(int argc, char *argv[]) {
             verboseB = true;
         } else if(std::string(argv[i]) == "-vV") {
             verboseV = true;
+        } else if(std::string(argv[i]) == "-d"){
+            debug = true;
         }
     }
 
@@ -90,7 +94,7 @@ int main(int argc, char *argv[]) {
 
     // Interpret the bytecode
     start = std::chrono::high_resolution_clock::now();
-    interpret_bytecode(verboseV);
+    interpret_bytecode(verboseV, debug);
     end = std::chrono::high_resolution_clock::now();
     if (verboseV) {
         std::cout << "Interpretation took "

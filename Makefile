@@ -45,6 +45,10 @@ runvV:
 	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -vV
 
+debug:
+	@echo "Running $(INPUT_FILE) in debug mode\n"
+	@$(EXE) $(INPUT_FILE) -d -vV
+
 test : build_bytecode
 	@for i in $$(find tests_2 -type f -name '*.calc'); do \
 		echo "Running test $$i"; \

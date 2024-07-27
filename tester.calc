@@ -1,3 +1,4 @@
-let str = "Dear name,\n\n\t We are pleased to inform you that you have been selected for the interview. Please find the attached interview details.\n\n\t Regards,\n\t Admin\n\n";
+let str = "print(5)";
+let file = "tester.py";
 
-print str;
+$file_write(file, str);
