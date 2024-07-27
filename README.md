@@ -53,13 +53,13 @@ for(let i = 1; i <= 10; i = i + 1){
 }
 ```
 
-Standard Library
+Standard Library Call
 ```
 let str = "Hello World!";
 print $string_len(str);
 ```
 
-### **Standard Library**
+### **Standard Library** 
 
 CastleLang has a built in standard library implemented in c++. These functions are able to be called from .cast file by prefixing a function call with '$'. An example of this is -> 
 ```
@@ -96,4 +96,6 @@ The Bytecode Generator takes in an abstract syntax tree and generates
 4. Virtual Machine  
 The Virtual Machine takes in the bytecode generator output and steps through the bytecode array. The VM uses a stack to evaluate expressions and call functions.
 
+### **Debugger**
 
+Can run the bytecode in debug mode using the -d flag. This allows you to step through the bytecode one instruction at a time and after each instruction the debugger will print useful information.
