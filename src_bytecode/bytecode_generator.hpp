@@ -20,6 +20,7 @@ enum OpCode{
     // Arithmetic
     OP_ADD,
     OP_SUB,
+    OP_U_SUB,
     OP_MUL,
     OP_DIV,
     //Comparison
@@ -56,6 +57,7 @@ enum OpCode{
 
 // For athritmetic and comparison operations
 std::unordered_map<std::string, OpCode> opCodeMap = { 
+    {"u-", OpCode::OP_U_SUB},
     {"+", OpCode::OP_ADD},
     {"-", OpCode::OP_SUB},
     {"*", OpCode::OP_MUL},
@@ -109,6 +111,9 @@ void display_bytecode(function* func){
                 break;
             case OpCode::OP_SUB:
                 std::cout << "OP_SUB" << std::endl;
+                break;
+            case OpCode::OP_U_SUB:
+                std::cout << "OP_U_SUB" << std::endl;
                 break;
             case OpCode::OP_MUL:
                 std::cout << "OP_MUL" << std::endl;
@@ -481,17 +486,29 @@ void choose_expr_operand(Node* node, function* func){
 
 void interpret_op(Node* node, function* func){
     if(node->get_type() == NodeType::OP_NODE){
-        Node* l_child = node->get_child(0);
-        Node* r_child = node->get_child(1);
-
-        choose_expr_operand(l_child, func); 
-
-        choose_expr_operand(r_child, func);
-
         std::string opStr = node->get_value();
         
         if(opCodeMap.find(opStr) == opCodeMap.end()){
             interpretation_error("Invalid operator", node);
+        }
+
+        if(operators.find(opStr) == operators.end()){
+            interpretation_error("Operator not found", node);
+        }
+
+        if(std::get<1>(operators[opStr]) == "binary"){
+            Node* l_child = node->get_child(0);
+            choose_expr_operand(l_child, func); 
+
+            Node* r_child = node->get_child(1);
+            choose_expr_operand(r_child, func);
+        }
+        else if(std::get<1>(operators[opStr]) == "unary"){
+            Node* child = node->get_child(0);
+            choose_expr_operand(child, func);
+        }
+        else{
+            interpretation_error("Invalid operator type", node);
         }
 
         WRITE_BYTE(opCodeMap[opStr], func);

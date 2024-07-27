@@ -118,18 +118,46 @@ void place_token_back(std::vector<Token>& tokens, Token token){
     tokens.insert(tokens.begin(), token);
 }
 
-int precedence(std::string op){ // TODO: Could be speed up with a map
-    if(op == "<" || op == ">" || op == "<=" || op == ">=" || op == "==" || op == "!="){
-        return 7;
+std::map<std::string, std::tuple<int, std::string>> operators = {
+    {"u-", {11, "unary"}}, // Unary minus
+    {"*", {10, "binary"}},
+    {"/", {10, "binary"}},
+    {"+", {9, "binary"}},
+    {"-", {9, "binary"}},
+    {"<", {7, "binary"}},
+    {">", {7, "binary"}},
+    {"<=", {7, "binary"}},
+    {">=", {7, "binary"}},
+    {"==", {7, "binary"}},
+    {"!=", {7, "binary"}},
+};
+
+int precedence(std::string op, Token token){ 
+    if(operators.find(op) == operators.end()){
+        parsing_error("UNKNOWN operator", token);
     }
-    else if(op == "+" || op == "-"){
-        return 9;
-    } 
-    else if(op == "*" || op == "/"){
-        return 10;
-    }
-    return 0;
+
+    return std::get<0>(operators[op]);
 }
+
+bool is_binary_operator(std::string op){
+    if(operators.find(op) == operators.end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(operators[op]) == "binary";
+}
+
+bool is_unary_operator(std::string op){
+    if(operators.find(op) == operators.end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(operators[op]) == "unary";
+}
+
 
 std::vector<std::string> splitStringByComma(const std::string& str) {
     std::vector<std::string> result;
@@ -222,6 +250,8 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
 
     bool loop = true;
 
+    TokenType previos_token_type = TokenType::OPERATOR_TOKEN;
+
     while(loop){
         Token token = pop(tokens);
         if(token.get_type() == TokenType::CLOSEPAR_TOKEN && nested){ // End of nested expression
@@ -273,15 +303,35 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
             }
             case TokenType::OPERATOR_TOKEN: {
                 Node* op = new Node(NodeType::OP_NODE, value);
-                while(ops.size() > 0 && precedence(ops.top()->get_value()) >= precedence(op->get_value())){
+
+                if(previos_token_type == TokenType::OPERATOR_TOKEN){
+                    if(value == "-"){ // Unary minus
+                        op->change_value("u-", 0);
+                    }
+                    else {
+                        parsing_error("Syntax error: expected number or identifier", token);
+                    }
+                }
+
+                while(ops.size() > 0 && (precedence(ops.top()->get_value(), token) >= precedence(op->get_value(), token)) ){
                     Node* top = ops.top();
                     ops.pop();
-                    top->add_child(values.top());
-                    values.pop();
-                    top->add_child(values.top());
-                    values.pop();
+                    if(is_binary_operator(top->get_value())){
+                        top->add_child(values.top());
+                        values.pop();
+                        top->add_child(values.top());
+                        values.pop();
+                    }
+                    else if(is_unary_operator(top->get_value())){
+                        top->add_child(values.top());
+                        values.pop();
+                    }
+                    else {
+                        parsing_error("Syntax error: unknown operator", token);
+                    }
                     values.push(top);
                 }
+
                 ops.push(op);
                 break;
             }
@@ -302,16 +352,25 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 break;
             }
         }
+
+        previos_token_type = type;
     }
 
     while(ops.size() > 0){
         Node* top = ops.top();
         ops.pop();
-        top->add_child(values.top());
-        values.pop();
-        top->add_child(values.top());
-        values.pop();
-        values.push(top);
+        if(is_binary_operator(top->get_value())){
+            top->add_child(values.top());
+            values.pop();
+            top->add_child(values.top());
+            values.pop();
+            values.push(top);
+        }
+        else if(is_unary_operator(top->get_value())){
+            top->add_child(values.top());
+            values.pop();
+            values.push(top);
+        }
     }
 
     current->add_child(values.top());

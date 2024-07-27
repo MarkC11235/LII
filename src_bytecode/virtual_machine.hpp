@@ -227,6 +227,19 @@ void vm_loop(bool verbose)
         }
         break;
     }
+    case OpCode::OP_U_SUB:
+    {
+        Value a = pop();
+        if (a.type == Value_Type::NUMBER)
+        {
+            push({Value_Type::NUMBER, -std::get<double>(a.data)});
+        }
+        else
+        {
+            vm_error("Invalid types for unary subtraction");
+        }
+        break;
+    }
     case OpCode::OP_MUL:
     {
         Value a = pop();
