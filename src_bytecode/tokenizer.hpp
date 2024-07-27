@@ -265,8 +265,16 @@ std::vector<Token> analyze(std::string input, int line_number){
             }
                 break;
             default:
-                if(isdigit(input[i])){
+                if(isdigit(input[i]) || input[i] == '.'){
                     std::string number = "";
+                    while(i < int(input.length()) && isdigit(input[i])){
+                        number += input[i];
+                        i++;
+                    }
+                    if(input[i] == '.'){
+                        number += input[i];
+                        i++;
+                    }
                     while(i < int(input.length()) && isdigit(input[i])){
                         number += input[i];
                         i++;
