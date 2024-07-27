@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 
+#include "Function.hpp"
 #include "Value.hpp"
 #include "./std_lib/std_lib.hpp" // Include the standard library, first so that the objects are declared before they are used
 #include "tokenizer.hpp"
@@ -72,7 +73,7 @@ int main(int argc, char *argv[]) {
 
     // Traverse the AST and generate the bytecode
     start = std::chrono::high_resolution_clock::now();
-    generate_bytecode(ast);
+    function* func = generate_bytecode(ast);
     end = std::chrono::high_resolution_clock::now();
     if (verboseB) {
         std::cout << "Bytecode generation took "
@@ -88,10 +89,8 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
 
         std::cout << "Bytecode:" << std::endl;
-        for(auto it = function_definitions.begin(); it != function_definitions.end(); it++){
-            std::cout << "Function: " << it->first << std::endl;
-            display_bytecode(it->second);
-        }
+        std::cout << "Main Function: " << std::endl;
+        display_bytecode(func);
         std::cout << std::endl;
     }
 
@@ -100,7 +99,7 @@ int main(int argc, char *argv[]) {
 
     // Interpret the bytecode
     start = std::chrono::high_resolution_clock::now();
-    interpret_bytecode(verboseV, debug);
+    interpret_bytecode(func, verboseV, debug);
     end = std::chrono::high_resolution_clock::now();
     if (verboseV) {
         std::cout << "Interpretation took "

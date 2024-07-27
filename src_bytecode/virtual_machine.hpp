@@ -56,14 +56,14 @@ function_frame *create_function_frame(function *func)
 }
 
 // Initializes the virtual machine ----------------------------------
-void init_vm(int stack_capacity = 256)
+void init_vm(function* func, int stack_capacity = 256)
 {
     vm.stack = new Value[stack_capacity];
     vm.stack_count = 0;
     vm.stack_capacity = stack_capacity;
 
     vm.function_frames.clear();
-    vm.function_frames.push_back(create_function_frame(function_definitions["main"]));
+    vm.function_frames.push_back(create_function_frame(func));
 }
 
 // -------------------------------------------------------------------
@@ -150,7 +150,7 @@ void update_variable(const std::string &name, Value value)
             return;
         }
     }
-    vm_error("Variable not found");
+    vm_error("update variable: Variable " + name + " not found");
 }
 
 // Gets a variable in the current function frame, does not look in the parent frames
@@ -165,7 +165,23 @@ Value get_variable(const std::string &name)
             return frame->variables[i][name];
         }
     }
-    vm_error("Variable not found");
+    vm_error("get_variable: Variable " + name + " not found");
+    return Value(); // To avoid warning, but this line will never be reached because of vm_error
+}
+
+Value get_function_variable(const std::string &name)
+{
+    for(int j = 0; j < (int)vm.function_frames.size(); j++){
+        function_frame *frame = vm.function_frames[j];
+        for (int i = frame->current_scope; i >= 0; i--)
+        {
+            if (frame->variables[i].find(name) != frame->variables[i].end())
+            {
+                return frame->variables[i][name];
+            }
+        }
+    }
+    vm_error("get_function_variable: Variable " + name + " not found");
     return Value(); // To avoid warning, but this line will never be reached because of vm_error
 }
 // -------------------------------------------------------------------
@@ -339,6 +355,10 @@ void vm_loop(bool verbose)
         push(get_variable(variable_names.names[get_ip()[1]]));
         increase_ip(1);
         break;
+    case OpCode::OP_LOAD_FUNCTION_VAR:
+        push(get_function_variable(variable_names.names[get_ip()[1]]));
+        increase_ip(1);
+        break;
 
     // Array operations
     case OpCode::OP_CREATE_VECTOR:
@@ -415,7 +435,7 @@ void vm_loop(bool verbose)
 
         if (verbose)
         {
-            std::cout << "Returning from function: " << get_current_function_frame()->func->name << std::endl;
+            std::cout << "Returning from function" << std::endl;
         }
 
         // remove the current function frame
@@ -423,7 +443,7 @@ void vm_loop(bool verbose)
         vm.function_frames.pop_back();
 
         // set the ip to the next instruction
-        get_current_function_frame()->ip += 1;
+        //get_current_function_frame()->ip += 1;
 
         break;
     }
@@ -447,10 +467,11 @@ void vm_loop(bool verbose)
     {
         if (verbose)
         {
-            std::cout << "Calling function: " << get_variable_name(get_ip()[1]) << std::endl;
+            std::cout << "Calling function: " << std::endl;
         }
 
-        function *func = function_definitions[get_variable_name(get_ip()[1])];
+        // function *func = function_definitions[get_variable_name(get_ip()[1])];
+        function* func = VALUE_AS_FUNCTION(pop());
         vm.function_frames.push_back(create_function_frame(func));
 
         get_current_function_frame()->ip = func->code - 1; // -1 because the ip will be increased by 1
@@ -583,6 +604,7 @@ void display_debug_info()
     std::cout << "IP: " << instruction << std::endl;
     std::cout << "Debuging Info:" << std::endl;
     
+
     std::cout << "\tCurrent Function: " << ff->func->name << std::endl;
     std::cout << "\tFunction Variables (outermost to innermost scope): " << std::endl;
     std::vector<std::map<std::string, Value>> variables = ff->variables;
@@ -594,6 +616,13 @@ void display_debug_info()
         {
             std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second) << std::endl;
         }
+    }
+
+
+    std::cout << "Stack: \n";
+    for(int i = 0; i < vm.stack_count; i++)
+    {
+        std::cout << VALUE_AS_STRING(vm.stack[i]) << std::endl;
     }
 
     std::cout << "--------------------------------------------------------------------" << std::endl;
@@ -631,9 +660,9 @@ void debug_vm(bool verbose = false)
 // -------------------------------------------------------------------
 
 // Starts the interpretation process ---------------------------------
-void interpret_bytecode(bool verbose = false, bool debug = false)
+void interpret_bytecode(function* func, bool verbose = false, bool debug = false)
 {
-    init_vm();
+    init_vm(func);
     if(debug){debug_vm(verbose);}
     else {run_vm(verbose);}
 }

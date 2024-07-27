@@ -116,6 +116,9 @@ bool LII_type_matches_cpp_type(Value value, std::string type){
                 return true;
             }
             break;
+        case FUNCTION:
+            return false;
+            break;
     }
 
     if(type == "Value"){ 

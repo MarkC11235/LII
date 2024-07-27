@@ -5,27 +5,36 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include "Function.hpp"
+
 
 enum Value_Type{
     NUMBER,
     BOOL,
     STRING,
     VECTOR,
+    FUNCTION,
     //STRUCT, Not implemented
 };
 
+// forward declare Value for the typedef
+struct Value;
+
+typedef std::variant<
+                    double, // NUMBER
+                    bool, // BOOL
+                    std::string, // STRING
+                    std::vector<Value>, // VECTOR
+                    function*
+                    > Value_Content;
+
 struct Value{
     Value_Type type;
-    std::variant<
-                double, // NUMBER
-                bool, // BOOL
-                std::string, // STRING
-                std::vector<Value> // VECTOR
-                > data;
+    Value_Content data;
 
     Value(){}
 
-    Value(Value_Type t, std::variant<double, bool, std::string, std::vector<Value>> d){
+    Value(Value_Type t, Value_Content d){
         type = t;
         data = d;
     }
@@ -133,6 +142,15 @@ std::string VALUE_AS_STRING(Value value){
             str += "]";
             return str;
         }
+        case FUNCTION:
+        {
+            function* func = std::get<function*>(value.data);
+            std::string bc = "";
+            for(int i = 0; i < func->count; i++){
+                bc += std::to_string(func->code[i]) + ", ";
+            }
+            return "Function: " + bc;
+        }
         default:
             return "UNKNOWN"; // Should never reach here, but to avoid warnings
     }
@@ -145,6 +163,16 @@ std::vector<Value> VALUE_AS_VECTOR(Value value){
         default:
             return {}; // Should never reach here, but to avoid warnings
     }
+}
+
+function* VALUE_AS_FUNCTION(Value value){
+    if(value.type == Value_Type::FUNCTION){
+        return std::get<function*>(value.data);
+    }
+
+    std::cout << "ERROR: casting non function to function" << std::endl;
+    exit(1);
+    return nullptr; // will never reach here
 }
 
 void print_value(Value value, bool verbose = false){

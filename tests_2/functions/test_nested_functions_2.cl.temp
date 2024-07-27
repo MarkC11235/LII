@@ -1,1 +1,4 @@
-Function not found: p
+1
+2
+3
+ERROR: get_function_variable: Variable p not found

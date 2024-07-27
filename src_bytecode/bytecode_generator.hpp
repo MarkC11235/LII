@@ -11,10 +11,10 @@
 #include <unordered_map>
 
 #include "parser.hpp"
+#include "Function.hpp"
 #include "Value.hpp"
 #include "./std_lib/std_lib.hpp"
 
-typedef int8_t CODE_SIZE; // Bytecode size, only 8 bits for pointers will be too small for large programs
 
 enum OpCode{
     // Arithmetic
@@ -34,6 +34,7 @@ enum OpCode{
     OP_STORE_VAR, // store a value from the stack to the variables map
     OP_UPDATE_VAR, // update a value in the variables map
     OP_LOAD_VAR, // push a value from the variables map to the stack
+    OP_LOAD_FUNCTION_VAR, // looks up the function frames to find function variable
     // Arrays
     OP_CREATE_VECTOR, // make empty vector, needs to be followed by an index to store the vector in the variables map
     OP_VECTOR_PUSH, // insert value from stack into vector, needs to be followed by the index of the vector in the variables map
@@ -69,24 +70,8 @@ std::unordered_map<std::string, OpCode> opCodeMap = {
 
 
 // Data Structures ---------------------------------------------------
-struct function; // Forward declaration
 
-struct function {
-    CODE_SIZE* code; // Bytecode array
-    int count;
-    int capacity;
-
-    std::string name; // Function name
-
-    function* parent; // Parent function
-    
-    //arguments
-    std::vector<std::string> arguments;
-
-    std::map<std::string, function*> functions; // function map
-};
-
-std::map<std::string, function*> function_definitions; // Dynamically allocated because multiple functions can be created
+//std::map<std::string, function*> function_definitions; // Dynamically allocated because multiple functions can be created
                                                         // This vector stores the functions
 
 
@@ -181,6 +166,13 @@ void display_bytecode(function* func){
                 std::cout << "          ";
                 std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
                 break;
+            case OpCode::OP_LOAD_FUNCTION_VAR:
+                std::cout << "OP_LOAD_FUNCTION_VAR";
+                std::cout << "          ";
+                std::cout << "Index: " << (int)func->code[++i];
+                std::cout << "          ";
+                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                break;
 
             // Arrays
             case OpCode::OP_CREATE_VECTOR:
@@ -217,11 +209,7 @@ void display_bytecode(function* func){
                 std::cout << "OP_JUMP_IF_FALSE    " << "Offset: " << (int)func->code[++i] << std::endl;
                 break;
             case OpCode::OP_FUNCTION_CALL:
-                std::cout << "OP_FUNCTION_CALL";
-                std::cout << "          ";
-                std::cout << "Index: " << (int)func->code[++i];
-                std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                std::cout << "OP_FUNCTION_CALL" << std::endl;;
                 break;
             
             // Scope
@@ -272,15 +260,19 @@ inline void WRITE_BYTE(CODE_SIZE byte, function* func){
 }
 
 inline void WRITE_VALUE(double value){
-    consts.constants[consts.count++] = {NUMBER, value};
+    consts.constants[consts.count++] = {Value_Type::NUMBER, value};
 }
 
 inline void WRITE_VALUE(bool value){
-    consts.constants[consts.count++] = {BOOL, value};
+    consts.constants[consts.count++] = {Value_Type::BOOL, value};
 }
 
 inline void WRITE_VALUE(const std::string& value){
-    consts.constants[consts.count++] = {STRING, value};
+    consts.constants[consts.count++] = {Value_Type::STRING, value};
+}
+
+inline void WRITE_VALUE(function* value){
+    consts.constants[consts.count++] = {Value_Type::FUNCTION, value};
 }
 
 inline void WRITE_VALUE(Value value){
@@ -305,34 +297,34 @@ std::string get_variable_name(int index){
 }
 
 // Constructor for the function struct
-function* create_function(int capacity, std::string name = "", function* parent = nullptr){
+function* create_function(int capacity, function* parent = nullptr){
     function* func = new function;
     func->code = new CODE_SIZE[capacity]; 
     func->count = 0;
     func->capacity = capacity;
 
-    func->parent = parent; // Set the parent function
+    //func->parent = parent; // Set the parent function
 
-    if(name == "main"){
-        func->name = name;
-        return func;
-    }
-    else{
-        func->name = name + "^" + parent->name;
-    }
+    // if(name == "main"){
+    //     func->name = name;
+    //     return func;
+    // }
+    // else{
+    //     func->name = name + "^" + parent->name;
+    // }
 
     // std::cout << "Function name: " << name << std::endl;
     // std::cout << "Parent function name: " << parent->name << std::endl;
 
-    if(parent != nullptr){
-        // new name should be function^parent_name to avoid name conflicts 
-        // if there are name conflicts, the function will be overwritten, which is the intended behavior
-        function_definitions[func->name] = func;
-        //add the function to the functions map of the parent function
-        parent->functions[func->name] = func;
-        //add the function name to the variables map, because functions are variables
-        WRITE_VAR_NAME(func->name);
-    }
+    // if(parent != nullptr){
+    //     // new name should be function^parent_name to avoid name conflicts 
+    //     // if there are name conflicts, the function will be overwritten, which is the intended behavior
+    //     function_definitions[func->name] = func;
+    //     //add the function to the functions map of the parent function
+    //     parent->functions[func->name] = func;
+    //     //add the function name to the variables map, because functions are variables
+    //     WRITE_VAR_NAME(func->name);
+    // }
 
     return func;
 }
@@ -367,43 +359,50 @@ void interpret_function_call(Node* node, function* func){
 
     //look up the function scopes to find the function
     //finds definition that is closest to the current function
-    function* func_where_called_func_resides = func;
-    while(func_where_called_func_resides != nullptr){
-        if(func_where_called_func_resides->functions.find(name + '^' + func_where_called_func_resides->name) != func_where_called_func_resides->functions.end()){
-            break;
-        }
-        func_where_called_func_resides = func_where_called_func_resides->parent;
-    }
+    // function* func_where_called_func_resides = func;
+    // while(func_where_called_func_resides != nullptr){
+    //     if(func_where_called_func_resides->functions.find(name) != func_where_called_func_resides->functions.end()){
+    //         break;
+    //     }
+    //     func_where_called_func_resides = func_where_called_func_resides->parent;
+    // }
 
-    if(func_where_called_func_resides == nullptr){
-        interpretation_error("Function not found: " + name, nullptr);
-    }
+    // if(func_where_called_func_resides == nullptr){
+    //     interpretation_error("Function not found: " + name, nullptr);
+    // }
 
-    name = name + '^' + func_where_called_func_resides->name;
+    // name = name + '^' + func_where_called_func_resides->name;
 
     // Get the function from the variables map
     // lookup the function in the functions map
-    function* called_func = func_where_called_func_resides->functions[name];
-    if(called_func == nullptr){
-        interpretation_error("Function not found: " + name, nullptr);
-    }
+    // function* called_func = func_where_called_func_resides->functions[name];
+    // if(called_func == nullptr){
+    //     interpretation_error("Function not found: " + name, nullptr);
+    // }
 
-    //check if the number of arguments is correct
-    if(node->get_child(0)->get_children().size() != called_func->arguments.size()){
-        interpretation_error("Incorrect number of arguments", node);
-    }
+    // //check if the number of arguments is correct
+    // if(node->get_child(0)->get_children().size() != called_func->arguments.size()){
+    //     interpretation_error("Incorrect number of arguments", node);
+    // }
     //push the arguments to the stack
     for(int i = 0; i < (int)node->get_child(0)->get_children().size(); i++){
         interpret_expr(node->get_child(0)->get_child(i), func);
     }
 
+    //Push the function onto the stack
+    WRITE_BYTE(OpCode::OP_LOAD_FUNCTION_VAR, func);
+    if(get_variable_index(name) == -1){
+        interpretation_error("Function not found", node);
+    }
+    WRITE_BYTE(get_variable_index(name), func);
+
     //call the function
     WRITE_BYTE(OpCode::OP_FUNCTION_CALL, func);
     //write the function index
-    if(get_variable_index(name) == -1){
-        interpretation_error("Function not found: " + name, node);
-    }
-    WRITE_BYTE(get_variable_index(name), func);
+    // if(get_variable_index(name) == -1){
+    //     interpretation_error("Function not found: " + name, node);
+    // }
+    // WRITE_BYTE(get_variable_index(name), func);
 }
 
 void interpret_std_lib_call(Node* node, function* func){
@@ -564,7 +563,11 @@ void interpret_function(Node* node, function* func, std::string name){
         interpretation_error("Function doesn't start with FUNCTION Node", node);
     }
 
-    function* new_func = create_function(1000, name, func);
+    function* new_func = create_function(1000, func);
+    WRITE_VALUE(new_func); // Add the function to the constants array
+
+    WRITE_BYTE(OpCode::OP_LOAD, func); // push function pointer to stack
+    WRITE_BYTE(consts.count - 1, func);
 
     // add the arguments to the variables map
     for(int i = 0; i < (int)node->get_child(0)->get_children().size(); i++){
@@ -620,7 +623,15 @@ void interpret_assign(Node* node, function* func){
         WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
     }
     else if(node->get_child(1)->get_type() == NodeType::FUNCTION_NODE){ // Assigning a function to a variable
+        //have to do this first incase function calls itself
+        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        }
+
         interpret_function(node->get_child(1), func, std::string(node->get_child(0)->get_value()));
+
+        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
     }
     else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a variable
         WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector
@@ -781,10 +792,10 @@ void interpret(Node* node, function* func){
     interpret_stmt_list(node, func);
 }
 
-void generate_bytecode(Node* ast) {
-    function* func = create_function(1000, "main");
+function* generate_bytecode(Node* ast) {
+    function* func = create_function(1000);
 
-    function_definitions["main"] = func;
+    //function_definitions["main"] = func;
 
     CODE_SIZE max = std::numeric_limits<CODE_SIZE>::max();
 
@@ -799,6 +810,8 @@ void generate_bytecode(Node* ast) {
     variable_names.capacity = (int)max;
 
     interpret(ast, func);
+
+    return func;
 }
 
 // -------------------------------------------------------------------
