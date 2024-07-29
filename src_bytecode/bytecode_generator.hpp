@@ -23,6 +23,10 @@ enum OpCode{
     OP_U_SUB,
     OP_MUL,
     OP_DIV,
+    // Boolean
+    OP_AND,
+    OP_OR,
+    OP_NOT,
     //Comparison
     OP_EQ,
     OP_NEQ,
@@ -67,7 +71,10 @@ std::unordered_map<std::string, OpCode> opCodeMap = {
     {">", OpCode::OP_GT},
     {"<", OpCode::OP_LT},
     {">=", OpCode::OP_GTEQ},
-    {"<=", OpCode::OP_LTEQ}
+    {"<=", OpCode::OP_LTEQ},
+    {"&&", OpCode::OP_AND},
+    {"||", OpCode::OP_OR},
+    {"!", OpCode::OP_NOT}
 };
 
 
@@ -120,6 +127,17 @@ void display_bytecode(function* func){
                 break;
             case OpCode::OP_DIV:
                 std::cout << "OP_DIV" << std::endl;
+                break;
+
+            // Boolean
+            case OpCode::OP_AND:
+                std::cout << "OP_AND" << std::endl;
+                break;
+            case OpCode::OP_OR:
+                std::cout << "OP_OR" << std::endl;
+                break;
+            case OpCode::OP_NOT:
+                std::cout << "OP_NOT" << std::endl;
                 break;
 
             // Comparison
@@ -441,6 +459,11 @@ void choose_expr_operand(Node* node, function* func){
                 break;
             case NodeType::NUM_NODE:
                 WRITE_VALUE(std::stod(node->get_value()));
+                WRITE_BYTE(OpCode::OP_LOAD, func);
+                WRITE_BYTE(consts.count - 1, func);
+                break;
+            case NodeType::BOOL_NODE:
+                WRITE_VALUE(node->get_value() == "true"); // Convert the string to a bool
                 WRITE_BYTE(OpCode::OP_LOAD, func);
                 WRITE_BYTE(consts.count - 1, func);
                 break;

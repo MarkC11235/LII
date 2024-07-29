@@ -35,6 +35,7 @@ enum TokenType {
     RETURN_TOKEN,
     OPERATOR_TOKEN,
     NUMBER_TOKEN,
+    BOOL_TOKEN,
     IDENTIFIER_TOKEN,
     STRING_TOKEN,
     FUNCTION_TOKEN,
@@ -97,6 +98,8 @@ std::string token_type_to_string(TokenType type){
             return "OPERATOR";
         case TokenType::NUMBER_TOKEN:
             return "NUMBER";
+        case TokenType::BOOL_TOKEN:
+            return "BOOL";
         case TokenType::IDENTIFIER_TOKEN:
             return "IDENTIFIER";
         case TokenType::STRING_TOKEN:
@@ -246,6 +249,24 @@ std::vector<Token> analyze(std::string input, int line_number){
                     i++;
                 }
                 else{
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "!", line_number));
+                }
+                break;
+            case '&':
+                if(i + 1 < int(input.length()) && input[i + 1] == '&'){
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "&&", line_number));
+                    i++;
+                }
+                else{
+                    return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "error", line_number)};
+                }
+                break;
+            case '|':
+                if(i + 1 < int(input.length()) && input[i + 1] == '|'){
+                    tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "||", line_number));
+                    i++;
+                }
+                else{
                     return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "error", line_number)};
                 }
                 break;
@@ -317,9 +338,18 @@ std::vector<Token> analyze(std::string input, int line_number){
                     else if(identifier == "func"){
                         tokens.push_back(Token(TokenType::FUNC_TOKEN, "func", line_number));
                     }
+                    else if(identifier == "true" || identifier == "false"){
+                        tokens.push_back(Token(TokenType::BOOL_TOKEN, identifier, line_number));
+                    }
                     else{
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
                     }
+                }
+                else if (input[i] != ' '){
+                    // ignore the character
+                }
+                else{
+                    return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "Invalid token", line_number)};
                 }
         }
     }

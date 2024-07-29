@@ -273,80 +273,122 @@ void vm_loop(bool verbose)
         break;
     }
 
-    // Comparison operations
-    // Can only compare numbers
-    case OpCode::OP_EQ:
+    // Logical operations
+    // uses type coercion, check VALUE_AS_BOOL for more info
+    case OpCode::OP_AND:
     {
         Value a = pop();
         Value b = pop();
-        if (!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER))
-        {
-            vm_error("Invalid types for comparison");
-        }
+        push({Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});
+        break;
+    }
+    case OpCode::OP_OR:
+    {
+        Value a = pop();
+        Value b = pop();
+        push({Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});
+        break;
+    }
+    case OpCode::OP_NOT:
+    {
+        Value a = pop();
+        push({Value_Type::BOOL, !VALUE_AS_BOOL(a)});
+        break;
+    }
 
-        push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) == VALUE_AS_NUMBER(b))});
+    // Comparison operations
+    // uses type coercion, check VALUE_AS_BOOL, VALUE_AS_NUMBER, VALUE_AS_STRING for more info
+    case OpCode::OP_EQ:
+    {
+        // If both are strings, compare the strings
+        // Else compare the bool values
+        Value a = pop();
+        Value b = pop();
+        if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
+            push({Value_Type::BOOL, VALUE_AS_STRING(a) == VALUE_AS_STRING(b)});
+        }
+        else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+            push({Value_Type::BOOL, VALUE_AS_NUMBER(a) == VALUE_AS_NUMBER(b)});
+        }
+        else{
+            push({Value_Type::BOOL, VALUE_AS_BOOL(a) == VALUE_AS_BOOL(b)});
+        }
         break;
     }
     case OpCode::OP_NEQ:
     {
+        // If both are strings, compare the strings
+        // Else compare the bool values
         Value a = pop();
         Value b = pop();
-        if (!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER))
-        {
-            vm_error("Invalid types for comparison");
+        if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
+            push({Value_Type::BOOL, VALUE_AS_STRING(a) != VALUE_AS_STRING(b)});
         }
-
-        push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) != VALUE_AS_NUMBER(b))});
+        else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+            push({Value_Type::BOOL, VALUE_AS_NUMBER(a) != VALUE_AS_NUMBER(b)});
+        }
+        else{
+            push({Value_Type::BOOL, VALUE_AS_BOOL(a) != VALUE_AS_BOOL(b)});
+        }
         break;
     }
     case OpCode::OP_GT:
     {
         Value a = pop();
         Value b = pop();
-        if (!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER))
+        if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
-            vm_error("Invalid types for comparison");
+            push({Value_Type::BOOL, std::get<double>(a.data) > std::get<double>(b.data)});
         }
-
-        push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) > VALUE_AS_NUMBER(b))});
-        break;
-    }
-    case OpCode::OP_LT:
-    {
-        Value a = pop();
-        Value b = pop();
-        if (!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER))
+        else
         {
-            vm_error("Invalid types for comparison");
+            vm_error("Invalid types for greater than comparison");
         }
-
-        push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) < VALUE_AS_NUMBER(b))});
         break;
     }
     case OpCode::OP_GTEQ:
     {
         Value a = pop();
         Value b = pop();
-        if (!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER))
+        if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
-            vm_error("Invalid types for comparison");
+            push({Value_Type::BOOL, std::get<double>(a.data) >= std::get<double>(b.data)});
         }
-
-        push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) >= VALUE_AS_NUMBER(b))});
+        else
+        {
+            vm_error("Invalid types for greater than or equal comparison");
+        }
+        break;
+    }
+    case OpCode::OP_LT:
+    {
+        Value a = pop();
+        Value b = pop();
+        if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
+        {
+            push({Value_Type::BOOL, std::get<double>(a.data) < std::get<double>(b.data)});
+        }
+        else
+        {
+            vm_error("Invalid types for less than comparison");
+        }
         break;
     }
     case OpCode::OP_LTEQ:
     {
         Value a = pop();
         Value b = pop();
-        if (!(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER))
+        if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
-            vm_error("Invalid types for comparison");
+            push({Value_Type::BOOL, std::get<double>(a.data) <= std::get<double>(b.data)});
         }
-
-        push({Value_Type::NUMBER, (double)(VALUE_AS_NUMBER(a) <= VALUE_AS_NUMBER(b))});
+        else
+        {
+            vm_error("Invalid types for less than or equal comparison");
+        }
         break;
     }
+
 
     // Memory operations
     case OpCode::OP_LOAD:

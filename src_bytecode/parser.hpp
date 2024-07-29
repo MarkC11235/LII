@@ -33,6 +33,7 @@ enum NodeType {
     NUM_NODE,
     OP_NODE,
     STRING_NODE,
+    BOOL_NODE,
 
     // OTHERS
     LIST_NODE,
@@ -86,6 +87,8 @@ std::string node_type_to_string(NodeType type){
             return "OP";
         case NodeType::STRING_NODE:
             return "STRING";
+        case NodeType::BOOL_NODE:   
+            return "BOOL";
         case NodeType::LIST_NODE:
             return "LIST";
         case NodeType::PRINT_NODE:
@@ -130,6 +133,9 @@ std::map<std::string, std::tuple<int, std::string>> operators = {
     {">=", {7, "binary"}},
     {"==", {7, "binary"}},
     {"!=", {7, "binary"}},
+    {"!", {6, "unary"}},
+    {"&&", {5, "binary"}},
+    {"||", {4, "binary"}},
 };
 
 int precedence(std::string op, Token token){ 
@@ -267,6 +273,11 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 values.push(num);
                 break;
             }
+            case TokenType::BOOL_TOKEN: {
+                Node* bool_node = new Node(NodeType::BOOL_NODE, value);
+                values.push(bool_node);
+                break;
+            }
             case TokenType::STD_LIB_TOKEN: {
                 Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, value);
                 parse_std_lib_call(tokens, std_lib);
@@ -307,6 +318,9 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 if(previos_token_type == TokenType::OPERATOR_TOKEN){
                     if(value == "-"){ // Unary minus
                         op->change_value("u-", 0);
+                    }
+                    else if(value == "!"){ // not
+                        op->change_value("!", 0); // keeps it the same, just here so it does not go to the else
                     }
                     else {
                         parsing_error("Syntax error: expected number or identifier", token);
