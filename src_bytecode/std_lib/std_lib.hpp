@@ -13,6 +13,12 @@
 #include "vectors.hpp" // include the vector functions
 #include "files.hpp" 
 
+#ifdef __has_include
+#if __has_include(<SDL.h>) // check if SDL.h is available, 
+#include "graphics.hpp" // Can't include the graphics functions if SDL is not available
+#endif
+#endif
+
 //Allowed mappings of LII types to C++ types
 // LII -> C++
 // number -> double
@@ -52,6 +58,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"do_nothing", make_std_lib_function(do_nothing), "void", {}}, 
     {"test", make_std_lib_function(test), "double", {}},
     {"inc", make_std_lib_function(inc), "double", {"double"}},
+    
     // string functions
     {"string_concat", make_std_lib_function(string_concat), "std::string", {"std::string", "std::string"}},
     {"string_substr", make_std_lib_function(string_substr), "std::string", {"std::string", "int", "int"}},
@@ -61,6 +68,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"print_colored_text", make_std_lib_function(print_colored_text), "void", {"std::string", "std::string"}},
     {"string_to_vector", make_std_lib_function(string_to_vector), "std::vector<Value>", {"std::string"}},
     {"string_split", make_std_lib_function(string_split), "std::vector<Value>", {"std::string", "std::string"}},
+    
     // vector functions
     {"vector_len", make_std_lib_function(vector_len), "int", {"std::vector<Value>"}},
     {"vector_push", make_std_lib_function(vector_push), "std::vector<Value>", {"std::vector<Value>", "Value"}},
@@ -73,10 +81,21 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"vector_slice", make_std_lib_function(vector_slice), "std::vector<Value>", {"std::vector<Value>", "int", "int"}},
     {"vector_reverse", make_std_lib_function(vector_reverse), "std::vector<Value>", {"std::vector<Value>"}},
     {"vector_concat", make_std_lib_function(vector_concat), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
+    
     // file functions
     {"file_write", make_std_lib_function(file_write), "void", {"std::string", "std::string"}},
     //{"file_read", make_std_lib_function(file_read), "Value", {"std::string"}},
-    {"run_python_file", make_std_lib_function(run_python_file), "void", {"std::string"}}
+    {"run_python_file", make_std_lib_function(run_python_file), "void", {"std::string"}},
+
+    // graphics functions
+    #ifdef __has_include
+    #if __has_include(<SDL.h>)
+    {"init_graphics", make_std_lib_function(init_graphics), "int", {"std::string", "int", "int"}},
+    {"close_graphics", make_std_lib_function(close_graphics), "int", {}},
+    {"draw_pixel", make_std_lib_function(draw_pixel), "void", {"int", "int", "int"}},
+    #endif
+    #endif
+    
 };  
 
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){
