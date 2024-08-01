@@ -1,5 +1,6 @@
 CC = g++
 CXXFLAGS = -Wall -std=c++17
+LDFLAGS = -lSDL2
 INPUT_FILE = tester.cl
 EXE = ./lii
 
@@ -16,7 +17,7 @@ build_base:
 
 build_bytecode:
 	@start_time=$$(date +%s); \
-	$(CC) $(CXXFLAGS) ./src_bytecode/main.cpp -o $(EXE); \
+	$(CC) $(CXXFLAGS) ./src_bytecode/main.cpp $(LDFLAGS) -o $(EXE) ; \
 	end_time=$$(date +%s); \
 	elapsed_time=$$((end_time - start_time)); \
 	echo "Bytecode version compiled in $$elapsed_time seconds"

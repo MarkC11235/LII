@@ -12,12 +12,8 @@
 #include "strings.hpp" // include the string functions
 #include "vectors.hpp" // include the vector functions
 #include "files.hpp" 
+#include "graphics.hpp"
 
-#ifdef __has_include
-#if __has_include(<SDL.h>) // check if SDL.h is available, 
-#include "graphics.hpp" // Can't include the graphics functions if SDL is not available
-#endif
-#endif
 
 //Allowed mappings of LII types to C++ types
 // LII -> C++
@@ -88,13 +84,11 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"run_python_file", make_std_lib_function(run_python_file), "void", {"std::string"}},
 
     // graphics functions
-    #ifdef __has_include
-    #if __has_include(<SDL.h>)
     {"init_graphics", make_std_lib_function(init_graphics), "int", {"std::string", "int", "int"}},
-    {"close_graphics", make_std_lib_function(close_graphics), "int", {}},
-    {"draw_pixel", make_std_lib_function(draw_pixel), "void", {"int", "int", "int"}},
-    #endif
-    #endif
+    {"close_graphics", make_std_lib_function(close_graphics), "void", {}},
+    {"clear_screen", make_std_lib_function(clear_screen), "void", {}},
+    {"update_screen", make_std_lib_function(update_screen), "void", {}},
+    {"draw_rect", make_std_lib_function(draw_rect), "void", {"int", "int", "int", "int"}},
     
 };  
 
