@@ -253,6 +253,9 @@ void parse_function(std::vector<Token>& tokens, Node* current);
 void parse_assignment(std::vector<Token>& tokens, Node* current);
 void parse_if(std::vector<Token>& tokens, Node* current);
 void parse_return(std::vector<Token>& tokens, Node* current);
+void parse_list(std::vector<Token>& tokens, Node* current, int level);
+void parse_struct(std::vector<Token>& tokens, Node* current);
+void parse_accessor(std::vector<Token>& tokens, Node* current);
 void parse_variable_update(std::vector<Token>& tokens, Node* current);
 void parse_print(std::vector<Token>& tokens, Node* current);
 
@@ -317,8 +320,16 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                     }
                 }
                 else { // Variable
-                    Node* var = new Node(NodeType::VAR_NODE, value);
-                    values.push(var);
+                    //check if the identifier is an accessor
+                    if(peek(tokens).get_type() == TokenType::ACCESSOR_TOKEN){
+                        Node* var = new Node(NodeType::VAR_NODE, value);
+                        parse_accessor(tokens, var);
+                        values.push(var);
+                    }
+                    else {
+                        Node* var = new Node(NodeType::VAR_NODE, value);
+                        values.push(var);
+                    }
                 }
                 break;
             }

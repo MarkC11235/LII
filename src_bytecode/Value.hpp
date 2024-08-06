@@ -15,7 +15,7 @@ enum Value_Type{
     VECTOR,
     FUNCTION,
     NULL_VALUE,
-    //STRUCT, Not implemented
+    STRUCT,
 };
 
 // forward declare Value for the typedef
@@ -27,7 +27,8 @@ typedef std::variant<
                     std::string, // STRING
                     std::vector<Value>, // VECTOR
                     function*,
-                    std::nullptr_t // NULL_VALUE
+                    std::nullptr_t, // NULL_VALUE
+                    std::map<std::string, Value> // STRUCT
                     > Value_Content;
 
 struct Value{
@@ -65,6 +66,8 @@ std::string get_value_type_string(Value value){
             return "function";
         case NULL_VALUE:
             return "null";
+        case STRUCT:
+            return "struct";
         default:
             return "unknown"; // Should never reach here, but to avoid warnings
     }
@@ -159,6 +162,21 @@ std::string VALUE_AS_STRING(Value value){
         }
         case NULL_VALUE:
             return "null";
+        case STRUCT:
+        {
+            std::string str = "{";
+
+            std::map<std::string, Value> map = std::get<std::map<std::string, Value>>(value.data);
+            for(auto it = map.begin(); it != map.end(); it++){
+                str += it->first + " = " + VALUE_AS_STRING(it->second);
+                if(it != --map.end()){
+                    str += ", ";
+                }
+            }
+
+            str += "}";
+            return str;
+        }
         default:
             return "UNKNOWN"; // Should never reach here, but to avoid warnings
     }
@@ -181,6 +199,15 @@ function* VALUE_AS_FUNCTION(Value value){
     std::cout << "ERROR: casting non function to function" << std::endl;
     exit(1);
     return nullptr; // will never reach here
+}
+
+std::map<std::string, Value> VALUE_AS_STRUCT(Value value){
+    switch(value.type){
+        case STRUCT:
+            return std::get<std::map<std::string, Value>>(value.data);
+        default:
+            return {}; // Should never reach here, but to avoid warnings
+    }
 }
 
 void print_value(Value value, bool verbose = false){

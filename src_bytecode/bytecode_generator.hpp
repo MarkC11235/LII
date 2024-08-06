@@ -644,6 +644,7 @@ void interpret_list(Node* node, function* func){
     }
 }
 
+//
 void interpret_assign(Node* node, function* func){
     if(node->get_type() != NodeType::ASSIGN_NODE){
         interpretation_error("Assign doesn't start with ASSIGN Node", node);
@@ -695,6 +696,7 @@ void interpret_assign(Node* node, function* func){
     }
 }
 
+//
 void interpret_update(Node* node, function* func){
     if(node->get_type() != NodeType::UPDATE_NODE){
         interpretation_error("Update doesn't start with UPDATE Node", node);
