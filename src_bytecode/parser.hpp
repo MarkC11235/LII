@@ -38,6 +38,7 @@ enum NodeType {
 
     // OTHERS
     LIST_NODE,
+    STRUCT_NODE,
     PRINT_NODE,
     FUNCTION_CALL_NODE
 };
@@ -94,6 +95,8 @@ std::string node_type_to_string(NodeType type){
             return "NULL";
         case NodeType::LIST_NODE:
             return "LIST";
+        case NodeType::STRUCT_NODE:
+            return "STRUCT";
         case NodeType::PRINT_NODE:
             return "PRINT";
         case NodeType::FUNCTION_CALL_NODE:
@@ -592,6 +595,43 @@ void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
     }
 }
 
+void parse_struct(std::vector<Token>& tokens, Node* current){
+    pop(tokens); // Skip the 'struct' keyword
+    Node* struct_node = new Node(NodeType::STRUCT_NODE, "");
+    current->add_child(struct_node);
+
+    // check for opening bracket
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '{'", token);
+    }
+
+    // Parse the fields
+    Node* list = new Node(NodeType::LIST_NODE, "");
+    struct_node->add_child(list);
+    token = peek(tokens);
+    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are fields
+        for(;;){ // Can have 0 or more let statments 
+            token = pop(tokens);
+            if(token.get_type() == TokenType::LET_TOKEN){ // Let statement
+                parse_assignment(tokens, list);
+            } else {
+                parsing_error("Syntax error: expected 'let'", token);
+            }
+
+            token = peek(tokens);
+            if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){ // End of fields
+                break;
+            }
+        }
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '}'", token);
+    }
+}
+
 // This is called when the let keyword is encountered
 void parse_assignment(std::vector<Token>& tokens, Node* current){
     Node* assign = new Node(NodeType::ASSIGN_NODE, "");
@@ -620,6 +660,9 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
         pop(tokens);
         Node* null_node = new Node(NodeType::NULL_NODE, "null");
         assign->add_child(null_node);
+    }
+    else if (peek(tokens).get_type() == TokenType::STRUCT_TOKEN){ // Struct assignment
+        parse_struct(tokens, assign);
     }
     else{ // Expression assignment
         Node* expr = new Node(NodeType::EXPR_NODE, "");
@@ -718,6 +761,22 @@ void parse_return(std::vector<Token>& tokens, Node* current){
     }
 }
 
+// Recursive function to handle nested accessors
+void parse_accessor(std::vector<Token>& tokens, Node* current){
+    Token token = pop(tokens); // Skip the dot
+    token = pop(tokens);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
+    }
+    Node* field = new Node(NodeType::VAR_NODE, token.get_value());
+    current->add_child(field);
+
+    token = peek(tokens);
+    if(token.get_type() == TokenType::ACCESSOR_TOKEN){
+        parse_accessor(tokens, field);
+    }
+}
+
 // This is called when an identifier is encountered, with no let keyword
 void parse_variable_update(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
@@ -741,6 +800,11 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
             parsing_error("Syntax error: expected ']'", token);
         }
 
+        token = pop(tokens);
+    }
+    else if(token.get_type() == TokenType::ACCESSOR_TOKEN){ // Struct update
+        place_token_back(tokens, token);
+        parse_accessor(tokens, var);
         token = pop(tokens);
     }
 
