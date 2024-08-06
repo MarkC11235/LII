@@ -34,6 +34,7 @@ enum NodeType {
     OP_NODE,
     STRING_NODE,
     BOOL_NODE,
+    NULL_NODE,
 
     // OTHERS
     LIST_NODE,
@@ -89,6 +90,8 @@ std::string node_type_to_string(NodeType type){
             return "STRING";
         case NodeType::BOOL_NODE:   
             return "BOOL";
+        case NodeType::NULL_NODE:
+            return "NULL";
         case NodeType::LIST_NODE:
             return "LIST";
         case NodeType::PRINT_NODE:
@@ -278,6 +281,10 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 values.push(bool_node);
                 break;
             }
+            case TokenType::NULL_TOKEN: {
+                parsing_error("Syntax error: null cannot be used in expressions", token);
+                break;
+            }
             case TokenType::STD_LIB_TOKEN: {
                 Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, value);
                 parse_std_lib_call(tokens, std_lib);
@@ -387,6 +394,9 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
         }
     }
 
+    if(values.size() != 1){
+        parsing_error("Syntax error: invalid expression", Token(TokenType::EOF_TOKEN, "EOF", -1));
+    }
     current->add_child(values.top());
 }
 
@@ -605,6 +615,11 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
     }
     else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
         parse_function(tokens, assign);
+    }
+    else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null assignment
+        pop(tokens);
+        Node* null_node = new Node(NodeType::NULL_NODE, "null");
+        assign->add_child(null_node);
     }
     else{ // Expression assignment
         Node* expr = new Node(NodeType::EXPR_NODE, "");

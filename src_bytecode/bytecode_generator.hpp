@@ -680,6 +680,16 @@ void interpret_assign(Node* node, function* func){
 
         interpret_list(node->get_child(1), func);
     }
+    else if(node->get_child(1)->get_type() == NodeType::NULL_NODE){ // Assigning null to a variable
+        WRITE_BYTE(OpCode::OP_LOAD, func);
+        WRITE_BYTE(consts.count, func);
+        WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
+        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        }
+        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+    }
     else{
         interpretation_error("Invalid child type for ASSIGN Node", node);
     }

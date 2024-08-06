@@ -36,6 +36,7 @@ enum TokenType {
     OPERATOR_TOKEN,
     NUMBER_TOKEN,
     BOOL_TOKEN,
+    NULL_TOKEN,
     IDENTIFIER_TOKEN,
     STRING_TOKEN,
     FUNCTION_TOKEN,
@@ -100,6 +101,8 @@ std::string token_type_to_string(TokenType type){
             return "NUMBER";
         case TokenType::BOOL_TOKEN:
             return "BOOL";
+        case TokenType::NULL_TOKEN:
+            return "NULL";
         case TokenType::IDENTIFIER_TOKEN:
             return "IDENTIFIER";
         case TokenType::STRING_TOKEN:
@@ -340,6 +343,9 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "true" || identifier == "false"){
                         tokens.push_back(Token(TokenType::BOOL_TOKEN, identifier, line_number));
+                    }
+                    else if(identifier == "null"){
+                        tokens.push_back(Token(TokenType::NULL_TOKEN, "null", line_number));
                     }
                     else{
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));

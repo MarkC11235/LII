@@ -1,3 +1,1 @@
-$init_graphics("Test", 800, 600);
-
-$close_graphics();
+let x = 5 + null;

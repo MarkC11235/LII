@@ -14,6 +14,7 @@ enum Value_Type{
     STRING,
     VECTOR,
     FUNCTION,
+    NULL_VALUE,
     //STRUCT, Not implemented
 };
 
@@ -25,7 +26,8 @@ typedef std::variant<
                     bool, // BOOL
                     std::string, // STRING
                     std::vector<Value>, // VECTOR
-                    function*
+                    function*,
+                    std::nullptr_t // NULL_VALUE
                     > Value_Content;
 
 struct Value{
@@ -59,6 +61,10 @@ std::string get_value_type_string(Value value){
             return "string";
         case VECTOR:
             return "vector";
+        case FUNCTION:
+            return "function";
+        case NULL_VALUE:
+            return "null";
         default:
             return "unknown"; // Should never reach here, but to avoid warnings
     }
@@ -91,7 +97,7 @@ double VALUE_AS_NUMBER(Value value){
 }
 
 std::string VALUE_AS_STRING(Value value){
-    //std::cout << "VALUE AS STRING | Value_Type: " << get_value_type_string(value) << std::endl;
+    // std::cout << "VALUE AS STRING | Value_Type: " << get_value_type_string(value) << std::endl;
     switch(value.type){
         case NUMBER: // TODO: Improve this to be faster, this is just a quick fix to remove trailing zeros
                      // This is because the tests expect the output to not have trailing zeros
@@ -151,6 +157,8 @@ std::string VALUE_AS_STRING(Value value){
             }
             return "Function: " + bc;
         }
+        case NULL_VALUE:
+            return "null";
         default:
             return "UNKNOWN"; // Should never reach here, but to avoid warnings
     }
