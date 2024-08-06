@@ -14,6 +14,8 @@ enum TokenType {
     LET_TOKEN,
     ASSIGNMENT_TOKEN,
     FUNC_TOKEN,
+    STRUCT_TOKEN,
+    ACCESSOR_TOKEN,
     WHILE_TOKEN,
     FOR_TOKEN,
     IF_TOKEN,
@@ -57,6 +59,10 @@ std::string token_type_to_string(TokenType type){
             return "ASSIGNMENT";
         case TokenType::FUNC_TOKEN:
             return "FUNC";
+        case TokenType::STRUCT_TOKEN:
+            return "STRUCT";
+        case TokenType::ACCESSOR_TOKEN:
+            return "ACCESSOR";
         case TokenType::WHILE_TOKEN:
             return "WHILE";
         case TokenType::FOR_TOKEN:
@@ -308,11 +314,28 @@ std::vector<Token> analyze(std::string input, int line_number){
                 }
                 else if(isalpha(input[i])){
                     std::string identifier = "";
-                    while(  i < int(input.length()) 
-                            && (isalnum(input[i]) || input[i] == '_')
-                            && input[i] != ' ')
+                    while(true)
                     {
+                        bool clear_identifier = false; // if you just clear inside the if, then the dot gets attached to the next identifier
+                        if(!(i < int(input.length()) 
+                            && (isalnum(input[i]) || input[i] == '_')
+                            && input[i] != ' ')){
+                            
+                            if(i < int(input.length()) && input[i] == '.'){
+                                tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
+                                clear_identifier = true;
+                                tokens.push_back(Token(TokenType::ACCESSOR_TOKEN, ".", line_number));
+                            }
+                            else{
+                                break;
+                            }
+                        }
+
+
                         identifier += input[i];
+                        if(clear_identifier){
+                            identifier = "";
+                        }
                         i++;
                         //std::cout << identifier << std::endl;
                     }
@@ -346,6 +369,9 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "null"){
                         tokens.push_back(Token(TokenType::NULL_TOKEN, "null", line_number));
+                    }
+                    else if(identifier == "struct"){
+                        tokens.push_back(Token(TokenType::STRUCT_TOKEN, "struct", line_number));
                     }
                     else{
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
