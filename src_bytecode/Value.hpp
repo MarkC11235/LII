@@ -167,6 +167,8 @@ std::string VALUE_AS_STRING(Value value){
             std::string str = "{";
 
             std::map<std::string, Value> map = std::get<std::map<std::string, Value>>(value.data);
+            // prints the keys in alphabetical order
+            // ig thats how c++ stores the keys internally
             for(auto it = map.begin(); it != map.end(); it++){
                 str += it->first + " = " + VALUE_AS_STRING(it->second);
                 if(it != --map.end()){

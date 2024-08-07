@@ -1,10 +1,9 @@
-let Node = struct {
-    let value = 0;
-    let next = null;
+let Person = struct {
+    let name = "Mark";
+    let age = 21;
 };
 
-let head = Node;
-head.value = 5;
+let p = Person;
+print p;
 
-print head.value;
-print head.next;
+

@@ -45,6 +45,10 @@ enum OpCode{
     OP_VECTOR_PUSH, // insert value from stack into vector, needs to be followed by the index of the vector in the variables map
     OP_LOAD_VECTOR_ELEMENT, // followed by the index of the vector in the variables map, and the index into the vector
     OP_UPDATE_VECTOR_ELEMENT, // insert value from stack, followed by the index of the vector in the variables map, the index into the vector
+    // Structs
+    OP_CREATE_STRUCT, // make empty struct, needs to be followed by an index to store the struct in the variables map
+    OP_LOAD_STRUCT_ELEMENT, // followed by the index of the struct in the variables map, and the index into the struct
+    OP_UPDATE_STRUCT_ELEMENT, // insert value from stack, followed by the index of the struct in the variables map
     // Control flow
     OP_RETURN,
     OP_JUMP,
@@ -218,6 +222,27 @@ void display_bytecode(function* func){
                 std::cout << "OP_UPDATE_VECTOR_ELEMENT";
                 std::cout << "          ";
                 std::cout << "Vector Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << std::endl;
+                break;
+            
+            // Structs
+            case OpCode::OP_CREATE_STRUCT:
+                std::cout << "OP_CREATE_STRUCT";
+                std::cout << "          ";
+                std::cout << "Name: " << variable_names.names[(int)func->code[++i]] << std::endl;
+                break;
+            case OpCode::OP_LOAD_STRUCT_ELEMENT:
+                std::cout << "OP_LOAD_STRUCT_ELEMENT";
+                std::cout << "          ";
+                std::cout << "Struct Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << std::endl;
+                break;
+            case OpCode::OP_UPDATE_STRUCT_ELEMENT:
+                std::cout << "OP_UPDATE_STRUCT_ELEMENT";
+                std::cout << "          ";
+                std::cout << "Struct Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << "          ";
+                std::cout << "Element Name: " << variable_names.names[(int)func->code[++i]];
                 std::cout << std::endl;
                 break;
             
@@ -644,7 +669,69 @@ void interpret_list(Node* node, function* func){
     }
 }
 
-//
+void interpret_struct_assign(Node* node, function* func, std::string struct_name){
+    if(node->get_type() != NodeType::ASSIGN_NODE){
+        interpretation_error("Struct assignment doesn't start with ASSIGN Node", node);
+    }
+
+    if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
+        interpretation_error("Struct assignment doesn't have a VAR Node as the first child", node);
+    }
+
+    if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a struct element
+        interpret_expr(node->get_child(1), func);
+
+        WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
+        WRITE_BYTE(get_variable_index(struct_name), func); // index of the struct in the variables names array
+        WRITE_VAR_NAME(node->get_child(0)->get_value());
+        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // index of the struct element in the struct still in the variables names array
+    }
+    // TODO: add support for nested structs and lists 
+    //don't support lists in structs right now becasue of the OP_VECTOR_CREATE opcode
+    //it just stores the vector in the variables map, so it can't be used in a struct
+    // else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a struct element
+    //     WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector
+    //     WRITE_BYTE(variable_names.count, func); // Index to store the vector in the variables map
+
+    //     interpret_list(node->get_child(1), func);
+
+    //     WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
+    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
+    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct element in the struct
+    // }
+    // else if(node->get_child(1)->get_type() == NodeType::NULL_NODE){ // Assigning null to a struct element
+    //     WRITE_BYTE(OpCode::OP_LOAD, func);
+    //     WRITE_BYTE(consts.count, func);
+    //     WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
+
+    //     WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
+    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
+    // }
+    // else if(node->get_child(1)->get_type() == NodeType::STRUCT_NODE){ // Assigning a struct to a struct element
+
+    //     WRITE_BYTE(OpCode::OP_CREATE_STRUCT, func); // Create an empty struct
+    //     WRITE_BYTE(variable_names.count, func); // Index to store the struct in the variables map
+
+    //     Node* list = node->get_child(1)->get_child(0);
+    //     for(int i = 0; i < (int)list->get_children().size(); i++){
+    //         // assignment nodes
+    //         Node* assign = list->get_child(i);
+    //         if(assign->get_type() != NodeType::ASSIGN_NODE){
+    //             interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign);
+    //         }
+
+    //         interpret_struct_assign(assign, func);
+    //     }
+
+    //     WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
+    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
+    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct element in the struct
+    // }
+    else{
+        interpretation_error("Invalid child type for ASSIGN Node", node);
+    }
+}
+
 void interpret_assign(Node* node, function* func){
     if(node->get_type() != NodeType::ASSIGN_NODE){
         interpretation_error("Assign doesn't start with ASSIGN Node", node);
@@ -691,12 +778,32 @@ void interpret_assign(Node* node, function* func){
         }
         WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
     }
+    else if(node->get_child(1)->get_type() == NodeType::STRUCT_NODE){ // Assigning a struct to a variable
+
+        //Create the struct
+        WRITE_BYTE(OpCode::OP_CREATE_STRUCT, func); // Create an empty struct
+        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        }
+        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index to store the struct in the variables map
+
+        //Assign the values to the struct
+        Node* list = node->get_child(1)->get_child(0);
+        for(int i = 0; i < (int)list->get_children().size(); i++){
+            // assignment nodes
+            Node* assign = list->get_child(i);
+            if(assign->get_type() != NodeType::ASSIGN_NODE){
+                interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign);
+            }
+
+            interpret_struct_assign(assign, func, node->get_child(0)->get_value());
+        }
+    }
     else{
         interpretation_error("Invalid child type for ASSIGN Node", node);
     }
 }
 
-//
 void interpret_update(Node* node, function* func){
     if(node->get_type() != NodeType::UPDATE_NODE){
         interpretation_error("Update doesn't start with UPDATE Node", node);

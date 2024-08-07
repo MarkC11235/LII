@@ -473,6 +473,45 @@ void vm_loop(bool verbose)
         break;
     }
 
+    // Struct operations
+    case OpCode::OP_CREATE_STRUCT:
+    {
+        set_variable(variable_names.names[get_ip()[1]], {Value_Type::STRUCT, std::map<std::string, Value>()});
+        increase_ip(1);
+        break;
+    }
+    case OpCode::OP_UPDATE_STRUCT_ELEMENT:
+    {
+        Value value = pop();
+        Value struct_ = get_variable(variable_names.names[get_ip()[1]]);
+        if (struct_.type != Value_Type::STRUCT)
+        {
+            vm_error("Not a struct");
+        }
+        std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);
+        struct_map[variable_names.names[get_ip()[2]]] = value;
+        update_variable(variable_names.names[get_ip()[1]], {Value_Type::STRUCT, struct_map});
+        increase_ip(2);
+        break;
+    }
+    case OpCode::OP_LOAD_STRUCT_ELEMENT:
+    {
+        Value key = pop();
+        Value struct_ = get_variable(variable_names.names[get_ip()[1]]);
+        if (struct_.type != Value_Type::STRUCT || key.type != Value_Type::STRING)
+        {
+            vm_error("Invalid types for struct element access");
+        }
+        std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);
+        if (struct_map.find(VALUE_AS_STRING(key)) == struct_map.end())
+        {
+            vm_error("Key not found in struct");
+        }
+        push(struct_map[VALUE_AS_STRING(key)]);
+        increase_ip(1);
+        break;
+    }
+
     // Control flow operations
     case OpCode::OP_RETURN:
     {
@@ -637,7 +676,7 @@ void run_vm(bool verbose = false)
         if (verbose)
         {
             function_frame *frame = get_current_function_frame();
-            int instruction = frame->ip - frame->func->code;
+            int instruction = frame->ip - frame->func->code; // no -1 because this is the instruction that will be executed
 
             std::cout << "IP: " << instruction << std::endl;
         }
@@ -654,7 +693,7 @@ void run_vm(bool verbose = false)
 void display_debug_info()
 {
     function_frame* ff = get_current_function_frame();
-    int instruction = ff->ip - ff->func->code;
+    int instruction = ff->ip - ff->func->code - 1; // -1 because this is the instruction that was just executed
 
     std::cout << "IP: " << instruction << std::endl;
     std::cout << "Debuging Info:" << std::endl;
