@@ -293,7 +293,9 @@ void display_bytecode(function* func){
 
 void display_constants(){
     for(int i = 0; i < consts.count; i++){
-        std::cout << i << ": " << VALUE_AS_STRING(consts.constants[i]) << std::endl;
+        std::cout << i << ": \n";
+        print_value(consts.constants[i]);
+        std::cout << "\n" << std::endl;
     }
 }
 
@@ -393,15 +395,26 @@ void interpret_return(Node* node, function* func);
 void interpret_expr(Node* node, function* func);
 void interpret_op(Node* node, function* func);
 
-void interpretation_error(std::string message, Node* node){
+void interpretation_error(std::string message, Node* node, function* func){
+    std::cout << "Bytecode generation failed" << std::endl;
+
     std::cout << message << std::endl;
     node->print();
+
+    // print the current state of the bytecode
+    std::cout << "\nBytecode: " << std::endl;
+    display_bytecode(func);
+    std::cout << "\nConstants: " << std::endl;
+    display_constants();
+    std::cout << "\nVariable names: " << std::endl;
+    display_variables();
+
     exit(1);
 }
 
 void interpret_function_call(Node* node, function* func){
     if(node->get_type() != NodeType::FUNCTION_CALL_NODE){
-        interpretation_error("Function call doesn't start with FUNCTION_CALL Node", node);
+        interpretation_error("Function call doesn't start with FUNCTION_CALL Node", node, func);
     }
 
     //get the name of the function
@@ -442,7 +455,7 @@ void interpret_function_call(Node* node, function* func){
     //Push the function onto the stack
     WRITE_BYTE(OpCode::OP_LOAD_FUNCTION_VAR, func);
     if(get_variable_index(name) == -1){
-        interpretation_error("Function not found", node);
+        interpretation_error("Function not found", node, func);
     }
     WRITE_BYTE(get_variable_index(name), func);
 
@@ -457,7 +470,7 @@ void interpret_function_call(Node* node, function* func){
 
 void interpret_std_lib_call(Node* node, function* func){
     if(node->get_type() != NodeType::STD_LIB_CALL_NODE){
-        interpretation_error("Std Lib call doesn't start with STD_LIB_CALL Node", node);
+        interpretation_error("Std Lib call doesn't start with STD_LIB_CALL Node", node, func);
     }
 
     //get the name of the function
@@ -476,7 +489,7 @@ void interpret_std_lib_call(Node* node, function* func){
             return;
         }
     }
-    interpretation_error("Std Lib function not found: " + name, node);
+    interpretation_error("Std Lib function not found: " + name, node, func);
 }
 
 void choose_expr_operand(Node* node, function* func){
@@ -498,7 +511,7 @@ void choose_expr_operand(Node* node, function* func){
                 if(node->get_children().size() == 0){ // Variable access
                     WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
                     if(get_variable_index(node->get_value()) == -1){
-                        interpretation_error("Variable not found", node);
+                        interpretation_error("Variable not found", node, func);
                     }
                     WRITE_BYTE(get_variable_index(node->get_value()), func);
                 }
@@ -507,27 +520,27 @@ void choose_expr_operand(Node* node, function* func){
                         interpret_expr(node->get_child(0), func); // Expression for vector index, first on the stack
                         WRITE_BYTE(OpCode::OP_LOAD_VECTOR_ELEMENT, func); // Load the value from the vector
                         if(get_variable_index(node->get_value()) == -1){
-                            interpretation_error("Variable not found", node);
+                            interpretation_error("Variable not found", node, func);
                         }
                         WRITE_BYTE(get_variable_index(node->get_value()), func); // Index of the vector in the variables map
                     }
                     else if(node->get_child(0)->get_type() == NodeType::VAR_NODE){ // Struct access
                         WRITE_BYTE(OpCode::OP_LOAD_STRUCT_ELEMENT, func); // Load the value from the struct
                         if(get_variable_index(node->get_value()) == -1){
-                            interpretation_error("Variable not found", node);
+                            interpretation_error("Variable not found", node, func);
                         }
                         WRITE_BYTE(get_variable_index(node->get_value()), func); // Index of the struct in the variables map
                         if(get_variable_index(node->get_child(0)->get_value()) == -1){
-                            interpretation_error("Variable not found", node);
+                            interpretation_error("Variable not found", node, func);
                         }
                         WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct element in the struct
                     }
                     else{
-                        interpretation_error("Invalid child type for VAR Node", node);
+                        interpretation_error("Invalid child type for VAR Node", node, func);
                     }
                 }
                 else{ 
-                    interpretation_error("Invalid number of children for VAR Node", node);
+                    interpretation_error("Invalid number of children for VAR Node", node, func);
                 }
                 break;
             case NodeType::FUNCTION_CALL_NODE:
@@ -545,7 +558,7 @@ void choose_expr_operand(Node* node, function* func){
                 WRITE_BYTE(consts.count - 1, func);
                 break;
             default:
-                interpretation_error("Invalid child type for OP Node", node);
+                interpretation_error("Invalid child type for OP Node", node, func);
                 break;
         }
 }
@@ -555,11 +568,11 @@ void interpret_op(Node* node, function* func){
         std::string opStr = node->get_value();
         
         if(opCodeMap.find(opStr) == opCodeMap.end()){
-            interpretation_error("Invalid operator", node);
+            interpretation_error("Invalid operator", node, func);
         }
 
         if(operators.find(opStr) == operators.end()){
-            interpretation_error("Operator not found", node);
+            interpretation_error("Operator not found", node, func);
         }
 
         if(std::get<1>(operators[opStr]) == "binary"){
@@ -574,13 +587,13 @@ void interpret_op(Node* node, function* func){
             choose_expr_operand(child, func);
         }
         else{
-            interpretation_error("Invalid operator type", node);
+            interpretation_error("Invalid operator type", node, func);
         }
 
         WRITE_BYTE(opCodeMap[opStr], func);
     }
     else{
-        interpretation_error("Operator doesn't start with OP Node", node);
+        interpretation_error("Operator doesn't start with OP Node", node, func);
     }
 }
 
@@ -589,13 +602,13 @@ void interpret_expr(Node* node, function* func){
         choose_expr_operand(node->get_child(0), func);
     }
     else{
-        interpretation_error("Expression doesn't start with EXPR Node", node);
+        interpretation_error("Expression doesn't start with EXPR Node", node, func);
     }
 }
 
 void interpret_return(Node* node, function* func){
     if(node->get_type() != NodeType::RETURN_NODE){
-        interpretation_error("Return doesn't start with RETURN Node", node);
+        interpretation_error("Return doesn't start with RETURN Node", node, func);
     }
 
     interpret_expr(node->get_child(0), func); // Expression to return
@@ -605,7 +618,7 @@ void interpret_return(Node* node, function* func){
 
 void interpret_if(Node* node, function* func){
     if(node->get_type() != NodeType::IF_NODE){
-        interpretation_error("If doesn't start with IF Node", node);
+        interpretation_error("If doesn't start with IF Node", node, func);
     }
 
     interpret_expr(node->get_child(0), func);
@@ -643,7 +656,7 @@ void interpret_if(Node* node, function* func){
 
 void interpret_function(Node* node, function* func, std::string name){
     if(node->get_type() != NodeType::FUNCTION_NODE){
-        interpretation_error("Function doesn't start with FUNCTION Node", node);
+        interpretation_error("Function doesn't start with FUNCTION Node", node, func);
     }
 
     function* new_func = create_function(1000, func);
@@ -668,14 +681,14 @@ void interpret_function(Node* node, function* func, std::string name){
 
     //make sure the function isn't empty
     if(node->get_children().size() == 0){
-        interpretation_error("Function is empty", node);
+        interpretation_error("Function is empty", node, func);
     }
     interpret_stmt_list(node->get_child(1), new_func);
 }
 
 void interpret_list(Node* node, function* func){
     if(node->get_type() != NodeType::LIST_NODE){
-        interpretation_error("List doesn't start with LIST Node", node);
+        interpretation_error("List doesn't start with LIST Node", node, func);
     }
 
     // TODO: add support for nested lists
@@ -689,11 +702,11 @@ void interpret_list(Node* node, function* func){
 
 void interpret_struct_assign(Node* node, function* func, std::string struct_name){
     if(node->get_type() != NodeType::ASSIGN_NODE){
-        interpretation_error("Struct assignment doesn't start with ASSIGN Node", node);
+        interpretation_error("Struct assignment doesn't start with ASSIGN Node", node, func);
     }
 
     if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
-        interpretation_error("Struct assignment doesn't have a VAR Node as the first child", node);
+        interpretation_error("Struct assignment doesn't have a VAR Node as the first child", node, func);
     }
 
     if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a struct element
@@ -746,17 +759,17 @@ void interpret_struct_assign(Node* node, function* func, std::string struct_name
     //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct element in the struct
     // }
     else{
-        interpretation_error("Invalid child type for ASSIGN Node", node);
+        interpretation_error("Invalid child type for ASSIGN Node", node, func);
     }
 }
 
 void interpret_assign(Node* node, function* func){
     if(node->get_type() != NodeType::ASSIGN_NODE){
-        interpretation_error("Assign doesn't start with ASSIGN Node", node);
+        interpretation_error("Assign doesn't start with ASSIGN Node", node, func);
     }
 
     if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
-        interpretation_error("Assign doesn't have a VAR Node as the first child", node);
+        interpretation_error("Assign doesn't have a VAR Node as the first child", node, func);
     }
 
     if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a variable
@@ -811,24 +824,24 @@ void interpret_assign(Node* node, function* func){
             // assignment nodes
             Node* assign = list->get_child(i);
             if(assign->get_type() != NodeType::ASSIGN_NODE){
-                interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign);
+                interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign, func);
             }
 
             interpret_struct_assign(assign, func, node->get_child(0)->get_value());
         }
     }
     else{
-        interpretation_error("Invalid child type for ASSIGN Node", node);
+        interpretation_error("Invalid child type for ASSIGN Node", node, func);
     }
 }
 
 void interpret_update(Node* node, function* func){
     if(node->get_type() != NodeType::UPDATE_NODE){
-        interpretation_error("Update doesn't start with UPDATE Node", node);
+        interpretation_error("Update doesn't start with UPDATE Node", node, func);
     }
 
     if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
-        interpretation_error("Update doesn't have a VAR Node as the first child", node);
+        interpretation_error("Update doesn't have a VAR Node as the first child", node, func);
     }
 
     if(node->get_children().size() == 2){ // Normal update or update a struct element
@@ -839,7 +852,7 @@ void interpret_update(Node* node, function* func){
             int index = get_variable_index(node->get_child(0)->get_value());
             if(index == -1){
                 // Should never happen because the variable should already exist
-                interpretation_error("Trying to update a variable that hasn't been defined", node);
+                interpretation_error("Trying to update a variable that hasn't been defined", node, func);
             }
             WRITE_BYTE(index, func);
         }
@@ -849,16 +862,16 @@ void interpret_update(Node* node, function* func){
 
             int index = get_variable_index(node->get_child(0)->get_value());
             if(index == -1){
-                interpretation_error("Struct not found", node);
+                interpretation_error("Struct not found", node, func);
             }
             WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
             if(get_variable_index(node->get_child(0)->get_child(0)->get_value()) == -1){
-                interpretation_error("Struct element not found", node);
+                interpretation_error("Struct element not found", node, func);
             }
             WRITE_BYTE(get_variable_index(node->get_child(0)->get_child(0)->get_value()), func); // Index of the struct element in the struct
         }
         else{
-            interpretation_error("Invalid number of children for UPDATE Node", node);
+            interpretation_error("Invalid number of children for UPDATE Node", node, func);
         }
     }
     else if(node->get_children().size() == 3){ // Update an array index
@@ -869,12 +882,12 @@ void interpret_update(Node* node, function* func){
         int index = get_variable_index(node->get_child(0)->get_value());
         if(index == -1){
             // Should never happen because the variable should already exist
-            interpretation_error("Trying to update a variable that hasn't been defined", node);
+            interpretation_error("Trying to update a variable that hasn't been defined", node, func);
         }
         WRITE_BYTE(index, func); // Index of the vector in the variables map
     }
     else{
-        interpretation_error("Invalid number of children for UPDATE Node", node);
+        interpretation_error("Invalid number of children for UPDATE Node", node, func);
     }
 
     
@@ -882,7 +895,7 @@ void interpret_update(Node* node, function* func){
 
 void interpret_print(Node* node, function* func){
     if(node->get_type() != NodeType::PRINT_NODE){
-        interpretation_error("Print doesn't start with PRINT Node", node);
+        interpretation_error("Print doesn't start with PRINT Node", node, func);
     }
 
     interpret_expr(node->get_child(0), func); // Expression to print
@@ -892,7 +905,7 @@ void interpret_print(Node* node, function* func){
 
 void interpret_for(Node* node, function* func){
     if(node->get_type() != NodeType::FOR_NODE){
-        interpretation_error("For doesn't start with FOR Node", node);
+        interpretation_error("For doesn't start with FOR Node", node, func);
     }
 
     WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the for loop
@@ -956,12 +969,12 @@ void interpret_stmt(Node* node, function* func){
                 interpret_std_lib_call(child, func);
                 break;
             default:
-                interpretation_error("Invalid statement type", node);
+                interpretation_error("Invalid statement type", node, func);
                 break;
         }
     }
     else{
-        interpretation_error("Statement doesn't start with STMT Node", node);
+        interpretation_error("Statement doesn't start with STMT Node", node, func);
     }
 }
 
@@ -971,7 +984,7 @@ void interpret_stmt_list(Node* node, function* func){
     }
 
     if(node->get_type() != NodeType::STMT_LIST_NODE){
-        interpretation_error("Statement List doesn't start with STMT_LIST Node", node);
+        interpretation_error("Statement List doesn't start with STMT_LIST Node", node, func);
     }
 
     interpret_stmt(node->get_child(0), func);
@@ -982,7 +995,7 @@ void interpret_stmt_list(Node* node, function* func){
 
 void interpret(Node* node, function* func){
     if(node->get_type() != NodeType::STMT_LIST_NODE){
-        interpretation_error("Program doesn't start with STMT_LIST Node", node);
+        interpretation_error("Program doesn't start with STMT_LIST Node", node, func);
     }
     
     interpret_stmt_list(node, func);

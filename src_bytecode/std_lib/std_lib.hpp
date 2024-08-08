@@ -13,6 +13,7 @@
 #include "vectors.hpp" // include the vector functions
 #include "files.hpp" 
 #include "graphics.hpp"
+#include "random.hpp"
 
 
 //Allowed mappings of LII types to C++ types
@@ -89,6 +90,9 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"clear_screen", make_std_lib_function(clear_screen), "void", {}},
     {"update_screen", make_std_lib_function(update_screen), "void", {}},
     {"draw_rect", make_std_lib_function(draw_rect), "void", {"int", "int", "int", "int"}},
+
+    // random functions
+    {"random_number", make_std_lib_function(random_number), "int", {"int", "int"}},
     
 };  
 

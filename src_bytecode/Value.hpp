@@ -8,6 +8,8 @@
 #include "Function.hpp"
 
 
+void display_bytecode(function* func);
+
 enum Value_Type{
     NUMBER,
     BOOL,
@@ -213,7 +215,14 @@ std::map<std::string, Value> VALUE_AS_STRUCT(Value value){
 }
 
 void print_value(Value value, bool verbose = false){
-    if(verbose) std::cout << "Type: " << get_value_type_string(value) << " | ";
+    if(verbose) {
+        std::cout << "Type: " << get_value_type_string(value) << " | ";
+    }
+    if(value.type == Value_Type::FUNCTION){
+        std::cout << "Function: \n";
+        display_bytecode(VALUE_AS_FUNCTION(value));
+        return;
+    }
     std::cout << VALUE_AS_STRING(value);
 }
 
