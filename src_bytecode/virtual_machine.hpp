@@ -496,19 +496,14 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_LOAD_STRUCT_ELEMENT:
     {
-        Value key = pop();
         Value struct_ = get_variable(variable_names.names[get_ip()[1]]);
-        if (struct_.type != Value_Type::STRUCT || key.type != Value_Type::STRING)
+        if (struct_.type != Value_Type::STRUCT)
         {
-            vm_error("Invalid types for struct element access");
+            vm_error("Not a struct");
         }
         std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);
-        if (struct_map.find(VALUE_AS_STRING(key)) == struct_map.end())
-        {
-            vm_error("Key not found in struct");
-        }
-        push(struct_map[VALUE_AS_STRING(key)]);
-        increase_ip(1);
+        push(struct_map[variable_names.names[get_ip()[2]]]);
+        increase_ip(2);
         break;
     }
 
