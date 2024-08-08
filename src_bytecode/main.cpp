@@ -10,6 +10,7 @@
 #include "parser.hpp"
 #include "bytecode_generator.hpp"
 #include "virtual_machine.hpp"
+#include "cl_exe_file.hpp"
 
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
@@ -73,7 +74,7 @@ int main(int argc, char *argv[]) {
 
     // Traverse the AST and generate the bytecode
     start = std::chrono::high_resolution_clock::now();
-    function* func = generate_bytecode(ast);
+    function* func = generate_bytecode(ast, input_file);
     end = std::chrono::high_resolution_clock::now();
     if (verboseB) {
         std::cout << "Bytecode generation took "
@@ -99,7 +100,8 @@ int main(int argc, char *argv[]) {
 
     // Interpret the bytecode
     start = std::chrono::high_resolution_clock::now();
-    interpret_bytecode(func, verboseV, debug);
+    input_file = input_file.substr(0, input_file.find_last_of(".")) + ".cl_exe";
+    interpret_bytecode("./" + input_file, verboseV, debug);
     end = std::chrono::high_resolution_clock::now();
     if (verboseV) {
         std::cout << "Interpretation took "

@@ -5,6 +5,8 @@
 
 #include "Value.hpp"
 #include "./std_lib/std_lib.hpp"
+#include "Function.hpp"
+#include "cl_exe_file.hpp"
 
 // Data Structures ---------------------------------------------------
 struct function_frame
@@ -24,6 +26,9 @@ struct VM
     Value *stack;
     int stack_count;
     int stack_capacity;
+
+    std::vector<Value> constants;
+    std::vector<std::string> variable_names;
 
     std::vector<function_frame *> function_frames;
 };
@@ -56,14 +61,17 @@ function_frame *create_function_frame(function *func)
 }
 
 // Initializes the virtual machine ----------------------------------
-void init_vm(function* func, int stack_capacity = 256)
+void init_vm(cl_exe* exe, int stack_capacity = 256)
 {
     vm.stack = new Value[stack_capacity];
     vm.stack_count = 0;
     vm.stack_capacity = stack_capacity;
 
     vm.function_frames.clear();
-    vm.function_frames.push_back(create_function_frame(func));
+    vm.function_frames.push_back(create_function_frame(exe->main));
+
+    vm.constants = exe->constants;
+    vm.variable_names = exe->variable_names;
 }
 
 // -------------------------------------------------------------------
@@ -92,6 +100,11 @@ bool increase_ip(int offset)
     frame->ip += offset;
 
     return true;
+}
+
+Value get_vm_constant(int index)
+{
+    return vm.constants[index];
 }
 
 // get ip from the current function frame
@@ -392,47 +405,44 @@ void vm_loop(bool verbose)
 
     // Memory operations
     case OpCode::OP_LOAD:
-        // push(vals.values[get_ip()[1]]);
-        push(get_constant(get_ip()[1]));
+        push(get_vm_constant(get_ip()[1]));
         increase_ip(1);
         break;
     case OpCode::OP_STORE_VAR:
-        // std::cout << "Storing variable: " << variable_names.names[vm.ip[1]] << std::endl;
-        // print_stack();
-        set_variable(variable_names.names[get_ip()[1]], pop());
+        set_variable(vm.variable_names[get_ip()[1]], pop());
         increase_ip(1);
         break;
     case OpCode::OP_UPDATE_VAR:
-        update_variable(variable_names.names[get_ip()[1]], pop());
+        update_variable(vm.variable_names[get_ip()[1]], pop());
         increase_ip(1);
         break;
     case OpCode::OP_LOAD_VAR:
-        push(get_variable(variable_names.names[get_ip()[1]]));
+        push(get_variable(vm.variable_names[get_ip()[1]]));
         increase_ip(1);
         break;
     case OpCode::OP_LOAD_FUNCTION_VAR:
-        push(get_function_variable(variable_names.names[get_ip()[1]]));
+        push(get_function_variable(vm.variable_names[get_ip()[1]]));
         increase_ip(1);
         break;
 
     // Array operations
     case OpCode::OP_CREATE_VECTOR:
     {
-        set_variable(variable_names.names[get_ip()[1]], {Value_Type::VECTOR, std::vector<Value>()});
+        set_variable(vm.variable_names[get_ip()[1]], {Value_Type::VECTOR, std::vector<Value>()});
         increase_ip(1);
         break;
     }
     case OpCode::OP_VECTOR_PUSH:
     {
         Value value = pop();
-        Value vector = get_variable(variable_names.names[get_ip()[1]]);
+        Value vector = get_variable(vm.variable_names[get_ip()[1]]);
         if (vector.type != Value_Type::VECTOR)
         {
             vm_error("Invalid type for vector push");
         }
         std::vector<Value> vec = VALUE_AS_VECTOR(vector);
         vec.push_back(value);
-        update_variable(variable_names.names[get_ip()[1]], {Value_Type::VECTOR, vec});
+        update_variable(vm.variable_names[get_ip()[1]], {Value_Type::VECTOR, vec});
         increase_ip(1);
         break;
     }
@@ -440,7 +450,7 @@ void vm_loop(bool verbose)
     {
         Value index = pop();
         Value value = pop();
-        Value vector = get_variable(variable_names.names[get_ip()[1]]);
+        Value vector = get_variable(vm.variable_names[get_ip()[1]]);
         if (vector.type != Value_Type::VECTOR || index.type != Value_Type::NUMBER)
         {
             vm_error("Invalid types for vector element update");
@@ -451,14 +461,14 @@ void vm_loop(bool verbose)
             vm_error("Index out of bounds");
         }
         vec[(int)VALUE_AS_NUMBER(index)] = value;
-        update_variable(variable_names.names[get_ip()[1]], {Value_Type::VECTOR, vec});
+        update_variable(vm.variable_names[get_ip()[1]], {Value_Type::VECTOR, vec});
         increase_ip(1);
         break;
     }
     case OpCode::OP_LOAD_VECTOR_ELEMENT:
     {
         Value index = pop();
-        Value vector = get_variable(variable_names.names[get_ip()[1]]);
+        Value vector = get_variable(vm.variable_names[get_ip()[1]]);
         if (vector.type != Value_Type::VECTOR || index.type != Value_Type::NUMBER)
         {
             vm_error("Invalid types for vector element access");
@@ -476,33 +486,33 @@ void vm_loop(bool verbose)
     // Struct operations
     case OpCode::OP_CREATE_STRUCT:
     {
-        set_variable(variable_names.names[get_ip()[1]], {Value_Type::STRUCT, std::map<std::string, Value>()});
+        set_variable(vm.variable_names[get_ip()[1]], {Value_Type::STRUCT, std::map<std::string, Value>()});
         increase_ip(1);
         break;
     }
     case OpCode::OP_UPDATE_STRUCT_ELEMENT:
     {
         Value value = pop();
-        Value struct_ = get_variable(variable_names.names[get_ip()[1]]);
+        Value struct_ = get_variable(vm.variable_names[get_ip()[1]]);
         if (struct_.type != Value_Type::STRUCT)
         {
             vm_error("Not a struct");
         }
         std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);
-        struct_map[variable_names.names[get_ip()[2]]] = value;
-        update_variable(variable_names.names[get_ip()[1]], {Value_Type::STRUCT, struct_map});
+        struct_map[vm.variable_names[get_ip()[2]]] = value;
+        update_variable(vm.variable_names[get_ip()[1]], {Value_Type::STRUCT, struct_map});
         increase_ip(2);
         break;
     }
     case OpCode::OP_LOAD_STRUCT_ELEMENT:
     {
-        Value struct_ = get_variable(variable_names.names[get_ip()[1]]);
+        Value struct_ = get_variable(vm.variable_names[get_ip()[1]]);
         if (struct_.type != Value_Type::STRUCT)
         {
             vm_error("Not a struct");
         }
         std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);
-        push(struct_map[variable_names.names[get_ip()[2]]]);
+        push(struct_map[vm.variable_names[get_ip()[2]]]);
         increase_ip(2);
         break;
     }
@@ -749,9 +759,10 @@ void debug_vm(bool verbose = false)
 // -------------------------------------------------------------------
 
 // Starts the interpretation process ---------------------------------
-void interpret_bytecode(function* func, bool verbose = false, bool debug = false)
+void interpret_bytecode(std::string path, bool verbose = false, bool debug = false)
 {
-    init_vm(func);
+    cl_exe* exe = read_cl_exe(path);
+    init_vm(exe);
     if(debug){debug_vm(verbose);}
     else {run_vm(verbose);}
 }

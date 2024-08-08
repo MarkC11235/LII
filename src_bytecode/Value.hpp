@@ -54,6 +54,26 @@ Value_Type get_value_type(Value value){
     return value.type;
 }
 
+Value_Type get_value_type_from_string(std::string type){
+    if(type == "number"){
+        return Value_Type::NUMBER;
+    } else if(type == "bool"){
+        return Value_Type::BOOL;
+    } else if(type == "string"){
+        return Value_Type::STRING;
+    } else if(type == "vector"){
+        return Value_Type::VECTOR;
+    } else if(type == "function"){
+        return Value_Type::FUNCTION;
+    } else if(type == "null"){
+        return Value_Type::NULL_VALUE;
+    } else if(type == "struct"){
+        return Value_Type::STRUCT;
+    } else {
+        return Value_Type::NULL_VALUE;
+    }
+}
+
 std::string get_value_type_string(Value value){
     switch(value.type){
         case NUMBER:
@@ -121,21 +141,7 @@ std::string VALUE_AS_STRING(Value value){
             return std::get<bool>(value.data) ? "true" : "false";
         case STRING:
         {
-            //replace all \\n with \n
             std::string str = std::get<std::string>(value.data);
-            size_t pos = 0;
-            while((pos = str.find("\\n", pos)) != std::string::npos){
-                str.replace(pos, 2, "\n");
-                pos += 1;
-            }
-
-            //replace all \\t with \t
-            pos = 0;
-            while((pos = str.find("\\t", pos)) != std::string::npos){
-                str.replace(pos, 2, "\t");
-                pos += 1;
-            }
-
             return str;
         }
         case VECTOR:
@@ -156,11 +162,20 @@ std::string VALUE_AS_STRING(Value value){
         case FUNCTION:
         {
             function* func = std::get<function*>(value.data);
+            std::string args = "(";
+            for(int i = 0; i < (int)func->arguments.size(); i++){
+                args += func->arguments[i];
+                if(i != (int)func->arguments.size() - 1){
+                    args += ", ";
+                }
+            }
+            args += ")";
+
             std::string bc = "";
             for(int i = 0; i < func->count; i++){
                 bc += std::to_string(func->code[i]) + ", ";
             }
-            return "Function: " + bc;
+            return "function " + func->name + args + " {" + bc + "}";
         }
         case NULL_VALUE:
             return "null";

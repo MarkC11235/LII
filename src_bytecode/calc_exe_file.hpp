@@ -1,6 +1,0 @@
-#ifndef CALC_EXE_FILE_HPP
-#define CALC_EXE_FILE_HPP
-
-
-
-#endif //CALC_EXE_FILE_HPP

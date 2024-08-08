@@ -14,6 +14,7 @@
 #include "Function.hpp"
 #include "Value.hpp"
 #include "./std_lib/std_lib.hpp"
+#include "cl_exe_file.hpp"
 
 
 enum OpCode{
@@ -249,27 +250,10 @@ std::unordered_map<std::string, OpCode> opCodeMap = {
 
 
 // Data Structures ---------------------------------------------------
+std::vector<Value> constants; // Statically allocated because only one constants array is needed
+                              // This array stores constant values Ex: let x = 5; 5 is a constant
 
-// Constants struct
-// This is so constants can be stored in the bytecode as indices
-struct constants{
-    Value* constants;
-    int count;
-    int capacity;
-};
-
-constants consts; // Statically allocated because only one constants array is needed
-                  // This array stores constant values Ex: let x = 5; 5 is a constant
-
-// Variable names struct
-// This is so variable names can be stored in the bytecode as indices
-struct varible_names{
-    std::string* names;
-    int count;
-    int capacity;
-};
-
-varible_names variable_names; // Statically allocated because only one variable names array is needed
+std::vector<std::string> variable_names; // Statically allocated because only one variable names array is needed
                               // This array stores the names of the variables, functions are included in this array
 // -------------------------------------------------------------------
 
@@ -332,58 +316,58 @@ void display_bytecode(function* func){
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Value: " << VALUE_AS_STRING(consts.constants[(int)func->code[i]]) << std::endl;
+                std::cout << "Value: " << VALUE_AS_STRING(constants[(int)func->code[i]]) << std::endl;
                 break;
             case OpCode::OP_STORE_VAR:
                 std::cout << "OP_STORE_VAR";
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                std::cout << "Name: " << variable_names[(int)func->code[i]] << std::endl;
                 break;
             case OpCode::OP_UPDATE_VAR:
                 std::cout << "OP_UPDATE_VAR";
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                std::cout << "Name: " << variable_names[(int)func->code[i]] << std::endl;
                 break;
             case OpCode::OP_LOAD_VAR:
                 std::cout << "OP_LOAD_VAR";
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                std::cout << "Name: " << variable_names[(int)func->code[i]] << std::endl;
                 break;
             case OpCode::OP_LOAD_FUNCTION_VAR:
                 std::cout << "OP_LOAD_FUNCTION_VAR";
                 std::cout << "          ";
                 std::cout << "Index: " << (int)func->code[++i];
                 std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[i]] << std::endl;
+                std::cout << "Name: " << variable_names[(int)func->code[i]] << std::endl;
                 break;
 
             // Arrays
             case OpCode::OP_CREATE_VECTOR:
                 std::cout << "OP_CREATE_VECTOR";
                 std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[++i]] << std::endl;
+                std::cout << "Name: " << variable_names[(int)func->code[++i]] << std::endl;
                 break;
             case OpCode::OP_VECTOR_PUSH:
                 std::cout << "OP_VECTOR_PUSH";
                 std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[++i]] << std::endl;
+                std::cout << "Name: " << variable_names[(int)func->code[++i]] << std::endl;
                 break;
             case OpCode::OP_LOAD_VECTOR_ELEMENT:
                 std::cout << "OP_LOAD_VECTOR_ELEMENT";
                 std::cout << "          ";
-                std::cout << "Vector Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << "Vector Name: " << variable_names[(int)func->code[++i]];
                 std::cout << std::endl;
                 break;
             case OpCode::OP_UPDATE_VECTOR_ELEMENT:
                 std::cout << "OP_UPDATE_VECTOR_ELEMENT";
                 std::cout << "          ";
-                std::cout << "Vector Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << "Vector Name: " << variable_names[(int)func->code[++i]];
                 std::cout << std::endl;
                 break;
             
@@ -391,22 +375,22 @@ void display_bytecode(function* func){
             case OpCode::OP_CREATE_STRUCT:
                 std::cout << "OP_CREATE_STRUCT";
                 std::cout << "          ";
-                std::cout << "Name: " << variable_names.names[(int)func->code[++i]] << std::endl;
+                std::cout << "Name: " << variable_names[(int)func->code[++i]] << std::endl;
                 break;
             case OpCode::OP_LOAD_STRUCT_ELEMENT:
                 std::cout << "OP_LOAD_STRUCT_ELEMENT";
                 std::cout << "          ";
-                std::cout << "Struct Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << "Struct Name: " << variable_names[(int)func->code[++i]];
                 std::cout << "          ";
-                std::cout << "Element Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << "Element Name: " << variable_names[(int)func->code[++i]];
                 std::cout << std::endl;
                 break;
             case OpCode::OP_UPDATE_STRUCT_ELEMENT:
                 std::cout << "OP_UPDATE_STRUCT_ELEMENT";
                 std::cout << "          ";
-                std::cout << "Struct Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << "Struct Name: " << variable_names[(int)func->code[++i]];
                 std::cout << "          ";
-                std::cout << "Element Name: " << variable_names.names[(int)func->code[++i]];
+                std::cout << "Element Name: " << variable_names[(int)func->code[++i]];
                 std::cout << std::endl;
                 break;
             
@@ -454,16 +438,16 @@ void display_bytecode(function* func){
 }
 
 void display_constants(){
-    for(int i = 0; i < consts.count; i++){
+    for(int i = 0; i < constants.size(); i++){
         std::cout << i << ": \n";
-        print_value(consts.constants[i]);
+        print_value(constants[i]);
         std::cout << "\n" << std::endl;
     }
 }
 
 void display_variables(){
-    for(int i = 0; i < variable_names.count; i++){
-        std::cout << i << ": " << variable_names.names[i] << std::endl;
+    for(int i = 0; i < (int)variable_names.size(); i++){
+        std::cout << i << ": " << variable_names[i] << std::endl;
     }
 }
 // -------------------------------------------------------------------
@@ -474,32 +458,32 @@ inline void WRITE_BYTE(CODE_SIZE byte, function* func){
 }
 
 inline void WRITE_VALUE(double value){
-    consts.constants[consts.count++] = {Value_Type::NUMBER, value};
+    constants.push_back({Value_Type::NUMBER, value});
 }
 
 inline void WRITE_VALUE(bool value){
-    consts.constants[consts.count++] = {Value_Type::BOOL, value};
+    constants.push_back({Value_Type::BOOL, value});
 }
 
 inline void WRITE_VALUE(const std::string& value){
-    consts.constants[consts.count++] = {Value_Type::STRING, value};
+    constants.push_back({Value_Type::STRING, value});
 }
 
 inline void WRITE_VALUE(function* value){
-    consts.constants[consts.count++] = {Value_Type::FUNCTION, value};
+    constants.push_back({Value_Type::FUNCTION, value});
 }
 
 inline void WRITE_VALUE(Value value){
-    consts.constants[consts.count++] = value;
+    constants.push_back(value);
 }
 
 inline void WRITE_VAR_NAME(const std::string& name){
-    variable_names.names[variable_names.count++] = name;
+    variable_names.push_back(name);
 }
 
 int get_variable_index(const std::string& name){ // returns the index of the variable in the variable names array
-    for(int i = 0; i < variable_names.count; i++){
-        if(variable_names.names[i] == name){
+    for(int i = 0; i < (int)variable_names.size(); i++){
+        if(variable_names[i] == name){
             return i;
         }
     }
@@ -507,7 +491,7 @@ int get_variable_index(const std::string& name){ // returns the index of the var
 }
 
 std::string get_variable_name(int index){
-    return variable_names.names[index];
+    return variable_names[index];
 }
 
 // Constructor for the function struct
@@ -544,7 +528,7 @@ function* create_function(int capacity, function* parent = nullptr){
 }
 
 inline Value get_constant(int index){
-    return consts.constants[index];
+    return constants[index];
 }
 // -------------------------------------------------------------------
 
@@ -631,12 +615,12 @@ void choose_expr_operand(Node* node, function* func){
             case NodeType::NUM_NODE:
                 WRITE_VALUE(std::stod(node->get_value()));
                 WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(consts.count - 1, func);
+                WRITE_BYTE(constants.size() - 1, func);
                 break;
             case NodeType::BOOL_NODE:
                 WRITE_VALUE(node->get_value() == "true"); // Convert the string to a bool
                 WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(consts.count - 1, func);
+                WRITE_BYTE(constants.size() - 1, func);
                 break;
             case NodeType::VAR_NODE:
                 if(node->get_children().size() == 0){ // Variable access
@@ -686,7 +670,7 @@ void choose_expr_operand(Node* node, function* func){
             case NodeType::STRING_NODE:
                 WRITE_VALUE(node->get_value());
                 WRITE_BYTE(OpCode::OP_LOAD, func);
-                WRITE_BYTE(consts.count - 1, func);
+                WRITE_BYTE(constants.size() - 1, func);
                 break;
             default:
                 interpretation_error("Invalid child type for OP Node", node, func);
@@ -794,7 +778,7 @@ void interpret_function(Node* node, function* func, std::string name){
     WRITE_VALUE(new_func); // Add the function to the constants array
 
     WRITE_BYTE(OpCode::OP_LOAD, func); // push function pointer to stack
-    WRITE_BYTE(consts.count - 1, func);
+    WRITE_BYTE(constants.size() - 1, func);
 
     // add the arguments to the variables map
     for(int i = 0; i < (int)node->get_child(0)->get_children().size(); i++){
@@ -807,7 +791,7 @@ void interpret_function(Node* node, function* func, std::string name){
     //assign the stack values to the arguments
     for(int i = new_func->arguments.size() - 1; i >= 0 ; i--){ // reverse loop to keep the order of the arguments
         WRITE_BYTE(OpCode::OP_STORE_VAR, new_func);
-        WRITE_BYTE(i + variable_names.count - new_func->arguments.size(), new_func);
+        WRITE_BYTE(i + variable_names.size() - new_func->arguments.size(), new_func);
     }
 
     //make sure the function isn't empty
@@ -827,7 +811,7 @@ void interpret_list(Node* node, function* func){
     for(int i = 0; i < (int)node->get_children().size(); i++){
         interpret_expr(node->get_child(i), func);
         WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func); // Insert the value into the vector
-        WRITE_BYTE(variable_names.count - 1, func); // Index of the vector in the variables map
+        WRITE_BYTE(variable_names.size() - 1, func); // Index of the vector in the variables map
     }
 }
 
@@ -863,7 +847,7 @@ void interpret_struct_assign(Node* node, function* func, std::string struct_name
     // }
     // else if(node->get_child(1)->get_type() == NodeType::NULL_NODE){ // Assigning null to a struct element
     //     WRITE_BYTE(OpCode::OP_LOAD, func);
-    //     WRITE_BYTE(consts.count, func);
+    //     WRITE_BYTE(constants.count, func);
     //     WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
 
     //     WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
@@ -925,14 +909,14 @@ void interpret_assign(Node* node, function* func){
     }
     else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a variable
         WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector
-        WRITE_BYTE(variable_names.count, func); // Index to store the vector in the variables map
+        WRITE_BYTE(variable_names.size(), func); // Index to store the vector in the variables map
         WRITE_VAR_NAME(node->get_child(0)->get_value());
 
         interpret_list(node->get_child(1), func);
     }
     else if(node->get_child(1)->get_type() == NodeType::NULL_NODE){ // Assigning null to a variable
         WRITE_BYTE(OpCode::OP_LOAD, func);
-        WRITE_BYTE(consts.count, func);
+        WRITE_BYTE(constants.size(), func);
         WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
         WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
         if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
@@ -1132,24 +1116,12 @@ void interpret(Node* node, function* func){
     interpret_stmt_list(node, func);
 }
 
-function* generate_bytecode(Node* ast) {
+function* generate_bytecode(Node* ast, std::string name){ 
     function* func = create_function(1000);
 
-    //function_definitions["main"] = func;
-
-    CODE_SIZE max = std::numeric_limits<CODE_SIZE>::max();
-
-    consts.constants = new Value[(int)max]; // Allocate the max number allowed in the CODE_SIZE type (EX: int8_t, 255)
-                                            // This is so the constants can be stored in the bytecode as indices
-    consts.count = 0;
-    consts.capacity = (int)max;
-
-    variable_names.names = new std::string[(int)max];   // Allocate the max number allowed in the CODE_SIZE type (EX: int8_t, 255)
-                                                        // This is so the variable names can be stored in the bytecode as indices
-    variable_names.count = 0;
-    variable_names.capacity = (int)max;
-
     interpret(ast, func);
+
+    write_cl_exe(name, "./", func, variable_names, constants);
 
     return func;
 }

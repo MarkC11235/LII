@@ -1,0 +1,37 @@
+tests_2/expressions/test_string_concatenation
+1
+str
+5
+string|Hello, World!
+string| Welcome to the world of Calc!
+number|2
+number|2
+string| The result of 2 + 2 is 
+27
+14
+0
+15
+0
+14
+1
+17
+0
+0
+16
+0
+14
+2
+14
+3
+0
+14
+4
+17
+0
+0
+0
+16
+0
+17
+0
+32

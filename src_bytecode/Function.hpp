@@ -8,6 +8,10 @@
 
 typedef int8_t CODE_SIZE; // Bytecode size, only 8 bits for pointers will be too small for large programs
 
+std::string CODE_TO_NUMBER_STRING(CODE_SIZE code){
+    return std::to_string((int)code);
+}
+
 struct function; // Forward declaration
 
 struct function {
@@ -16,13 +20,9 @@ struct function {
     int capacity;
 
     std::string name; // Function name
-
-    //function* parent; // Parent function
     
     //arguments
     std::vector<std::string> arguments;
-
-    //std::map<std::string, function*> functions; // function map
 };
 
 #endif //FUNCTION_HPP
