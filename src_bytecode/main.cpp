@@ -55,8 +55,30 @@ int main(int argc, char *argv[]) {
     // Read the input file and tokenize the input
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<Token> tokens = read_input(input_file, verboseT);
+
+    int token_count = 0;
+    std::vector<Token> new_tokens;  // Vector to store the tokens after processing the include tokens
+    for(Token t : tokens){
+        if(t.get_type() == TokenType::INCLUDE_TOKEN){
+            std::vector<Token> include_tokens = read_input(t.get_value(), verboseT);
+            // remove the EOF token
+            include_tokens.pop_back();
+            new_tokens.insert(new_tokens.end(), include_tokens.begin(), include_tokens.end());
+        }else{
+            new_tokens.push_back(t);
+        }
+        token_count++;
+    }
+
+    tokens = new_tokens;
+
     auto end = std::chrono::high_resolution_clock::now();
     if (verboseT) {
+        std::cout << "\nTokens: " << std::endl;
+        for(Token token : tokens){
+            token.print();
+        }
+        std::cout << std::endl;
         std::cout << "Tokenization took "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
                   << " milliseconds." << std::endl << std::endl;

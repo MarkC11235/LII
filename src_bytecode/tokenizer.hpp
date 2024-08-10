@@ -43,7 +43,7 @@ enum TokenType {
     STRING_TOKEN,
     FUNCTION_TOKEN,
     STD_LIB_TOKEN,
-    DIRECTIVE_TOKEN,
+    INCLUDE_TOKEN,
     ERROR_TOKEN,
     EOF_TOKEN
 };
@@ -117,8 +117,8 @@ std::string token_type_to_string(TokenType type){
             return "FUNCTION";
         case TokenType::STD_LIB_TOKEN:
             return "STD_LIB";
-        case TokenType::DIRECTIVE_TOKEN:
-            return "DIRECTIVE";
+        case TokenType::INCLUDE_TOKEN:
+            return "INCLUDE";
         case TokenType::ERROR_TOKEN:
             return "ERROR";
         case TokenType::EOF_TOKEN:
@@ -180,11 +180,24 @@ std::vector<Token> analyze(std::string input, int line_number){
     std::vector<Token> tokens;
     for(int i = 0; i < int(input.length()); i++){
         switch(input[i]){
-            case '#':
-                // This will be used for importing files
-                // Example: #include "file_name"
-                // right now throw an error
-                return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "error", line_number)};
+            case '#':{
+                //Next should be a string
+                std::string include_file = "";
+                i++;
+                if(input[i] != '"'){
+                    return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "Invalid include statement", line_number)};
+                }
+                i++;
+                while(input[i] != '"' && i < int(input.length())){
+                    include_file += input[i];
+                    i++;
+                }
+                if(i == int(input.length())){
+                    return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "No closing quotes", line_number)};
+                }
+                tokens.push_back(Token(TokenType::INCLUDE_TOKEN, include_file, line_number));
+            }
+                break;  
             case '$':
                 tokens.push_back(Token(TokenType::STD_LIB_TOKEN, "$", line_number));
                 break;
@@ -415,15 +428,6 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false){
 
     // Close the file
     File.close();
-
-    if(verbose){
-        std::cout << "\nTokens: " << std::endl;
-        for(Token token : tokens){
-            token.print();
-        }
-        std::cout << std::endl;
-    }
-
 
     return tokens;
 }
