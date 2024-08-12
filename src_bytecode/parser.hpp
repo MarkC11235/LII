@@ -250,7 +250,7 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested);
 void parse_function_call(std::vector<Token>& tokens, Node* current);
 void parse_std_lib_call(std::vector<Token>& tokens, Node* current);
 void parse_function(std::vector<Token>& tokens, Node* current);
-void parse_assignment(std::vector<Token>& tokens, Node* current);
+void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const = false);
 void parse_if(std::vector<Token>& tokens, Node* current);
 void parse_return(std::vector<Token>& tokens, Node* current);
 void parse_list(std::vector<Token>& tokens, Node* current, int level);
@@ -644,8 +644,9 @@ void parse_struct(std::vector<Token>& tokens, Node* current){
 }
 
 // This is called when the let keyword is encountered
-void parse_assignment(std::vector<Token>& tokens, Node* current){
-    Node* assign = new Node(NodeType::ASSIGN_NODE, "");
+void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const /* = false */){
+    std::string keyword = is_const ? "const" : "let";
+    Node* assign = new Node(NodeType::ASSIGN_NODE, keyword);
     current->add_child(assign);
 
     Token token = pop(tokens);
@@ -908,6 +909,9 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             break;
         case TokenType::LET_TOKEN:
             parse_assignment(tokens, current);
+            break;
+        case TokenType::CONST_TOKEN:
+            parse_assignment(tokens, current, true);
             break;
         case TokenType::PRINT_TOKEN:
             parse_print(tokens, current);

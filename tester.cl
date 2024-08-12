@@ -1,12 +1,13 @@
-#"./cl_headers/test.clh"
-#"./cl_headers/math.clh"
+let x = 5;
 
-let res = test();
+const y = 10;
 
-let vec1 = [1, 2, 3];
-let vec2 = [4, 5, 6];
+const Person = struct {
+    let name = "John";
+    let age = 30;
+    let isAdult = true;
+};
 
-print dot_product(vec1, vec2);
-print sum_vector(vec1);
-print factorial(5);
-
+const add = func (a, b) {
+    return a + b;
+};

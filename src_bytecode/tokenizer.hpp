@@ -12,6 +12,7 @@ class Token;
 enum TokenType {
     PRINT_TOKEN,
     LET_TOKEN,
+    CONST_TOKEN,
     ASSIGNMENT_TOKEN,
     FUNC_TOKEN,
     STRUCT_TOKEN,
@@ -55,6 +56,8 @@ std::string token_type_to_string(TokenType type){
             return "PRINT";
         case TokenType::LET_TOKEN:
             return "LET";
+        case TokenType::CONST_TOKEN:
+            return "CONST";
         case TokenType::ASSIGNMENT_TOKEN:
             return "ASSIGNMENT";
         case TokenType::FUNC_TOKEN:
@@ -385,6 +388,9 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "struct"){
                         tokens.push_back(Token(TokenType::STRUCT_TOKEN, "struct", line_number));
+                    }
+                    else if(identifier == "const"){
+                        tokens.push_back(Token(TokenType::CONST_TOKEN, "const", line_number));
                     }
                     else{
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
