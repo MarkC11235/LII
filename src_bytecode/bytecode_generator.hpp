@@ -501,29 +501,6 @@ function* create_function(int capacity, function* parent = nullptr){
     func->count = 0;
     func->capacity = capacity;
 
-    //func->parent = parent; // Set the parent function
-
-    // if(name == "main"){
-    //     func->name = name;
-    //     return func;
-    // }
-    // else{
-    //     func->name = name + "^" + parent->name;
-    // }
-
-    // std::cout << "Function name: " << name << std::endl;
-    // std::cout << "Parent function name: " << parent->name << std::endl;
-
-    // if(parent != nullptr){
-    //     // new name should be function^parent_name to avoid name conflicts 
-    //     // if there are name conflicts, the function will be overwritten, which is the intended behavior
-    //     function_definitions[func->name] = func;
-    //     //add the function to the functions map of the parent function
-    //     parent->functions[func->name] = func;
-    //     //add the function name to the variables map, because functions are variables
-    //     WRITE_VAR_NAME(func->name);
-    // }
-
     return func;
 }
 
@@ -555,7 +532,7 @@ void interpretation_error(std::string message, Node* node, function* func){
     std::cout << "\nVariable names: " << std::endl;
     display_variables();
 
-    exit(1);
+    exit(1); // TODO: Handle errors better
 }
 
 void interpret_function_call(Node* node, function* func){
@@ -608,47 +585,49 @@ void interpret_std_lib_call(Node* node, function* func){
 }
 
 void choose_expr_operand(Node* node, function* func){
+    std::string opStr = node->get_value();
     switch(node->get_type()){
             case NodeType::OP_NODE:
                 interpret_op(node, func);
                 break;
             case NodeType::NUM_NODE:
-                WRITE_VALUE(std::stod(node->get_value()));
+                WRITE_VALUE(std::stod(opStr));
                 WRITE_BYTE(OpCode::OP_LOAD, func);
                 WRITE_BYTE(constants.size() - 1, func);
                 break;
             case NodeType::BOOL_NODE:
-                WRITE_VALUE(node->get_value() == "true"); // Convert the string to a bool
+                WRITE_VALUE(opStr == "true"); // Convert the string to a bool
                 WRITE_BYTE(OpCode::OP_LOAD, func);
                 WRITE_BYTE(constants.size() - 1, func);
                 break;
             case NodeType::VAR_NODE:
                 if(node->get_children().size() == 0){ // Variable access
                     WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
-                    if(get_variable_index(node->get_value()) == -1){
+                    if(get_variable_index(opStr) == -1){
                         interpretation_error("Variable not found", node, func);
                     }
                     WRITE_BYTE(get_variable_index(node->get_value()), func);
                 }
                 else if(node->get_children().size() == 1){ // Vector access or struct access
-                    if(node->get_child(0)->get_type() == NodeType::EXPR_NODE){ // Vector access
-                        interpret_expr(node->get_child(0), func); // Expression for vector index, first on the stack
+                    Node* child = node->get_child(0);
+                    if(child->get_type() == NodeType::EXPR_NODE){ // Vector access
+                        interpret_expr(child, func); // Expression for vector index, first on the stack
                         WRITE_BYTE(OpCode::OP_LOAD_VECTOR_ELEMENT, func); // Load the value from the vector
-                        if(get_variable_index(node->get_value()) == -1){
+                        if(get_variable_index(opStr) == -1){
                             interpretation_error("Variable not found", node, func);
                         }
-                        WRITE_BYTE(get_variable_index(node->get_value()), func); // Index of the vector in the variables map
+                        WRITE_BYTE(get_variable_index(opStr), func); // Index of the vector in the variables map
                     }
-                    else if(node->get_child(0)->get_type() == NodeType::VAR_NODE){ // Struct access
+                    else if(child->get_type() == NodeType::VAR_NODE){ // Struct access
                         WRITE_BYTE(OpCode::OP_LOAD_STRUCT_ELEMENT, func); // Load the value from the struct
                         if(get_variable_index(node->get_value()) == -1){
                             interpretation_error("Variable not found", node, func);
                         }
-                        WRITE_BYTE(get_variable_index(node->get_value()), func); // Index of the struct in the variables map
-                        if(get_variable_index(node->get_child(0)->get_value()) == -1){
+                        WRITE_BYTE(get_variable_index(opStr), func); // Index of the struct in the variables map
+                        if(get_variable_index(child->get_value()) == -1){
                             interpretation_error("Variable not found", node, func);
                         }
-                        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct element in the struct
+                        WRITE_BYTE(get_variable_index(child->get_value()), func); // Index of the struct element in the struct
                     }
                     else{
                         interpretation_error("Invalid child type for VAR Node", node, func);
@@ -668,7 +647,7 @@ void choose_expr_operand(Node* node, function* func){
                 interpret_expr(node, func);
                 break;
             case NodeType::STRING_NODE:
-                WRITE_VALUE(node->get_value());
+                WRITE_VALUE(node->get_value()); // Add the string to the constants array
                 WRITE_BYTE(OpCode::OP_LOAD, func);
                 WRITE_BYTE(constants.size() - 1, func);
                 break;
@@ -955,46 +934,51 @@ void interpret_update(Node* node, function* func){
         interpretation_error("Update doesn't start with UPDATE Node", node, func);
     }
 
-    if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
+    Node* variable = node->get_child(0);
+
+    if(variable->get_type() != NodeType::VAR_NODE){
         interpretation_error("Update doesn't have a VAR Node as the first child", node, func);
     }
 
-    if(node->get_children().size() == 2){ // Normal update or update a struct element
-        if(node->get_child(0)->get_children().size() == 0){ // Normal update
-            interpret_expr(node->get_child(1), func); // Expression to update variable with 
+    std::vector<Node*> node_children = node->get_children();
+
+    if(node_children.size() == 2){ // Normal update or update a struct element
+        std::vector<Node*> variable_children = variable->get_children();
+
+        if(variable_children.size() == 0){ // Normal update
+            interpret_expr(node_children[1], func); // Expression to update variable with 
 
             WRITE_BYTE(OpCode::OP_UPDATE_VAR, func); // takes the value from the stack and updates the value in the variables map
-            int index = get_variable_index(node->get_child(0)->get_value());
+            int index = get_variable_index(variable->get_value());
             if(index == -1){
-                // Should never happen because the variable should already exist
                 interpretation_error("Trying to update a variable that hasn't been defined", node, func);
             }
             WRITE_BYTE(index, func);
         }
-        else if(node->get_child(0)->get_children().size() == 1){ // Update a struct element
-            interpret_expr(node->get_child(1), func); // Expression to update the struct element with, left on the stack
+        else if(variable_children.size() == 1){ // Update a struct element
+            interpret_expr(node_children[1], func); // Expression to update the struct element with, left on the stack
             WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
 
-            int index = get_variable_index(node->get_child(0)->get_value());
+            int index = get_variable_index(variable->get_value());
             if(index == -1){
                 interpretation_error("Struct not found", node, func);
             }
-            WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
-            if(get_variable_index(node->get_child(0)->get_child(0)->get_value()) == -1){
+            WRITE_BYTE(get_variable_index(variable->get_value()), func); // Index of the struct in the variables map
+            if(get_variable_index(variable_children[0]->get_value()) == -1){
                 interpretation_error("Struct element not found", node, func);
             }
-            WRITE_BYTE(get_variable_index(node->get_child(0)->get_child(0)->get_value()), func); // Index of the struct element in the struct
+            WRITE_BYTE(get_variable_index(variable_children[0]->get_value()), func); // Index of the struct element in the struct
         }
         else{
             interpretation_error("Invalid number of children for UPDATE Node", node, func);
         }
     }
-    else if(node->get_children().size() == 3){ // Update an array index
-        interpret_expr(node->get_child(2), func); // Expression to update array index with, left on the stack
-        interpret_expr(node->get_child(1), func); // Expression for array index, first on the stack
+    else if(node_children.size() == 3){ // Update an array index
+        interpret_expr(node_children[2], func); // Expression to update array index with, left on the stack
+        interpret_expr(node_children[1], func); // Expression for array index, first on the stack
         WRITE_BYTE(OpCode::OP_UPDATE_VECTOR_ELEMENT, func); // Update the value in the vector
 
-        int index = get_variable_index(node->get_child(0)->get_value());
+        int index = get_variable_index(variable->get_value());
         if(index == -1){
             // Should never happen because the variable should already exist
             interpretation_error("Trying to update a variable that hasn't been defined", node, func);

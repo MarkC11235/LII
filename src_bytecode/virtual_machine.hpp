@@ -765,6 +765,8 @@ void interpret_bytecode(std::string path, bool verbose = false, bool debug = fal
     init_vm(exe);
     if(debug){debug_vm(verbose);}
     else {run_vm(verbose);}
+
+    delete exe;
 }
 
 // -------------------------------------------------------------------
