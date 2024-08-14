@@ -428,8 +428,7 @@ void vm_loop(bool verbose)
     // Array operations
     case OpCode::OP_CREATE_VECTOR:
     {
-        set_variable(vm.variable_names[get_ip()[1]], {Value_Type::VECTOR, std::vector<Value>()});
-        increase_ip(1);
+        push({Value_Type::VECTOR, std::vector<Value>()});
         break;
     }
     case OpCode::OP_VECTOR_PUSH:
@@ -486,8 +485,7 @@ void vm_loop(bool verbose)
     // Struct operations
     case OpCode::OP_CREATE_STRUCT:
     {
-        set_variable(vm.variable_names[get_ip()[1]], {Value_Type::STRUCT, std::map<std::string, Value>()});
-        increase_ip(1);
+        push({Value_Type::STRUCT, std::map<std::string, Value>()});
         break;
     }
     case OpCode::OP_UPDATE_STRUCT_ELEMENT:

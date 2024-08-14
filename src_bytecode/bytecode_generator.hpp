@@ -116,6 +116,10 @@ enum OpCode{
     /*
     * OP_UPDATE_VAR: Update a value in the variables map with a value from the stack
                 Index of the variable name in the variable names array is the next byte
+                var type is the next byte -> 
+                    0: normal variable (number, bool, string, function, null)
+                    1: vector
+                    2: struct
     */
     OP_UPDATE_VAR, 
     /*
@@ -132,9 +136,7 @@ enum OpCode{
     // Arrays
 
     /*
-    * OP_CREATE_VECTOR: Make an empty vector
-                Index of the vector in the variable names array is the next byte
-                Put the vector in the variables map
+    * OP_CREATE_VECTOR: Make an empty vector and push it onto the stack 
     */
     OP_CREATE_VECTOR, 
     /*
@@ -159,9 +161,7 @@ enum OpCode{
     // Structs
 
     /*
-    * OP_CREATE_STRUCT: Make an empty struct
-                Index of the struct in the variable names array is the next byte
-                Put the struct in the variables map
+    * OP_CREATE_STRUCT: Make an empty struct and push it onto the stack
     */
     OP_CREATE_STRUCT, 
     /*
@@ -349,9 +349,7 @@ void display_bytecode(function* func){
 
             // Arrays
             case OpCode::OP_CREATE_VECTOR:
-                std::cout << "OP_CREATE_VECTOR";
-                std::cout << "          ";
-                std::cout << "Name: " << variable_names[(int)func->code[++i]] << std::endl;
+                std::cout << "OP_CREATE_VECTOR" << std::endl;
                 break;
             case OpCode::OP_VECTOR_PUSH:
                 std::cout << "OP_VECTOR_PUSH";
@@ -373,9 +371,7 @@ void display_bytecode(function* func){
             
             // Structs
             case OpCode::OP_CREATE_STRUCT:
-                std::cout << "OP_CREATE_STRUCT";
-                std::cout << "          ";
-                std::cout << "Name: " << variable_names[(int)func->code[++i]] << std::endl;
+                std::cout << "OP_CREATE_STRUCT" << std::endl;
                 break;
             case OpCode::OP_LOAD_STRUCT_ELEMENT:
                 std::cout << "OP_LOAD_STRUCT_ELEMENT";
@@ -814,6 +810,8 @@ void interpret_struct_assign(Node* node, function* func, std::string struct_name
     // TODO: add support for nested structs and lists 
     //don't support lists in structs right now becasue of the OP_VECTOR_CREATE opcode
     //it just stores the vector in the variables map, so it can't be used in a struct
+    // IDEA: make the OP_STORE_VAR opcode store any type of value in the variables map
+    // make it take another argument that is encoded in the bytecode that tells it what type of value it is
     // else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a struct element
     //     WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector
     //     WRITE_BYTE(variable_names.count, func); // Index to store the vector in the variables map
@@ -862,7 +860,9 @@ void interpret_assign(Node* node, function* func){
         interpretation_error("Assign doesn't start with ASSIGN Node", node, func);
     }
 
-    if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
+    Node* var = node->get_child(0);
+
+    if(var->get_type() != NodeType::VAR_NODE){
         interpretation_error("Assign doesn't have a VAR Node as the first child", node, func);
     }
 
@@ -870,26 +870,30 @@ void interpret_assign(Node* node, function* func){
         interpret_expr(node->get_child(1), func);
 
         WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(var->get_value());
         }
-        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+        WRITE_BYTE(get_variable_index(var->get_value()), func);
     }
     else if(node->get_child(1)->get_type() == NodeType::FUNCTION_NODE){ // Assigning a function to a variable
         //have to do this first incase function calls itself
-        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(var->get_value());
         }
 
-        interpret_function(node->get_child(1), func, std::string(node->get_child(0)->get_value()));
+        interpret_function(node->get_child(1), func, std::string(var->get_value()));
 
         WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+        WRITE_BYTE(get_variable_index(var->get_value()), func);
     }
     else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a variable
-        WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector
-        WRITE_BYTE(variable_names.size(), func); // Index to store the vector in the variables map
-        WRITE_VAR_NAME(node->get_child(0)->get_value());
+        WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
+        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(var->get_value());
+        }
+        // Store var
+        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+        WRITE_BYTE(get_variable_index(var->get_value()), func);
 
         interpret_list(node->get_child(1), func);
     }
@@ -898,19 +902,21 @@ void interpret_assign(Node* node, function* func){
         WRITE_BYTE(constants.size(), func);
         WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
         WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(var->get_value());
         }
-        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func);
+        WRITE_BYTE(get_variable_index(var->get_value()), func);
     }
     else if(node->get_child(1)->get_type() == NodeType::STRUCT_NODE){ // Assigning a struct to a variable
 
         //Create the struct
         WRITE_BYTE(OpCode::OP_CREATE_STRUCT, func); // Create an empty struct
-        if(get_variable_index(node->get_child(0)->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(node->get_child(0)->get_value());
+        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
+            WRITE_VAR_NAME(var->get_value());
         }
-        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index to store the struct in the variables map
+
+        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+        WRITE_BYTE(get_variable_index(var->get_value()), func);
 
         //Assign the values to the struct
         Node* list = node->get_child(1)->get_child(0);
