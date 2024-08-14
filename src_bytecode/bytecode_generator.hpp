@@ -434,7 +434,7 @@ void display_bytecode(function* func){
 }
 
 void display_constants(){
-    for(int i = 0; i < constants.size(); i++){
+    for(int i = 0; i < (int)constants.size(); i++){
         std::cout << i << ": \n";
         print_value(constants[i]);
         std::cout << "\n" << std::endl;
@@ -484,6 +484,12 @@ int get_variable_index(const std::string& name){ // returns the index of the var
         }
     }
     return -1;
+}
+
+void WRITE_VAR_NAME_IF_NOT_EXISTS(const std::string& name){
+    if(get_variable_index(name) == -1){
+        WRITE_VAR_NAME(name);
+    }
 }
 
 std::string get_variable_name(int index){
@@ -758,7 +764,7 @@ void interpret_function(Node* node, function* func, std::string name){
     // add the arguments to the variables map
     for(int i = 0; i < (int)node->get_child(0)->get_children().size(); i++){
         std::string arg_name = node->get_child(0)->get_child(i)->get_value();
-        WRITE_VAR_NAME(arg_name);
+        WRITE_VAR_NAME_IF_NOT_EXISTS(arg_name);
 
         new_func->arguments.push_back(arg_name);
     }
@@ -766,7 +772,7 @@ void interpret_function(Node* node, function* func, std::string name){
     //assign the stack values to the arguments
     for(int i = new_func->arguments.size() - 1; i >= 0 ; i--){ // reverse loop to keep the order of the arguments
         WRITE_BYTE(OpCode::OP_STORE_VAR, new_func);
-        WRITE_BYTE(i + variable_names.size() - new_func->arguments.size(), new_func);
+        WRITE_BYTE(get_variable_index(new_func->arguments[i]), new_func);
     }
 
     //make sure the function isn't empty
@@ -795,63 +801,32 @@ void interpret_struct_assign(Node* node, function* func, std::string struct_name
         interpretation_error("Struct assignment doesn't start with ASSIGN Node", node, func);
     }
 
-    if(node->get_child(0)->get_type() != NodeType::VAR_NODE){
+    Node* var = node->get_child(0);
+    std::string var_name = var->get_value();
+
+    Node* value = node->get_child(1);
+
+    if(var->get_type() != NodeType::VAR_NODE){
         interpretation_error("Struct assignment doesn't have a VAR Node as the first child", node, func);
     }
 
-    if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a struct element
-        interpret_expr(node->get_child(1), func);
-
-        WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
-        WRITE_BYTE(get_variable_index(struct_name), func); // index of the struct in the variables names array
-        WRITE_VAR_NAME(node->get_child(0)->get_value());
-        WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // index of the struct element in the struct still in the variables names array
-    }
     // TODO: add support for nested structs and lists 
-    //don't support lists in structs right now becasue of the OP_VECTOR_CREATE opcode
-    //it just stores the vector in the variables map, so it can't be used in a struct
+    // don't support lists in structs right now becasue of the OP_VECTOR_CREATE opcode
+    // it just stores the vector in the variables map, so it can't be used in a struct
     // IDEA: make the OP_STORE_VAR opcode store any type of value in the variables map
     // make it take another argument that is encoded in the bytecode that tells it what type of value it is
-    // else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a struct element
-    //     WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector
-    //     WRITE_BYTE(variable_names.count, func); // Index to store the vector in the variables map
+    switch(value->get_type()){
+        case NodeType::EXPR_NODE:{
+            interpret_expr(value, func);
 
-    //     interpret_list(node->get_child(1), func);
-
-    //     WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
-    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
-    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct element in the struct
-    // }
-    // else if(node->get_child(1)->get_type() == NodeType::NULL_NODE){ // Assigning null to a struct element
-    //     WRITE_BYTE(OpCode::OP_LOAD, func);
-    //     WRITE_BYTE(constants.count, func);
-    //     WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
-
-    //     WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
-    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
-    // }
-    // else if(node->get_child(1)->get_type() == NodeType::STRUCT_NODE){ // Assigning a struct to a struct element
-
-    //     WRITE_BYTE(OpCode::OP_CREATE_STRUCT, func); // Create an empty struct
-    //     WRITE_BYTE(variable_names.count, func); // Index to store the struct in the variables map
-
-    //     Node* list = node->get_child(1)->get_child(0);
-    //     for(int i = 0; i < (int)list->get_children().size(); i++){
-    //         // assignment nodes
-    //         Node* assign = list->get_child(i);
-    //         if(assign->get_type() != NodeType::ASSIGN_NODE){
-    //             interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign);
-    //         }
-
-    //         interpret_struct_assign(assign, func);
-    //     }
-
-    //     WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
-    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct in the variables map
-    //     WRITE_BYTE(get_variable_index(node->get_child(0)->get_value()), func); // Index of the struct element in the struct
-    // }
-    else{
-        interpretation_error("Invalid child type for ASSIGN Node", node, func);
+            WRITE_BYTE(OpCode::OP_UPDATE_STRUCT_ELEMENT, func); // Update the value in the struct
+            WRITE_BYTE(get_variable_index(struct_name), func); // index of the struct in the variables names array
+            WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
+            WRITE_BYTE(get_variable_index(var_name), func); // index of the struct element in the struct still in the variables names array
+        }break;
+        default:
+            interpretation_error("Invalid child type for ASSIGN Node", node, func);
+            break;
     }
 }
 
@@ -861,78 +836,72 @@ void interpret_assign(Node* node, function* func){
     }
 
     Node* var = node->get_child(0);
+    std::string var_name = var->get_value();
+    Node* value = node->get_child(1);
 
     if(var->get_type() != NodeType::VAR_NODE){
         interpretation_error("Assign doesn't have a VAR Node as the first child", node, func);
     }
 
-    if(node->get_child(1)->get_type() == NodeType::EXPR_NODE){ // Assigning a value to a variable
-        interpret_expr(node->get_child(1), func);
+    switch(value->get_type()){
+        case NodeType::EXPR_NODE:{
+            interpret_expr(value, func);
 
-        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(var->get_value());
-        }
-        WRITE_BYTE(get_variable_index(var->get_value()), func);
-    }
-    else if(node->get_child(1)->get_type() == NodeType::FUNCTION_NODE){ // Assigning a function to a variable
-        //have to do this first incase function calls itself
-        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(var->get_value());
-        }
+            WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+            WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
+            WRITE_BYTE(get_variable_index(var_name), func);
+        }break;
+        case NodeType::FUNCTION_NODE:{
+            //have to do this first incase function calls itself
+            WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
 
-        interpret_function(node->get_child(1), func, std::string(var->get_value()));
+            interpret_function(value, func, std::string(var_name));
 
-        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        WRITE_BYTE(get_variable_index(var->get_value()), func);
-    }
-    else if(node->get_child(1)->get_type() == NodeType::LIST_NODE){ // Assigning a list to a variable
-        WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
-        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(var->get_value());
-        }
-        // Store var
-        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        WRITE_BYTE(get_variable_index(var->get_value()), func);
+            WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+            WRITE_BYTE(get_variable_index(var_name), func);
+        }break;
+        case NodeType::LIST_NODE:{
+            WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
+            WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
+            // Store var
+            WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+            WRITE_BYTE(get_variable_index(var_name), func);
 
-        interpret_list(node->get_child(1), func);
-    }
-    else if(node->get_child(1)->get_type() == NodeType::NULL_NODE){ // Assigning null to a variable
-        WRITE_BYTE(OpCode::OP_LOAD, func);
-        WRITE_BYTE(constants.size(), func);
-        WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
-        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(var->get_value());
-        }
-        WRITE_BYTE(get_variable_index(var->get_value()), func);
-    }
-    else if(node->get_child(1)->get_type() == NodeType::STRUCT_NODE){ // Assigning a struct to a variable
+            interpret_list(value, func);
+        }break;
+        case NodeType::NULL_NODE:{
+            WRITE_BYTE(OpCode::OP_LOAD, func);
+            WRITE_BYTE(constants.size(), func);
+            WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
+            WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+            WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
+            WRITE_BYTE(get_variable_index(var_name), func);
+        }break;
+        case NodeType::STRUCT_NODE:{
+            //Create the struct
+            WRITE_BYTE(OpCode::OP_CREATE_STRUCT, func); // Create an empty struct
+            WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
 
-        //Create the struct
-        WRITE_BYTE(OpCode::OP_CREATE_STRUCT, func); // Create an empty struct
-        if(get_variable_index(var->get_value()) == -1){ // if the variable doesn't exist, add it to the variable names array
-            WRITE_VAR_NAME(var->get_value());
-        }
+            WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
+            WRITE_BYTE(get_variable_index(var_name), func);
 
-        WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
-        WRITE_BYTE(get_variable_index(var->get_value()), func);
+            //Assign the values to the struct
+            Node* list = value->get_child(0);
+            for(int i = 0; i < (int)list->get_children().size(); i++){
+                // assignment nodes
+                Node* assign = list->get_child(i);
+                if(assign->get_type() != NodeType::ASSIGN_NODE){
+                    interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign, func);
+                }
 
-        //Assign the values to the struct
-        Node* list = node->get_child(1)->get_child(0);
-        for(int i = 0; i < (int)list->get_children().size(); i++){
-            // assignment nodes
-            Node* assign = list->get_child(i);
-            if(assign->get_type() != NodeType::ASSIGN_NODE){
-                interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign, func);
+                interpret_struct_assign(assign, func, var_name);
             }
+        }break;
+        default:
+            interpretation_error("Invalid child type for ASSIGN Node", node, func);
+            break;
+    }
 
-            interpret_struct_assign(assign, func, node->get_child(0)->get_value());
-        }
-    }
-    else{
-        interpretation_error("Invalid child type for ASSIGN Node", node, func);
-    }
 }
 
 void interpret_update(Node* node, function* func){

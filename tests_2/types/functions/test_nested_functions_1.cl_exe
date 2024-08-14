@@ -1,4 +1,4 @@
-tests_2/functions/test_nested_functions_2
+tests_2/types/functions/test_nested_functions_1
 3
 a
 p
@@ -10,16 +10,12 @@ number|1
 function|function () {14, 4, 26, }
 number|2
 number|3
-12
+8
 14
 0
 15
 0
 18
 0
-29
-32
-18
-1
 29
 32
