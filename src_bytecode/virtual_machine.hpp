@@ -102,6 +102,20 @@ bool increase_ip(int offset)
     return true;
 }
 
+bool goto_ip(int index)
+{
+    function_frame *frame = get_current_function_frame();
+
+    if (index >= frame->func->count || index < 0)
+    {
+        return false;
+    }
+
+    frame->ip = &frame->func->code[index];
+
+    return true;
+}
+
 Value get_vm_constant(int index)
 {
     return vm.constants[index];
@@ -545,14 +559,22 @@ void vm_loop(bool verbose)
         break;
     }
     case OpCode::OP_JUMP:
-        increase_ip(get_ip()[1]);
+        {
+            if(!goto_ip(get_ip()[1]))
+            {
+                vm_error("Invalid jump index " + std::to_string(get_ip()[1]));
+            }
+        }
         break;
     case OpCode::OP_JUMP_IF_FALSE:
     {
         bool val = VALUE_AS_BOOL(pop());
         if (!val)
         {
-            increase_ip(get_ip()[1]);
+            if(!goto_ip(get_ip()[1]))
+            {
+                vm_error("Invalid jump index " + std::to_string(get_ip()[1]));
+            }
         }
         else
         {

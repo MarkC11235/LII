@@ -395,10 +395,10 @@ void display_bytecode(function* func){
                 std::cout << "OP_RETURN" << std::endl;
                 break;
             case OpCode::OP_JUMP:
-                std::cout << "OP_JUMP    " << "Offset: " << (int)func->code[++i] << std::endl;
+                std::cout << "OP_JUMP    " << "Index: " << (int)func->code[++i] << std::endl;
                 break;
             case OpCode::OP_JUMP_IF_FALSE:
-                std::cout << "OP_JUMP_IF_FALSE    " << "Offset: " << (int)func->code[++i] << std::endl;
+                std::cout << "OP_JUMP_IF_FALSE    " << "Index: " << (int)func->code[++i] << std::endl;
                 break;
             case OpCode::OP_FUNCTION_CALL:
                 std::cout << "OP_FUNCTION_CALL" << std::endl;;
@@ -451,6 +451,14 @@ void display_variables(){
 // Helper functions --------------------------------------------------
 inline void WRITE_BYTE(CODE_SIZE byte, function* func){
     func->code[func->count++] = byte;
+}
+
+inline void CHANGE_BYTE(int index, CODE_SIZE byte, function* func){
+    if(index >= func->count || index < 0){
+        std::cout << "Index out of bounds" << std::endl;
+        exit(1);
+    }
+    func->code[index] = byte;
 }
 
 inline void WRITE_VALUE(double value){
@@ -719,8 +727,8 @@ void interpret_if(Node* node, function* func){
 
     interpret_expr(node->get_child(0), func);
     WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
-    int jump_index = func->count;
     WRITE_BYTE(0, func); // Placeholder for the jump index
+    int jump_if_false_byte = func->count - 1;
 
     WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the if block
 
@@ -728,16 +736,15 @@ void interpret_if(Node* node, function* func){
 
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the if block
 
-    int jump_offset = func->count - jump_index;
-    func->code[jump_index] = jump_offset;
+    CHANGE_BYTE(jump_if_false_byte, func->count - 1, func); // Jump to the end of the if block
 
     // check if there is an else block
     if(node->get_children().size() == 3){
-        func->code[jump_index] = jump_offset + 2; 
+        WRITE_BYTE(OpCode::OP_JUMP, func); // Jump to the end of the else block, because the if block was executed
+        WRITE_BYTE(0, func); // Placeholder for the jump index of the end of the else block
+        int jump_byte = func->count - 1;
 
-        WRITE_BYTE(OpCode::OP_JUMP, func);
-        int jump_index = func->count;
-        WRITE_BYTE(0, func); // Placeholder for the jump index
+        CHANGE_BYTE(jump_if_false_byte, func->count - 1, func); // Jump to the else block
 
         WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the else block
 
@@ -745,8 +752,7 @@ void interpret_if(Node* node, function* func){
 
         WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the else block
 
-        int jump_offset = func->count - jump_index;
-        func->code[jump_index] = jump_offset;
+        CHANGE_BYTE(jump_byte, func->count - 1, func); // Jump to the end of the else block
     }
 }
 
@@ -987,7 +993,7 @@ void interpret_for(Node* node, function* func){
     interpret_assign(node->get_child(0), func); // Initialize the for loop
 
     // get the index to jump back to
-    int jump_index = func->count;
+    int start_byte = func->count - 1;
 
     // interpret the condition
     interpret_expr(node->get_child(1), func);
@@ -996,8 +1002,8 @@ void interpret_for(Node* node, function* func){
     WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
 
     // get the index to jump to the end of the for loop
-    int jump_index2 = func->count;
-    WRITE_BYTE(0, func); // Placeholder for the jump index
+    WRITE_BYTE(0, func); // Placeholder for the end of for loop jump 
+    int jump_to_end_byte = func->count - 1;
 
     interpret_stmt_list(node->get_child(3), func); // Interpret the body of the for loop
 
@@ -1005,11 +1011,10 @@ void interpret_for(Node* node, function* func){
 
     // jump back to the condition
     WRITE_BYTE(OpCode::OP_JUMP, func);
-    WRITE_BYTE(jump_index - func->count, func);
+    WRITE_BYTE(start_byte, func);
 
     // jump to the end of the for loop
-    int jump_offset = func->count - jump_index2;
-    func->code[jump_index2] = jump_offset;
+    CHANGE_BYTE(jump_to_end_byte, func->count - 1, func);
 
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }

@@ -55,7 +55,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"do_nothing", make_std_lib_function(do_nothing), "void", {}}, 
     {"test", make_std_lib_function(test), "double", {}},
     {"inc", make_std_lib_function(inc), "double", {"double"}},
-    
+
     // string functions
     {"string_concat", make_std_lib_function(string_concat), "std::string", {"std::string", "std::string"}},
     {"string_substr", make_std_lib_function(string_substr), "std::string", {"std::string", "int", "int"}},

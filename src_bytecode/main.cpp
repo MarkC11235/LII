@@ -12,6 +12,13 @@
 #include "virtual_machine.hpp"
 #include "cl_exe_file.hpp"
 
+// TODO: MAKE THE FOR LOOP IN CASTLELANG BE ABLE TO BE EMPTY
+// TODO: MAKE NULL BE ABLE TO BE COMPARABLE (==, !=)
+// TODO: MAKE A WAY TO INIT A VECTOR WITH A SIZE AND VALUE
+//          currently very slow to init a vector with a large size, because of dumb way of doing it
+// TODO: ADD 
+//           exit expr ; // exit the program completely and prints the value of expr
+
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
     if(argc < 2) {
@@ -56,6 +63,7 @@ int main(int argc, char *argv[]) {
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<Token> tokens = read_input(input_file, verboseT);
 
+    // TODO: MOVE THIS TO THE TOKENISZER FILE
     int token_count = 0;
     std::vector<Token> new_tokens;  // Vector to store the tokens after processing the include tokens
     for(Token t : tokens){

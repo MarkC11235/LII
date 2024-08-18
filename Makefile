@@ -1,7 +1,7 @@
 CC = g++
 CXXFLAGS = -Wall -std=c++17
 LDFLAGS = -lSDL2
-INPUT_FILE = tester.cl
+INPUT_FILE = brainfuck.cl #tester.cl
 EXE = ./lii
 
 VERSION = BYTECODE

@@ -964,6 +964,7 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current){
 }
 
 Node* parse(std::vector<Token> tokens, bool verbose = false){
+    // TODO: make stmt_list be able to be empty, so the grammar matches the language
     Node* root = new Node(NodeType::STMT_LIST_NODE, "");
     parse_stmt_list(tokens, root);
 
