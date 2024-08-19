@@ -67,6 +67,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"string_split", make_std_lib_function(string_split), "std::vector<Value>", {"std::string", "std::string"}},
     
     // vector functions
+    {"vector_create", make_std_lib_function(vector_create), "std::vector<Value>", {"int", "Value"}},
     {"vector_len", make_std_lib_function(vector_len), "int", {"std::vector<Value>"}},
     {"vector_push", make_std_lib_function(vector_push), "std::vector<Value>", {"std::vector<Value>", "Value"}},
     {"vector_pop", make_std_lib_function(vector_pop), "std::vector<Value>", {"std::vector<Value>"}},

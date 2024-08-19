@@ -7,6 +7,10 @@
 
 #include "helpers.hpp"
 
+std::vector<Value> vector_create(int size, Value value){
+    return std::vector<Value>(size, value);
+}
+
 int vector_len(std::vector<Value> a){
     return a.size();
 }

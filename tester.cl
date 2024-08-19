@@ -8,9 +8,11 @@
 // const vectors should not let you change the length of the vector or the values of the elements
 
 
+// let vec = $vector_create(10000, 0); // 11 ms
 
-for( let i = 0; i < 10; i = i + 1){
-    if( true){
-        print true;
-    }
-}
+// let vec = [];  // 110941 ms
+
+// for (let i = 0; i < 10000; i = i + 1) {
+//     vec = $vector_push(vec, 0);
+// }
+

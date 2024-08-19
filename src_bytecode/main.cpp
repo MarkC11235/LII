@@ -39,6 +39,8 @@ int main(int argc, char *argv[]) {
 
     bool debug = false;
 
+    bool time = false;
+
     // Check for flags
     for(int i = 2; i < argc; i++) {
         if(std::string(argv[i]) == "-v") {
@@ -56,6 +58,8 @@ int main(int argc, char *argv[]) {
             verboseV = true;
         } else if(std::string(argv[i]) == "-d"){
             debug = true;
+        } else if(std::string(argv[i]) == "-t"){
+            time = true;
         }
     }
 
@@ -81,7 +85,7 @@ int main(int argc, char *argv[]) {
     tokens = new_tokens;
 
     auto end = std::chrono::high_resolution_clock::now();
-    if (verboseT) {
+    if (verboseT || time) {
         std::cout << "\nTokens: " << std::endl;
         for(Token token : tokens){
             token.print();
@@ -89,27 +93,27 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
         std::cout << "Tokenization took "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << " milliseconds." << std::endl << std::endl;
+                  << " milliseconds.\n" << std::endl;
     }
 
     // Parse the tokens and form the AST
     start = std::chrono::high_resolution_clock::now();
     Node* ast = parse(tokens, verboseP);
     end = std::chrono::high_resolution_clock::now();
-    if (verboseP) {
+    if (verboseP || time) {
         std::cout << "Parsing took "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << " milliseconds." << std::endl << std::endl;
+                  << " milliseconds.\n" << std::endl;
     }
 
     // Traverse the AST and generate the bytecode
     start = std::chrono::high_resolution_clock::now();
     function* func = generate_bytecode(ast, input_file);
     end = std::chrono::high_resolution_clock::now();
-    if (verboseB) {
+    if (verboseB || time) {
         std::cout << "Bytecode generation took "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << " milliseconds." << std::endl;
+                  << " milliseconds.\n" << std::endl;
 
         std::cout << "Constants:" << std::endl;
         display_constants();
@@ -133,7 +137,7 @@ int main(int argc, char *argv[]) {
     input_file = input_file.substr(0, input_file.find_last_of(".")) + ".cl_exe";
     interpret_bytecode("./" + input_file, verboseV, debug);
     end = std::chrono::high_resolution_clock::now();
-    if (verboseV) {
+    if (verboseV || time) {
         std::cout << "Interpretation took "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
                   << " milliseconds." << std::endl;

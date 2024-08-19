@@ -1,7 +1,7 @@
 CC = g++
 CXXFLAGS = -Wall -std=c++17
 LDFLAGS = -lSDL2
-INPUT_FILE = brainfuck.cl #tester.cl
+INPUT_FILE = tester.cl
 EXE = ./lii
 
 VERSION = BYTECODE
@@ -45,6 +45,10 @@ runvB:
 runvV:
 	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -vV
+
+time:
+	@echo "Running $(INPUT_FILE)\n"
+	@$(EXE) $(INPUT_FILE) -t
 
 debug:
 	@echo "Running $(INPUT_FILE) in debug mode\n"
