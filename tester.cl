@@ -16,3 +16,6 @@
 //     vec = $vector_push(vec, 0);
 // }
 
+let str = $file_read("words.txt");
+
+print str;

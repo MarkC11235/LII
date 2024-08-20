@@ -82,7 +82,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     
     // file functions
     {"file_write", make_std_lib_function(file_write), "void", {"std::string", "std::string"}},
-    //{"file_read", make_std_lib_function(file_read), "Value", {"std::string"}},
+    {"file_read", make_std_lib_function(file_read), "std::string", {"std::string"}},
     {"run_python_file", make_std_lib_function(run_python_file), "void", {"std::string"}},
 
     // graphics functions

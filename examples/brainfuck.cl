@@ -1,18 +1,14 @@
 // initializing the tape
-let tape = [];
 let TAPE_LENGTH = 1000;
+let tape = $vector_create(TAPE_LENGTH, 0);
 
 let pointer = 0;
 let saved_pointers = [];
 let saved_input_positions = [];
 
-for(let i = 0; i < TAPE_LENGTH; i = i + 1){
-    tape = $vector_push(tape, 0);
-}
-
 print "Created Tape";
 
-let input = "++++. [ > ++++.[-.] <-.]";             
+let input = $file_read("./test.bf");          
 let input_length = $string_len(input);
 
 print "Starting BrainFuck Program | Length = " + input_length;

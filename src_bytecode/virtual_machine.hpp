@@ -781,6 +781,10 @@ void debug_vm(bool verbose = false)
 // Starts the interpretation process ---------------------------------
 void interpret_bytecode(std::string path, bool verbose = false, bool debug = false)
 {
+    // set the directory path for the files.hpp functions
+    int last_slash = path.find_last_of("/");
+    directory_path = path.substr(0, last_slash + 1);
+
     cl_exe* exe = read_cl_exe(path);
     init_vm(exe);
     if(debug){debug_vm(verbose);}

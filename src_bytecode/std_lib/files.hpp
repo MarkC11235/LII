@@ -6,8 +6,14 @@
 #include <iostream>
 #include <fstream>
 
+// file paths must be relative to the lii executable
+// TODO: make the file paths relative to the file that is being executed
+
+std::string directory_path; // the directory path of the file that is being executed
+                            // this is so the user can use relative paths in the file that is being executed instead of paths relative to the lii executable
+
 void file_write(std::string file_path, std::string content){
-    std::ofstream File(file_path);
+    std::ofstream File(directory_path + file_path);
 
     File << content;
 
@@ -15,31 +21,18 @@ void file_write(std::string file_path, std::string content){
 }
 
 
-// This function doesn't work becasue when the vector is returned for some reason the values inside the vector are missing their data
-// I believe this has something to do with the copy constructor, even though it does get called 
-// Value file_read(std::string file_path){
-//     std::ifstream File(file_path);
+std::string file_read(std::string file_path){
+    std::cout << "Reading file: " << directory_path + file_path << std::endl;
+    std::ifstream file(directory_path + file_path);
+    std::string content(
+        (std::istreambuf_iterator<char>(file)), // This creates an input iterator that reads characters from the input stream file.
+                                                // file is assumed to be an object of type std::ifstream or any other input stream.
+        (std::istreambuf_iterator<char>())      // This creates a default-constructed std::istreambuf_iterator<char>, which acts as an end-of-stream iterator.
 
-//     std::vector<std::string> lines;
-//     std::string line;
+    );
+    return content;
+}
 
-//     while(std::getline(File, line)){
-//         lines.push_back(line);
-//     }
-
-//     File.close();
-
-//     Value vals_vector = Value();
-//     vals_vector.type = Value_Type::VECTOR;
-//     vals_vector.data = std::vector<Value>();
-
-//     for(int i = 0; i < (int)lines.size(); i++){
-//         Value v = Value(Value_Type::STRING, lines[i]);
-//         std::get<std::vector<Value>>(vals_vector.data).push_back(v);
-//     }
-
-//     return vals_vector;
-// }
 
 void run_python_file(std::string file_path){
     std::string command = "python3 " + file_path;
