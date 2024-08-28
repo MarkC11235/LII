@@ -199,6 +199,15 @@ public:
         this->type = type;
         this->values.push_back(value);
     }
+    ~Node(){
+        for(int i = 0; i < int(this->children.size()); i++){
+            delete this->children[i];
+        }
+
+        this->children.clear();
+
+        this->values.clear();
+    }
     void add_child(Node* child){
         this->children.push_back(child);
     }

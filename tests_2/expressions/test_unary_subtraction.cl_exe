@@ -1,4 +1,4 @@
-tests_2/expressions/test_unary_subtraction
+./tests_2/expressions/test_unary_subtraction
 3
 x
 y

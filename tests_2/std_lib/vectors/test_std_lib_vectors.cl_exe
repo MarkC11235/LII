@@ -1,4 +1,4 @@
-tests_2/std_lib/vectors/test_std_lib_vectors
+./tests_2/std_lib/vectors/test_std_lib_vectors
 1
 vec
 14

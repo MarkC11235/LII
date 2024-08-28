@@ -1,4 +1,4 @@
-tests_2/types/number/test_numbers
+./tests_2/types/number/test_numbers
 4
 x
 y

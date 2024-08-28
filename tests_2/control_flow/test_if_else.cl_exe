@@ -1,4 +1,4 @@
-tests_2/control_flow/test_if_else
+./tests_2/control_flow/test_if_else
 2
 x
 y

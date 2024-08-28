@@ -1,4 +1,4 @@
-tests_2/types/functions/test_functions_with_same_name
+./tests_2/types/functions/test_functions_with_same_name
 3
 a
 x

@@ -1,4 +1,4 @@
-tests_2/expressions/test_expr_2
+./tests_2/expressions/test_expr_2
 0
 9
 number|4

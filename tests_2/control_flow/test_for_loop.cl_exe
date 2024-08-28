@@ -1,4 +1,4 @@
-tests_2/control_flow/test_for_loop
+./tests_2/control_flow/test_for_loop
 3
 inc
 x

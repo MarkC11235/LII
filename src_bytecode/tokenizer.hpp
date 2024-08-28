@@ -165,6 +165,11 @@ public:
 
 // -------------------------------------------------------------------
 
+// Forward declarations ----------------------------------------------
+std::vector<Token> analyze(std::string input, int line_number);
+std::vector<Token> includes(std::vector<Token> tokens, bool verbose);
+std::vector<Token> read_input(std::string file_path, bool verbose, bool include);
+
 void print_tokens(std::vector<Token> tokens){
     for(Token token : tokens){
         token.print();
@@ -407,7 +412,22 @@ std::vector<Token> analyze(std::string input, int line_number){
     return tokens;
 }
 
-std::vector<Token> read_input(std::string file_path, bool verbose = false){
+std::vector<Token> includes(std::vector<Token> tokens, bool verbose = false){
+    std::vector<Token> new_tokens;
+    for(int i = 0; i < int(tokens.size()); i++){
+        if(tokens[i].get_type() == TokenType::INCLUDE_TOKEN){
+            std::string include_file = tokens[i].get_value();
+            std::vector<Token> include_tokens = read_input(directory_path + include_file, verbose, true);
+            new_tokens.insert(new_tokens.end(), include_tokens.begin(), include_tokens.end());
+        }
+        else{
+            new_tokens.push_back(tokens[i]);
+        }
+    }
+    return new_tokens;
+}
+
+std::vector<Token> read_input(std::string file_path, bool verbose = false, bool include = false){
     // Open the file
     std::ifstream File(file_path); 
     if (!File) {
@@ -429,11 +449,16 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false){
         tokens.insert(tokens.end(), line_tokens.begin(), line_tokens.end());
     }
 
-    // Add an EOF token to the end of the file
-    tokens.push_back(Token(TokenType::EOF_TOKEN, "EOF", line_number));
-
     // Close the file
     File.close();
+
+    // Recursively include files
+    tokens = includes(tokens, verbose);
+
+    // Add an EOF token to the end of the file
+    if(include == false){
+        tokens.push_back(Token(TokenType::EOF_TOKEN, "EOF", line_number));
+    }
 
     return tokens;
 }

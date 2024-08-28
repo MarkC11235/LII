@@ -1,4 +1,4 @@
-tests_2/types/struct/test_struct
+./tests_2/types/struct/test_struct
 5
 Person
 name

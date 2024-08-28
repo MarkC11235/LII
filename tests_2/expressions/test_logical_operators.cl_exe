@@ -1,4 +1,4 @@
-tests_2/expressions/test_logical_operators
+./tests_2/expressions/test_logical_operators
 2
 x
 y

@@ -1,4 +1,4 @@
-tests_2/types/bool/test_bools
+./tests_2/types/bool/test_bools
 2
 x
 y

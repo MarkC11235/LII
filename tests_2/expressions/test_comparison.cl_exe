@@ -1,4 +1,4 @@
-tests_2/expressions/test_comparison
+./tests_2/expressions/test_comparison
 16
 lt1
 lt2

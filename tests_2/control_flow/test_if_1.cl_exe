@@ -1,4 +1,4 @@
-tests_2/control_flow/test_if_1
+./tests_2/control_flow/test_if_1
 0
 3
 number|1

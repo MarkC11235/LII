@@ -1,4 +1,4 @@
-tests_2/types/functions/test_recursion
+./tests_2/types/functions/test_recursion
 2
 factorial
 i

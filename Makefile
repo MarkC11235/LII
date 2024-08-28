@@ -63,6 +63,14 @@ test : build_bytecode
 		echo "-----------------------------------"; \
 	done
 
+leak_test : build_bytecode
+	@for i in $$(find tests_2 -type f -name '*.cl'); do \
+		echo "Running test $$i"; \
+		valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes $(EXE) $$i > $${i}.temp; \
+		diff -b -w $${i}.temp $${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; \
+		echo "-----------------------------------"; \
+	done
+
 clean:
 	@rm -f main.exe
 	@for i in tests/*.temp; do \

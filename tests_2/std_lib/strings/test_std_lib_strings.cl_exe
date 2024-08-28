@@ -1,4 +1,4 @@
-tests_2/std_lib/strings/test_std_lib_strings
+./tests_2/std_lib/strings/test_std_lib_strings
 0
 14
 string|Hello, World!

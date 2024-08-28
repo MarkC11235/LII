@@ -1,4 +1,4 @@
-tests_2/std_lib/misc/test_std_lib_misc_functions
+./tests_2/std_lib/misc/test_std_lib_misc_functions
 2
 string_len
 x

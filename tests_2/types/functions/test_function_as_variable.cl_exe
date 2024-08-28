@@ -1,4 +1,4 @@
-tests_2/types/functions/test_function_as_variable
+./tests_2/types/functions/test_function_as_variable
 10
 function_reciever
 function

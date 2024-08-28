@@ -1,0 +1,4 @@
+let pprint = func(x) {
+    print x;
+    return 0;
+};

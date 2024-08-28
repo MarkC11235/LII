@@ -1,4 +1,4 @@
-tests_2/types/struct/test_linked_list
+./tests_2/types/struct/test_linked_list
 6
 Node
 value

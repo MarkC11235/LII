@@ -1,4 +1,4 @@
-tests_2/expressions/test_assignment
+./tests_2/expressions/test_assignment
 2
 x
 y

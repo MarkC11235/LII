@@ -63,26 +63,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // set the directory path for the files.hpp functions and tokenize the input when there are include statements
+    input_file = "./" + input_file;
+    int last_slash = input_file.find_last_of("/");
+    directory_path = input_file.substr(0, last_slash + 1);
+
     // Read the input file and tokenize the input
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<Token> tokens = read_input(input_file, verboseT);
-
-    // TODO: MOVE THIS TO THE TOKENISZER FILE
-    int token_count = 0;
-    std::vector<Token> new_tokens;  // Vector to store the tokens after processing the include tokens
-    for(Token t : tokens){
-        if(t.get_type() == TokenType::INCLUDE_TOKEN){
-            std::vector<Token> include_tokens = read_input(t.get_value(), verboseT);
-            // remove the EOF token
-            include_tokens.pop_back();
-            new_tokens.insert(new_tokens.end(), include_tokens.begin(), include_tokens.end());
-        }else{
-            new_tokens.push_back(t);
-        }
-        token_count++;
-    }
-
-    tokens = new_tokens;
 
     auto end = std::chrono::high_resolution_clock::now();
     if (verboseT || time) {

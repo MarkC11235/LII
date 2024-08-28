@@ -1,4 +1,4 @@
-tests_2/expressions/test_string_concatenation
+./tests_2/expressions/test_string_concatenation
 1
 str
 5
