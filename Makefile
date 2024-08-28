@@ -1,6 +1,7 @@
-CC = g++
-CXXFLAGS = -Wall -std=c++17
-LDFLAGS = -lSDL2
+# CC = g++
+CC = clang++-16
+CXXFLAGS = -Wall -std=c++17 
+LDFLAGS = #-lSDL2
 INPUT_FILE = tester.cl
 EXE = ./lii
 
