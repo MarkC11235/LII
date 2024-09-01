@@ -19,6 +19,9 @@ struct function {
     int count;
     int capacity;
 
+    // Vector of flagged instruction indices
+    std::vector<std::tuple<int, std::string>> flags;
+
     std::string name; // Function name
     
     //arguments

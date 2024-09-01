@@ -461,6 +461,10 @@ inline void CHANGE_BYTE(int index, CODE_SIZE byte, function* func){
     func->code[index] = byte;
 }
 
+inline void FLAG_BYTE(int index, std::string flag, function* func){
+    func->flags.push_back({index, flag});
+}
+
 inline void WRITE_VALUE(double value){
     constants.push_back({Value_Type::NUMBER, value});
 }
@@ -1052,20 +1056,42 @@ void interpret_for(Node* node, function* func){
             break;
         }
     }
+    int update_byte = func->count - 1;
     if(update_index != -1){
         interpret_update(node->get_child(update_index), func); // Update the for loop
     }
-
 
     // jump back to the condition
     WRITE_BYTE(OpCode::OP_JUMP, func);
     WRITE_BYTE(start_byte, func);
 
+    // find all flagged bytes from start_byte to the end of the for loop
+    for(int i = start_byte; i < func->count; i++){
+        if(func->flags.size() == 0){
+            break;
+        }
+        for(int j = 0; j < (int)func->flags.size(); j++){
+            if(std::get<0>(func->flags[j]) == i){
+                if(std::get<1>(func->flags[j]) == "continue"){
+                    CHANGE_BYTE(i, update_byte, func); // jump to the update part of the for loop
+                    func->flags.erase(func->flags.begin() + j);
+                }
+                else if(std::get<1>(func->flags[j]) == "break"){
+                    CHANGE_BYTE(i, func->count - 1, func); // jump to the end of the for loop
+                    func->flags.erase(func->flags.begin() + j);
+                }
+                break;
+            }
+        }
+    }
+
     // jump to the end of the for loop
     if(expr_index != -1){
         CHANGE_BYTE(jump_to_end_byte, func->count - 1, func);
     }
+
     
+
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }
 
@@ -1093,6 +1119,18 @@ void interpret_stmt(Node* node, function* func){
                 break;
             case NodeType::FOR_NODE:
                 interpret_for(child, func);
+                break;
+            case NodeType::CONTINUE_NODE:
+                // add a jump and flag the bytecode
+                WRITE_BYTE(OpCode::OP_JUMP, func);
+                WRITE_BYTE(0, func); // Placeholder for the jump index
+                FLAG_BYTE(func->count - 1, "continue", func);
+                break;
+            case NodeType::BREAK_NODE:
+                // add a jump and flag the bytecode
+                WRITE_BYTE(OpCode::OP_JUMP, func);
+                WRITE_BYTE(0, func); // Placeholder for the jump index
+                FLAG_BYTE(func->count - 1, "break", func);
                 break;
             case NodeType::STD_LIB_CALL_NODE:
                 interpret_std_lib_call(child, func);

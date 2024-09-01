@@ -1,4 +1,4 @@
-./tester
+./tests_2/control_flow/test_break_continue_2
 2
 i
 j
