@@ -71,6 +71,10 @@ leak_test : build_bytecode
 		echo "-----------------------------------"; \
 	done
 
+count:
+	@echo "Counting lines of code"
+	@find ./src_bytecode/ -name '*.cpp' -o -name '*.hpp' | xargs wc -l
+
 clean:
 	@rm -f main.exe
 	@for i in tests/*.temp; do \
