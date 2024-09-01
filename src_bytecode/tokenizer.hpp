@@ -19,6 +19,8 @@ enum TokenType {
     ACCESSOR_TOKEN,
     WHILE_TOKEN,
     FOR_TOKEN,
+    BREAK_TOKEN,
+    CONTINUE_TOKEN,
     IF_TOKEN,
     ELSE_TOKEN,
     EQUALS_TOKEN,
@@ -70,6 +72,10 @@ std::string token_type_to_string(TokenType type){
             return "WHILE";
         case TokenType::FOR_TOKEN:
             return "FOR";
+        case TokenType::BREAK_TOKEN:
+            return "BREAK";
+        case TokenType::CONTINUE_TOKEN:
+            return "CONTINUE";
         case TokenType::IF_TOKEN:
             return "IF";
         case TokenType::ELSE_TOKEN:
@@ -396,6 +402,12 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "const"){
                         tokens.push_back(Token(TokenType::CONST_TOKEN, "const", line_number));
+                    }
+                    else if(identifier == "break"){
+                        tokens.push_back(Token(TokenType::BREAK_TOKEN, "break", line_number));
+                    }
+                    else if(identifier == "continue"){
+                        tokens.push_back(Token(TokenType::CONTINUE_TOKEN, "continue", line_number));
                     }
                     else{
                         tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));

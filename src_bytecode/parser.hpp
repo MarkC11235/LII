@@ -22,6 +22,8 @@ enum NodeType {
     FOR_NODE,
     IF_NODE,
     RETURN_NODE,
+    BREAK_NODE,
+    CONTINUE_NODE,
     // ASSIGNMENTS
     ASSIGN_NODE,
     UPDATE_NODE,
@@ -71,6 +73,10 @@ std::string node_type_to_string(NodeType type){
             return "IF";
         case NodeType::RETURN_NODE:
             return "RETURN";
+        case NodeType::BREAK_NODE:
+            return "BREAK";
+        case NodeType::CONTINUE_NODE:
+            return "CONTINUE";
         case NodeType::ASSIGN_NODE:
             return "ASSIGN";
         case NodeType::UPDATE_NODE:
@@ -861,13 +867,20 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     }
 
     // Parse the initialization 
-    pop(tokens); // Skip the let keyword(usally done in the parse_stmt function)
-    parse_assignment(tokens, for_node);
+    if(peek(tokens).get_type() != TokenType::SEMICOLON_TOKEN){ // Check if there is an initialization
+        pop(tokens); // Skip the let keyword(usally done in the parse_stmt function)
+        parse_assignment(tokens, for_node);
+    }
+    else{
+        pop(tokens); // Skip the semicolon
+    }
 
     // Parse the condition
-    Node* condition = new Node(NodeType::EXPR_NODE, "");
-    for_node->add_child(condition);
-    parse_expr(tokens, condition);
+    if(peek(tokens).get_type() != TokenType::SEMICOLON_TOKEN){ // Check if there is a condition
+        Node* condition = new Node(NodeType::EXPR_NODE, "");
+        for_node->add_child(condition);
+        parse_expr(tokens, condition);
+    }
 
     token = pop(tokens);
     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
@@ -875,7 +888,9 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     }
 
     // Parse the variable update 
-    parse_variable_update(tokens, for_node);
+    if(peek(tokens).get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there is a variable update
+        parse_variable_update(tokens, for_node);    
+    }
 
     token = pop(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){

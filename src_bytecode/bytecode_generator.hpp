@@ -990,32 +990,82 @@ void interpret_for(Node* node, function* func){
 
     WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the for loop
 
-    interpret_assign(node->get_child(0), func); // Initialize the for loop
+    std::vector<Node*> children = node->get_children();
+    std::vector<NodeType> child_types;
+    // print the children
+    for(int i = 0; i < (int)children.size(); i++){
+        child_types.push_back(children[i]->get_type());
+    }
+
+    //find the index of the first assign node
+    int assign_index = -1;
+    for(int i = 0; i < (int)child_types.size(); i++){
+        if(child_types[i] == NodeType::ASSIGN_NODE){
+            assign_index = i;
+            break;
+        }
+    }
+    if(assign_index != -1){
+        interpret_assign(node->get_child(assign_index), func); // Initialize the for loop
+    }
 
     // get the index to jump back to
     int start_byte = func->count - 1;
 
-    // interpret the condition
-    interpret_expr(node->get_child(1), func);
+    // find if there is an expression node
+    int expr_index = -1;
+    for(int i = 0; i < (int)child_types.size(); i++){
+        if(child_types[i] == NodeType::EXPR_NODE){
+            expr_index = i;
+            break;
+        }
+    }
+    if(expr_index != -1){
+        interpret_expr(node->get_child(expr_index), func); // Interpret the condition for the for loop
 
-    // jump if the condition is false
-    WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
+        // jump if the condition is false
+        WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
 
-    // get the index to jump to the end of the for loop
-    WRITE_BYTE(0, func); // Placeholder for the end of for loop jump 
+        // get the index to jump to the end of the for loop
+        WRITE_BYTE(0, func); // Placeholder for the end of for loop jump 
+    }
     int jump_to_end_byte = func->count - 1;
 
-    interpret_stmt_list(node->get_child(3), func); // Interpret the body of the for loop
 
-    interpret_update(node->get_child(2), func); // Update the for loop
+    // find the index of the statement list node
+    int stmt_list_index = -1;
+    for(int i = 0; i < (int)child_types.size(); i++){
+        if(child_types[i] == NodeType::STMT_LIST_NODE){
+            stmt_list_index = i;
+            break;
+        }
+    }
+    if(stmt_list_index != -1){
+        interpret_stmt_list(node->get_child(stmt_list_index), func); // Interpret the body of the for loop
+    }
+
+    // find the index of the update node
+    int update_index = -1;
+    for(int i = 0; i < (int)child_types.size(); i++){
+        if(child_types[i] == NodeType::UPDATE_NODE){
+            update_index = i;
+            break;
+        }
+    }
+    if(update_index != -1){
+        interpret_update(node->get_child(update_index), func); // Update the for loop
+    }
+
 
     // jump back to the condition
     WRITE_BYTE(OpCode::OP_JUMP, func);
     WRITE_BYTE(start_byte, func);
 
     // jump to the end of the for loop
-    CHANGE_BYTE(jump_to_end_byte, func->count - 1, func);
-
+    if(expr_index != -1){
+        CHANGE_BYTE(jump_to_end_byte, func->count - 1, func);
+    }
+    
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }
 

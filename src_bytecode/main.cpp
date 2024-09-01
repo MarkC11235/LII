@@ -13,9 +13,9 @@
 #include "cl_exe_file.hpp"
 
 // TODO: MAKE THE FOR LOOP IN CASTLELANG BE ABLE TO BE EMPTY
+//      if this is done, then the for loop will be able to be used as a while loop
+//      should also add break and continue statements
 // TODO: MAKE NULL BE ABLE TO BE COMPARABLE (==, !=)
-// TODO: MAKE A WAY TO INIT A VECTOR WITH A SIZE AND VALUE
-//          currently very slow to init a vector with a large size, because of dumb way of doing it
 // TODO: ADD 
 //           exit expr ; // exit the program completely and prints the value of expr
 

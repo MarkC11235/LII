@@ -1,4 +1,4 @@
-./tester
+./tests_2/control_flow/test_for_loop_variants
 1
 i
 12

@@ -1,6 +1,0 @@
-If an expr evaluates to 0 then its false, else its true.
-
-Booleans should just be syntactic sugar for 0 and 1.
-No need to implement currently.
-
-currently std_lib function names are injected into the global namespace, so you can't 
