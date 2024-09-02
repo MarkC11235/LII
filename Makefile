@@ -72,8 +72,10 @@ leak_test : build_bytecode
 	done
 
 count:
-	@echo "Counting lines of code"
+	@echo "Counting lines of cpp and hpp code"
 	@find ./src_bytecode/ -name '*.cpp' -o -name '*.hpp' | xargs wc -l
+	@echo "Counting lines of cl and clh code"
+	@find ./ -name '*.cl' -o -name '*.clh' | xargs wc -l
 
 clean:
 	@rm -f main.exe
