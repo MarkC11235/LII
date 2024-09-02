@@ -26,6 +26,10 @@ struct function {
     
     //arguments
     std::vector<std::string> arguments;
+
+    //for jit compilation
+    int times_called = 0;
+    int jit_index = -1;
 };
 
 #endif //FUNCTION_HPP

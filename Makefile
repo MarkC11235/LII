@@ -23,6 +23,10 @@ build_bytecode:
 	elapsed_time=$$((end_time - start_time)); \
 	echo "Bytecode version compiled in $$elapsed_time seconds"
 
+run_jit: build_bytecode
+	@echo "Running $(INPUT_FILE)\n"
+	@$(EXE) $(INPUT_FILE) -jit 
+
 run:
 	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) 
@@ -59,6 +63,14 @@ test : build_bytecode
 	@for i in $$(find tests_2 -type f -name '*.cl'); do \
 		echo "Running test $$i"; \
 		$(EXE) $$i > $${i}.temp; \
+		diff -b -w $${i}.temp $${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; \
+		echo "-----------------------------------"; \
+	done
+
+test_jit : build_bytecode
+	@for i in $$(find tests_2 -type f -name '*.cl'); do \
+		echo "Running test $$i"; \
+		$(EXE) $$i -jit > $${i}.temp; \
 		diff -b -w $${i}.temp $${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; \
 		echo "-----------------------------------"; \
 	done

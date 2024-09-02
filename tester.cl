@@ -1,3 +1,10 @@
-let x = 5 % 2;
+let print_ten = func(x){
+    for(let i = 0; i < 10; i = i + 1){
+        print x;
+    }
+    return x;
+};
 
-print x; // 1
+for(let i = 0; i < 10000; i = i + 1){
+    print print_ten(i);
+}
