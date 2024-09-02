@@ -20,7 +20,7 @@
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
     if(argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file.cl> -d -v [-vT -vP -vB -vV]" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file.cl> -d -v [-vT -vP -vB -vV] -jit" << std::endl;
         return 1;
     }
     std::string input_file = argv[1];
@@ -38,6 +38,8 @@ int main(int argc, char *argv[]) {
     bool debug = false;
 
     bool time = false;
+
+    bool jit = false;
 
     // Check for flags
     for(int i = 2; i < argc; i++) {
@@ -58,6 +60,8 @@ int main(int argc, char *argv[]) {
             debug = true;
         } else if(std::string(argv[i]) == "-t"){
             time = true;
+        } else if(std::string(argv[i]) == "-jit"){
+            jit = true;
         }
     }
 
@@ -121,7 +125,7 @@ int main(int argc, char *argv[]) {
     // Interpret the bytecode
     start = std::chrono::high_resolution_clock::now();
     input_file = input_file.substr(0, input_file.find_last_of(".")) + ".cl_exe";
-    interpret_bytecode("./" + input_file, verboseV, debug);
+    interpret_bytecode("./" + input_file, verboseV, debug, jit);
     end = std::chrono::high_resolution_clock::now();
     if (verboseV || time) {
         std::cout << "Interpretation took "

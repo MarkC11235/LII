@@ -7,6 +7,7 @@
 #include "./std_lib/std_lib.hpp"
 #include "Function.hpp"
 #include "cl_exe_file.hpp"
+#include "jit.hpp"
 
 // Data Structures ---------------------------------------------------
 struct function_frame
@@ -31,6 +32,8 @@ struct VM
     std::vector<std::string> variable_names;
 
     std::vector<function_frame *> function_frames;
+
+    bool jit;
 };
 
 VM vm; // Statically allocated because only one VM is needed
@@ -61,7 +64,7 @@ function_frame *create_function_frame(function *func)
 }
 
 // Initializes the virtual machine ----------------------------------
-void init_vm(cl_exe* exe, int stack_capacity = 256)
+void init_vm(cl_exe* exe, bool jit, int stack_capacity = 256)
 {
     vm.stack = new Value[stack_capacity];
     vm.stack_count = 0;
@@ -72,6 +75,8 @@ void init_vm(cl_exe* exe, int stack_capacity = 256)
 
     vm.constants = exe->constants;
     vm.variable_names = exe->variable_names;
+
+    vm.jit = jit;
 }
 
 // -------------------------------------------------------------------
@@ -797,10 +802,10 @@ void debug_vm(bool verbose = false)
 // -------------------------------------------------------------------
 
 // Starts the interpretation process ---------------------------------
-void interpret_bytecode(std::string path, bool verbose = false, bool debug = false)
+void interpret_bytecode(std::string path, bool verbose = false, bool debug = false, bool jit = false)
 {
     cl_exe* exe = read_cl_exe(path);
-    init_vm(exe);
+    init_vm(exe, jit);
     if(debug){debug_vm(verbose);}
     else {run_vm(verbose);}
 
