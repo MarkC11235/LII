@@ -15,7 +15,6 @@
 // TODO: MAKE NULL BE ABLE TO BE COMPARABLE (==, !=)
 // TODO: ADD 
 //           exit expr ; // exit the program completely and prints the value of expr
-// TODO: ADD modulous operator (%)
 // TODO: ADD bitwise operators (&, |, ^, ~, <<, >>)
 
 int main(int argc, char *argv[]) {
