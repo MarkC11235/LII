@@ -1,4 +1,4 @@
-./tester
+./tests_2/expressions/test_modulo
 1
 x
 2

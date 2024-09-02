@@ -46,6 +46,12 @@ enum OpCode{
                 If the second value is 0, throws a runtime error
     */
     OP_DIV,
+    /*
+    * OP_MOD: Modulus of the top two values on the stack
+                Pushes the result back onto the stack
+                If the second value is 0, throws a runtime error
+    */
+    OP_MOD,
     // Boolean
     /*
     * OP_AND: Logical AND of the top two values on the stack
@@ -237,6 +243,7 @@ std::unordered_map<std::string, OpCode> opCodeMap = {
     {"-", OpCode::OP_SUB},
     {"*", OpCode::OP_MUL},
     {"/", OpCode::OP_DIV},
+    {"%", OpCode::OP_MOD},
     {"==", OpCode::OP_EQ},
     {"!=", OpCode::OP_NEQ},
     {">", OpCode::OP_GT},
@@ -277,6 +284,9 @@ void display_bytecode(function* func){
                 break;
             case OpCode::OP_DIV:
                 std::cout << "OP_DIV" << std::endl;
+                break;
+            case OpCode::OP_MOD:
+                std::cout << "OP_MOD" << std::endl;
                 break;
 
             // Boolean

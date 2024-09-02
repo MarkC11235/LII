@@ -299,6 +299,24 @@ void vm_loop(bool verbose)
         }
         break;
     }
+    case OpCode::OP_MOD:
+    {
+        Value a = pop();
+        Value b = pop();
+        if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
+        {
+            if (std::get<double>(b.data) == 0)
+            {
+                vm_error("Modulus by zero");
+            }
+            push({Value_Type::NUMBER, std::fmod(std::get<double>(a.data), std::get<double>(b.data))});
+        }
+        else
+        {
+            vm_error("Invalid types for modulus");
+        }
+        break;
+    }
 
     // Logical operations
     // uses type coercion, check VALUE_AS_BOOL for more info

@@ -1,0 +1,1 @@
+let x = 5 % 0; // Error: Modulus by zero

@@ -12,15 +12,11 @@
 #include "virtual_machine.hpp"
 #include "cl_exe_file.hpp"
 
-// TODO: MAKE THE FOR LOOP IN CASTLELANG BE ABLE TO BE EMPTY
-//      if this is done, then the for loop will be able to be used as a while loop
-//      should also add break and continue statements
 // TODO: MAKE NULL BE ABLE TO BE COMPARABLE (==, !=)
 // TODO: ADD 
 //           exit expr ; // exit the program completely and prints the value of expr
 // TODO: ADD modulous operator (%)
-// TODO: add option to flag specific bytecode instructions, so that they can be easily found in the bytecode
-//      ex: going back to find a jump instruction that doesn't have the correct index
+// TODO: ADD bitwise operators (&, |, ^, ~, <<, >>)
 
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag

@@ -137,17 +137,18 @@ std::map<std::string, std::tuple<int, std::string>> operators = {
     {"u-", {11, "unary"}}, // Unary minus
     {"*", {10, "binary"}},
     {"/", {10, "binary"}},
+    {"%", {10, "binary"}},
     {"+", {9, "binary"}},
     {"-", {9, "binary"}},
     {"<", {7, "binary"}},
     {">", {7, "binary"}},
     {"<=", {7, "binary"}},
     {">=", {7, "binary"}},
-    {"==", {7, "binary"}},
-    {"!=", {7, "binary"}},
-    {"!", {6, "unary"}},
-    {"&&", {5, "binary"}},
-    {"||", {4, "binary"}},
+    {"==", {6, "binary"}},
+    {"!=", {6, "binary"}},
+    {"!", {5, "unary"}},
+    {"&&", {4, "binary"}},
+    {"||", {3, "binary"}},
 };
 
 int precedence(std::string op, Token token){ 

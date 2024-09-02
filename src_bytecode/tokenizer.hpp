@@ -23,12 +23,6 @@ enum TokenType {
     CONTINUE_TOKEN,
     IF_TOKEN,
     ELSE_TOKEN,
-    EQUALS_TOKEN,
-    LESS_THAN_TOKEN,
-    GREATER_THAN_TOKEN,
-    LESS_THAN_OR_EQUAL_TOKEN,
-    GREATER_THAN_OR_EQUAL_TOKEN,
-    NOT_EQUAL_TOKEN,
     OPENPAR_TOKEN,
     CLOSEPAR_TOKEN,
     OPENBRACKET_TOKEN,
@@ -80,18 +74,6 @@ std::string token_type_to_string(TokenType type){
             return "IF";
         case TokenType::ELSE_TOKEN:
             return "ELSE";
-        case TokenType::EQUALS_TOKEN:
-            return "EQUALS";    
-        case TokenType::LESS_THAN_TOKEN:
-            return "LESS_THAN";
-        case TokenType::GREATER_THAN_TOKEN: 
-            return "GREATER_THAN";
-        case TokenType::LESS_THAN_OR_EQUAL_TOKEN:
-            return "LESS_THAN_OR_EQUAL";
-        case TokenType::GREATER_THAN_OR_EQUAL_TOKEN:
-            return "GREATER_THAN_OR_EQUAL";
-        case TokenType::NOT_EQUAL_TOKEN:
-            return "NOT_EQUAL";
         case TokenType::OPENPAR_TOKEN:
             return "OPENPAR";
         case TokenType::CLOSEPAR_TOKEN:
@@ -253,6 +235,7 @@ std::vector<Token> analyze(std::string input, int line_number){
             case '+':
             case '-':
             case '*':
+            case '%':
                 tokens.push_back(Token(TokenType::OPERATOR_TOKEN, std::string(1, input[i]), line_number));
                 break;
             case '/':
