@@ -32,6 +32,7 @@ void jit_compile_function(function* func)
                         #include <iostream>
                         #include "../src_bytecode/VM.hpp"
                         #include "../src_bytecode/Value.hpp"
+                        #include "../src_bytecode/std_lib/std_lib.hpp"
                         extern "C" void )" + jit_name + R"((VM* vm){)";
 
     for(int i = 0; i < func->count; i++){
@@ -421,8 +422,66 @@ void jit_compile_function(function* func)
             })";
             break;
         }
+        case OpCode::OP_FUNCTION_CALL:
+        {
+            vm_error("Function calls are not supported in JIT");
+            break;
+        }
+        case OpCode::OP_STD_LIB_CALL:
+        {
+            program += R"(
+            STD_LIB_FUNCTION_INFO func = STD_LIB_FUNCTIONS_DEFINITIONS[)" + std::to_string(func->code[++i]) + R"(];)";
+            program += R"(
+            std::vector<std::any> args;
+            for (int i = 0; i < (int)func.arg_types.size(); i++)                                      
+            {                                                                                      
+                int index = (int)func.arg_types.size() - i - 1;                                      
+                if (!LII_type_matches_cpp_type(top(vm), func.arg_types[index]))                      
+                {                                                                                  
+                    vm_error("Invalid argument type. Expected: " + func.arg_types[index] + ", Got: " + get_value_type_string(top(vm))); 
+                }                                                                                  
+                args.push_back(cast_LII_type_to_cpp_type(pop(vm), func.arg_types[index]));          
+            }
+            std::reverse(args.begin(), args.end());)";
+            program += R"(
+            auto result = func.function(args, func.arg_types);)";
+            program += R"(
+            if (func.return_type != "void")
+            {
+                // check if the return value is the correct type
+                if (!any_type_check(result, func.return_type))
+                {
+                    vm_error("Invalid return type");
+                }
 
-        //leave out nested functions and std lib calls for now
+                // cast the any type to the LII type
+                if (func.return_type == "int")
+                {
+                    push(vm, {Value_Type::NUMBER, (double)std::any_cast<int>(result)});
+                }
+                else if (func.return_type == "double")
+                {
+                    push(vm, {Value_Type::NUMBER, std::any_cast<double>(result)});
+                }
+                else if (func.return_type == "bool")
+                {
+                    push(vm, {Value_Type::BOOL, std::any_cast<bool>(result)});
+                }
+                else if (func.return_type == "std::string")
+                {
+                    push(vm, {Value_Type::STRING, std::any_cast<std::string>(result)});
+                }
+                else if (func.return_type == "std::vector<Value>")
+                {
+                    push(vm, {Value_Type::VECTOR, std::any_cast<std::vector<Value>>(result)});
+                }
+                else if (func.return_type == "Value")
+                {
+                    push(vm, std::any_cast<Value>(result));
+                }
+            })";
+            break;
+        }
 
         // Scope operations
         case OpCode::OP_INC_SCOPE:

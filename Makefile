@@ -27,6 +27,20 @@ run_jit: build_bytecode
 	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -jit 
 
+compare_normal_jit_times: build_bytecode
+	@echo "Running $(INPUT_FILE) in normal mode\n"
+	@start_time=$$(date +%s); \
+	$(EXE) $(INPUT_FILE); \
+	end_time=$$(date +%s); \
+	normal_elapsed_time=$$((end_time - start_time)); \
+	echo "Running $(INPUT_FILE) in JIT mode\n"; \
+	start_time=$$(date +%s); \
+	$(EXE) $(INPUT_FILE) -jit; \
+	end_time=$$(date +%s); \
+	jit_elapsed_time=$$((end_time - start_time)); \
+	echo "Normal mode took $$normal_elapsed_time seconds"; \
+	echo "JIT mode took $$jit_elapsed_time seconds"
+
 run:
 	@echo "Running $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) 

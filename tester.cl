@@ -1,10 +1,13 @@
-let print_ten = func(x){
-    for(let i = 0; i < 10; i = i + 1){
-        print x;
+let create_vector = func(size) {
+    let vec = [];
+    for (let i = 0; i < size; i = i + 1){ 
+        vec = $vector_push(vec, i);
     }
-    return x;
+    return vec;
 };
 
-for(let i = 0; i < 10000; i = i + 1){
-    print print_ten(i);
+for(let i = 0; i < 10; i = i + 1){
+    let vec = create_vector(10);
+    print(vec);
 }
+
