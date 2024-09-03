@@ -221,5 +221,81 @@ enum OpCode{
     OP_STD_LIB_CALL
 };
 
+std::string opcode_to_string(CODE_SIZE op){
+    switch(op){
+        case OpCode::OP_ADD:
+            return "OP_ADD";
+        case OpCode::OP_SUB:
+            return "OP_SUB";
+        case OpCode::OP_U_SUB:
+            return "OP_U_SUB";
+        case OpCode::OP_MUL:
+            return "OP_MUL";
+        case OpCode::OP_DIV:
+            return "OP_DIV";
+        case OpCode::OP_MOD:
+            return "OP_MOD";
+        case OpCode::OP_AND:
+            return "OP_AND";
+        case OpCode::OP_OR:
+            return "OP_OR";
+        case OpCode::OP_NOT:
+            return "OP_NOT";
+        case OpCode::OP_EQ:
+            return "OP_EQ";
+        case OpCode::OP_NEQ:
+            return "OP_NEQ";
+        case OpCode::OP_GT:
+            return "OP_GT";
+        case OpCode::OP_LT:
+            return "OP_LT";
+        case OpCode::OP_GTEQ:
+            return "OP_GTEQ";
+        case OpCode::OP_LTEQ:
+            return "OP_LTEQ";
+        case OpCode::OP_LOAD:
+            return "OP_LOAD";
+        case OpCode::OP_STORE_VAR:
+            return "OP_STORE_VAR";
+        case OpCode::OP_UPDATE_VAR:
+            return "OP_UPDATE_VAR";
+        case OpCode::OP_LOAD_VAR:
+            return "OP_LOAD_VAR";
+        case OpCode::OP_LOAD_FUNCTION_VAR:
+            return "OP_LOAD_FUNCTION_VAR";
+        case OpCode::OP_CREATE_VECTOR:
+            return "OP_CREATE_VECTOR";
+        case OpCode::OP_VECTOR_PUSH:
+            return "OP_VECTOR_PUSH";
+        case OpCode::OP_LOAD_VECTOR_ELEMENT:
+            return "OP_LOAD_VECTOR_ELEMENT";
+        case OpCode::OP_UPDATE_VECTOR_ELEMENT:
+            return "OP_UPDATE_VECTOR_ELEMENT";
+        case OpCode::OP_CREATE_STRUCT:
+            return "OP_CREATE_STRUCT";
+        case OpCode::OP_LOAD_STRUCT_ELEMENT:
+            return "OP_LOAD_STRUCT_ELEMENT";
+        case OpCode::OP_UPDATE_STRUCT_ELEMENT:
+            return "OP_UPDATE_STRUCT_ELEMENT";
+        case OpCode::OP_RETURN:
+            return "OP_RETURN";
+        case OpCode::OP_JUMP:
+            return "OP_JUMP";
+        case OpCode::OP_JUMP_IF_FALSE:
+            return "OP_JUMP_IF_FALSE";
+        case OpCode::OP_FUNCTION_CALL:
+            return "OP_FUNCTION_CALL";
+        case OpCode::OP_INC_SCOPE:
+            return "OP_INC_SCOPE";
+        case OpCode::OP_DEC_SCOPE:
+            return "OP_DEC_SCOPE";
+        case OpCode::OP_PRINT:
+            return "OP_PRINT";
+        case OpCode::OP_STD_LIB_CALL:
+            return "OP_STD_LIB_CALL";
+        default:
+            return "INVALID OPCODE";    
+    }
+}
 
 #endif // OPCODES_HPP

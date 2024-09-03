@@ -19,6 +19,12 @@ struct function_frame
     std::vector<std::map<std::string, Value>> variables; // Variables in the current function
 };
 
+struct VM; // Forward declaration
+
+typedef void (*JIT_FUNCTION)(VM* vm);
+
+#define CALLS_TO_JIT 1
+
 struct VM
 {
     Value *stack;
@@ -31,6 +37,7 @@ struct VM
     std::vector<function_frame *> function_frames;
 
     bool jit;
+    std::vector<JIT_FUNCTION> jit_functions;
 };
 
 VM vm; // Statically allocated because only one VM is needed

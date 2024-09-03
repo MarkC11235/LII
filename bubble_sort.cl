@@ -6,7 +6,8 @@ let create_vector = func(size) {
     return vec;
 };
 
-
+let vec = create_vector(1000);
+print(vec);
 
 let sort = func(vec) {
     let n = $vector_len(vec);
@@ -22,9 +23,6 @@ let sort = func(vec) {
     return vec;
 };
 
-for (let i = 0; i < 2; i = i + 1){
-    let vec = create_vector(100);
-    print(vec);
-    let sorted_vec = sort(vec);
-    print(sorted_vec);
-}
+let sorted_vec = sort(vec);
+print(sorted_vec);
+

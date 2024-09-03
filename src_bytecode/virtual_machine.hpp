@@ -424,11 +424,11 @@ void vm_loop(bool verbose)
 
         func->times_called++; // for jit compilation
 
-        if(vm.jit && func->times_called == 2){
+        if(vm.jit && func->times_called == CALLS_TO_JIT){
             if(verbose){
                 std::cout << "JIT compiling function: " << func->name << std::endl;
             }        
-            jit_compile_function(func);
+            jit_compile_function(&vm, func);
         }
 
         if(vm.jit && func->jit_index != -1){

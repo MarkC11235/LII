@@ -1,4 +1,1 @@
-1
-2
-2
-0
+ERROR: Function calls are not supported in JIT

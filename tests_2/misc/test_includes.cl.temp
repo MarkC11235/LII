@@ -1,2 +1,1 @@
-add 1 2
-3
+ERROR: Function calls are not supported in JIT

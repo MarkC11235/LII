@@ -11,23 +11,19 @@
 #include "Value.hpp"
 #include "opcodes.hpp"
 
-typedef void (*JIT_FUNCTION)(VM* vm);
-
-std::vector<JIT_FUNCTION> jit_functions;
-
-void jit_add_function(JIT_FUNCTION func)
+void jit_add_function(VM* vm, JIT_FUNCTION func)
 {
-    jit_functions.push_back(func);
+    vm->jit_functions.push_back(func);
 }
 
 void jit_run_function(VM* vm, int index)
 {
-    jit_functions[index](vm);
+    vm->jit_functions[index](vm);
 }
 
-void jit_compile_function(function* func)
+void jit_compile_function(VM* vm, function* func)
 {
-    std::string jit_name = "jit_" + std::to_string(jit_functions.size());
+    std::string jit_name = "jit_" + std::to_string(vm->jit_functions.size());
     std::string program = R"(
                         #include <iostream>
                         #include "../src_bytecode/VM.hpp"
@@ -37,6 +33,8 @@ void jit_compile_function(function* func)
 
     for(int i = 0; i < func->count; i++){
         program += "\nlabel_" + std::to_string(i) + ": \n";
+        // Add a comment with the Opcode name
+        program += "// " + opcode_to_string(func->code[i]) + "\n";
         program += "{\n";
         switch (func->code[i])
         {
@@ -322,18 +320,18 @@ void jit_compile_function(function* func)
         case OpCode::OP_UPDATE_VECTOR_ELEMENT:
         {
             program += R"(
-            Value value = pop(vm);                                                                    
             Value index = pop(vm);                                                                    
+            Value value = pop(vm);                                                                    
             Value vector = get_variable(vm, vm->variable_names[)" + std::to_string(func->code[++i]) + R"(]);)";
             program += R"(
             if (vector.type != Value_Type::VECTOR || index.type != Value_Type::NUMBER)                
             {                                                                                      
                 vm_error("Invalid types for vector element access");                                 
             }                                                                                      
-            std::vector<Value> vec = VALUE_AS_VECTOR(vector);                                        
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);                
             if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())                  
             {                                                                                      
-                vm_error("Index out of bounds");                                                    
+                vm_error("Index out of bounds - Vector element update");                                                    
             }                                                                                      
             vec[(int)VALUE_AS_NUMBER(index)] = value;                                               
             update_variable(vm, vm->variable_names[)" + std::to_string(func->code[i]) + R"(], {Value_Type::VECTOR, vec});)";
@@ -348,12 +346,12 @@ void jit_compile_function(function* func)
             if (vector.type != Value_Type::VECTOR || index.type != Value_Type::NUMBER)                
             {                                                                                      
                 vm_error("Invalid types for vector element access");                                 
-            }                                                                                      
-            if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= VALUE_AS_VECTOR(vector).size())
+            }                                                 
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);                                    
+            if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
             {                                                                                      
-                vm_error("Index out of bounds");                                                    
-            }                                                                                      
-            std::vector<Value> vec = VALUE_AS_VECTOR(vector);                                        
+                vm_error("Index out of bounds - Vector element access");                                                    
+            }                                                                                                                         
             push(vm, vec[(int)VALUE_AS_NUMBER(index)]);                                                  
             )";
             break;
@@ -539,8 +537,8 @@ void jit_compile_function(function* func)
         exit(1);
     }
 
-    jit_add_function(jit_func);
-    func->jit_index = jit_functions.size() - 1;
+    jit_add_function(vm, jit_func);
+    func->jit_index = vm->jit_functions.size() - 1;
 }
 
 
