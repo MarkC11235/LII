@@ -8,6 +8,7 @@
 #include <limits.h>
 
 #include "VM.hpp"
+#include "virtual_machine.hpp"
 #include "Value.hpp"
 #include "opcodes.hpp"
 
@@ -29,6 +30,8 @@ void jit_compile_function(VM* vm, function* func)
                         #include "../src_bytecode/VM.hpp"
                         #include "../src_bytecode/Value.hpp"
                         #include "../src_bytecode/std_lib/std_lib.hpp"
+                        #include "../src_bytecode/virtual_machine.hpp"
+                        #include "../src_bytecode/jit.hpp"
                         extern "C" void )" + jit_name + R"((VM* vm){)";
 
     for(int i = 0; i < func->count; i++){
@@ -290,7 +293,7 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_LOAD_FUNCTION_VAR:
         {
             program += R"(
-            push(vm, get_function_variable(vm, vm->variable_names[)" + std::to_string(func->code[++i]) + R"(]);)";
+            push(vm, get_function_variable(vm, vm->variable_names[)" + std::to_string(func->code[++i]) + R"(]));)";
             break;
         }
 
@@ -422,7 +425,27 @@ void jit_compile_function(VM* vm, function* func)
         }
         case OpCode::OP_FUNCTION_CALL:
         {
-            vm_error("Function calls are not supported in JIT");
+            program += R"(
+            function* func = VALUE_AS_FUNCTION(pop(vm));)";
+            program += R"(
+            func->times_called++;)";
+            program += R"(
+            if(vm->jit && func->times_called == CALLS_TO_JIT){ 
+                jit_compile_function(vm, func);
+            }
+
+            if(vm->jit && func->jit_index != -1){
+                vm->function_frames.push_back(create_function_frame(func));
+                jit_run_function(vm, func->jit_index);
+            }
+            else{
+                vm->function_frames.push_back(create_function_frame(func));
+
+                get_current_function_frame(vm)->ip = func->code - 1; // -1 because the ip will be increased by 1
+
+                run_vm();
+            })";
+
             break;
         }
         case OpCode::OP_STD_LIB_CALL:
@@ -520,7 +543,7 @@ void jit_compile_function(VM* vm, function* func)
     out.close();
 
     // Compile the program
-    std::string command = "clang++-16";
+    std::string command = "clang++-16 ";
     command += JIT_OPTIMIZATION_LEVEL;
     command += " -shared -fPIC -o ./jit_functions/" + jit_name + ".so " + "./jit_functions/" + jit_name + ".cpp";
     system(command.c_str());

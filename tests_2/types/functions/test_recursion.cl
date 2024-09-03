@@ -4,6 +4,7 @@ let factorial = func(i){
     } else {
         return 1;
     }
+    return -1; // This line should not be reached, but needs to be here for the JIT engine
 };
 
 print factorial(5);

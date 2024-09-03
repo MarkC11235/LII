@@ -1,3 +1,8 @@
+// bubble sort 
+// takes about 26 seconds to sort 1000 elements with jit enabled
+// takes a lot of time without jit enabled, didn't wait for it to finish
+
+
 let create_vector = func(size) {
     let vec = [];
     for (let i = 0; i < size; i = i + 1){ 
@@ -6,8 +11,7 @@ let create_vector = func(size) {
     return vec;
 };
 
-let vec = create_vector(1000);
-print(vec);
+
 
 let sort = func(vec) {
     let n = $vector_len(vec);
@@ -23,6 +27,14 @@ let sort = func(vec) {
     return vec;
 };
 
-let sorted_vec = sort(vec);
-print(sorted_vec);
-
+let size = 1000;
+let vec = [];
+for (let i = 0; i < size; i = i + 1){ 
+    vec = $vector_push(vec, $random_number(0, 1000));
+}
+for (let i = 0; i < 1; i = i + 1){
+    //let vec = create_vector(size);
+    //print(vec);
+    let sorted_vec = sort(vec);
+    print(sorted_vec);
+}
