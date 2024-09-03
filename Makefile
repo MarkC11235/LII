@@ -66,8 +66,12 @@ runvV:
 	@$(EXE) $(INPUT_FILE) -vV
 
 time:
-	@echo "Running $(INPUT_FILE)\n"
+	@echo "Timing $(INPUT_FILE)\n"
 	@$(EXE) $(INPUT_FILE) -t
+
+time_jit:
+	@echo "Timing $(INPUT_FILE) with jit enabled\n"
+	@$(EXE) $(INPUT_FILE) -jit -t
 
 debug:
 	@echo "Running $(INPUT_FILE) in debug mode\n"

@@ -520,7 +520,9 @@ void jit_compile_function(VM* vm, function* func)
     out.close();
 
     // Compile the program
-    std::string command = "clang++-16 -shared -fPIC -o ./jit_functions/" + jit_name + ".so " + "./jit_functions/" + jit_name + ".cpp";
+    std::string command = "clang++-16";
+    command += JIT_OPTIMIZATION_LEVEL;
+    command += " -shared -fPIC -o ./jit_functions/" + jit_name + ".so " + "./jit_functions/" + jit_name + ".cpp";
     system(command.c_str());
 
     // Load the shared library

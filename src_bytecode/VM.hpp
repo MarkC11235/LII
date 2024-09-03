@@ -24,6 +24,7 @@ struct VM; // Forward declaration
 typedef void (*JIT_FUNCTION)(VM* vm);
 
 #define CALLS_TO_JIT 1
+#define JIT_OPTIMIZATION_LEVEL "-O3"
 
 struct VM
 {
