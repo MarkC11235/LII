@@ -1,10 +1,2 @@
-let factorial = func(i){
-    if(i){
-        return i * factorial(i - 1);
-    } else {
-        return 1;
-    }
-    return 0;
-};
-
-print factorial(5);
+let vec = [1, 2, 3, 4, 5];
+print vec[0];
