@@ -169,6 +169,13 @@ enum OpCode{
     */
     OP_UPDATE_STRUCT_ELEMENT, 
 
+    /*
+    * OP_ACCESS: Access a value in a struct or vector
+                Index is the top value on the stack
+                The struct or vector is below the index on the stack
+    */
+    OP_ACCESS,
+
     // Control flow
 
     /*
@@ -277,6 +284,8 @@ std::string opcode_to_string(CODE_SIZE op){
             return "OP_LOAD_STRUCT_ELEMENT";
         case OpCode::OP_UPDATE_STRUCT_ELEMENT:
             return "OP_UPDATE_STRUCT_ELEMENT";
+        case OpCode::OP_ACCESS:
+            return "OP_ACCESS";
         case OpCode::OP_RETURN:
             return "OP_RETURN";
         case OpCode::OP_JUMP:

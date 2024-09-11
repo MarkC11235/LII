@@ -3,7 +3,7 @@
 string_len
 x
 3
-function|function (x) {16, 1, 18, 1, 27, }
+function|function (x) {16, 1, 18, 1, 28, }
 string|tester.calc
 number|1
 20
@@ -15,15 +15,15 @@ number|1
 1
 19
 0
-30
-33
+31
 34
+35
 0
-34
+35
 1
-33
+34
 15
 2
-34
+35
 2
-33
+34

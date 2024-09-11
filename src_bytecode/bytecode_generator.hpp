@@ -20,6 +20,7 @@
 
 // For athritmetic and comparison operations
 std::unordered_map<std::string, OpCode> opCodeMap = { 
+    {"[", OpCode::OP_ACCESS},
     {"u-", OpCode::OP_U_SUB},
     {"+", OpCode::OP_ADD},
     {"-", OpCode::OP_SUB},
@@ -148,12 +149,12 @@ void display_bytecode(function* func){
                 std::cout << "          ";
                 std::cout << "Name: " << variable_names[(int)func->code[++i]] << std::endl;
                 break;
-            case OpCode::OP_LOAD_VECTOR_ELEMENT:
-                std::cout << "OP_LOAD_VECTOR_ELEMENT";
-                std::cout << "          ";
-                std::cout << "Vector Name: " << variable_names[(int)func->code[++i]];
-                std::cout << std::endl;
-                break;
+            // case OpCode::OP_LOAD_VECTOR_ELEMENT:
+            //     std::cout << "OP_LOAD_VECTOR_ELEMENT";
+            //     std::cout << "          ";
+            //     std::cout << "Vector Name: " << variable_names[(int)func->code[++i]];
+            //     std::cout << std::endl;
+            //     break;
             case OpCode::OP_UPDATE_VECTOR_ELEMENT:
                 std::cout << "OP_UPDATE_VECTOR_ELEMENT";
                 std::cout << "          ";
@@ -165,14 +166,14 @@ void display_bytecode(function* func){
             case OpCode::OP_CREATE_STRUCT:
                 std::cout << "OP_CREATE_STRUCT" << std::endl;
                 break;
-            case OpCode::OP_LOAD_STRUCT_ELEMENT:
-                std::cout << "OP_LOAD_STRUCT_ELEMENT";
-                std::cout << "          ";
-                std::cout << "Struct Name: " << variable_names[(int)func->code[++i]];
-                std::cout << "          ";
-                std::cout << "Element Name: " << variable_names[(int)func->code[++i]];
-                std::cout << std::endl;
-                break;
+            // case OpCode::OP_LOAD_STRUCT_ELEMENT:
+            //     std::cout << "OP_LOAD_STRUCT_ELEMENT";
+            //     std::cout << "          ";
+            //     std::cout << "Struct Name: " << variable_names[(int)func->code[++i]];
+            //     std::cout << "          ";
+            //     std::cout << "Element Name: " << variable_names[(int)func->code[++i]];
+            //     std::cout << std::endl;
+            //     break;
             case OpCode::OP_UPDATE_STRUCT_ELEMENT:
                 std::cout << "OP_UPDATE_STRUCT_ELEMENT";
                 std::cout << "          ";
@@ -180,6 +181,9 @@ void display_bytecode(function* func){
                 std::cout << "          ";
                 std::cout << "Element Name: " << variable_names[(int)func->code[++i]];
                 std::cout << std::endl;
+                break;
+            case OpCode::OP_ACCESS:
+                std::cout << "OP_ACCESS" << std::endl;
                 break;
             
             // Control flow
@@ -414,31 +418,31 @@ void choose_expr_operand(Node* node, function* func){
                     }
                     WRITE_BYTE(get_variable_index(node->get_value()), func);
                 }
-                else if(node->get_children().size() == 1){ // Vector access or struct access
-                    Node* child = node->get_child(0);
-                    if(child->get_type() == NodeType::EXPR_NODE){ // Vector access
-                        interpret_expr(child, func); // Expression for vector index, first on the stack
-                        WRITE_BYTE(OpCode::OP_LOAD_VECTOR_ELEMENT, func); // Load the value from the vector
-                        if(get_variable_index(opStr) == -1){
-                            interpretation_error("Variable not found", node, func);
-                        }
-                        WRITE_BYTE(get_variable_index(opStr), func); // Index of the vector in the variables map
-                    }
-                    else if(child->get_type() == NodeType::VAR_NODE){ // Struct access
-                        WRITE_BYTE(OpCode::OP_LOAD_STRUCT_ELEMENT, func); // Load the value from the struct
-                        if(get_variable_index(node->get_value()) == -1){
-                            interpretation_error("Variable not found", node, func);
-                        }
-                        WRITE_BYTE(get_variable_index(opStr), func); // Index of the struct in the variables map
-                        if(get_variable_index(child->get_value()) == -1){
-                            interpretation_error("Variable not found", node, func);
-                        }
-                        WRITE_BYTE(get_variable_index(child->get_value()), func); // Index of the struct element in the struct
-                    }
-                    else{
-                        interpretation_error("Invalid child type for VAR Node", node, func);
-                    }
-                }
+                // else if(node->get_children().size() == 1){ // Vector access or struct access
+                //     Node* child = node->get_child(0);
+                //     if(child->get_type() == NodeType::EXPR_NODE){ // Vector access
+                //         interpret_expr(child, func); // Expression for vector index, first on the stack
+                //         WRITE_BYTE(OpCode::OP_LOAD_VECTOR_ELEMENT, func); // Load the value from the vector
+                //         if(get_variable_index(opStr) == -1){
+                //             interpretation_error("Variable not found", node, func);
+                //         }
+                //         WRITE_BYTE(get_variable_index(opStr), func); // Index of the vector in the variables map
+                //     }
+                //     else if(child->get_type() == NodeType::VAR_NODE){ // Struct access
+                //         WRITE_BYTE(OpCode::OP_LOAD_STRUCT_ELEMENT, func); // Load the value from the struct
+                //         if(get_variable_index(node->get_value()) == -1){
+                //             interpretation_error("Variable not found", node, func);
+                //         }
+                //         WRITE_BYTE(get_variable_index(opStr), func); // Index of the struct in the variables map
+                //         if(get_variable_index(child->get_value()) == -1){
+                //             interpretation_error("Variable not found", node, func);
+                //         }
+                //         WRITE_BYTE(get_variable_index(child->get_value()), func); // Index of the struct element in the struct
+                //     }
+                //     else{
+                //         interpretation_error("Invalid child type for VAR Node", node, func);
+                //     }
+                // }
                 else{ 
                     interpretation_error("Invalid number of children for VAR Node", node, func);
                 }
@@ -466,6 +470,7 @@ void choose_expr_operand(Node* node, function* func){
 void interpret_op(Node* node, function* func){
     if(node->get_type() == NodeType::OP_NODE){
         std::string opStr = node->get_value();
+        //std::cout << "opStr: " << opStr << std::endl;
         
         if(opCodeMap.find(opStr) == opCodeMap.end()){
             interpretation_error("Invalid operator", node, func);
@@ -485,6 +490,13 @@ void interpret_op(Node* node, function* func){
         else if(std::get<1>(operators[opStr]) == "unary"){
             Node* child = node->get_child(0);
             choose_expr_operand(child, func);
+        }
+        else if(std::get<1>(operators[opStr]) == "access"){
+            Node* l_child = node->get_child(0);
+            choose_expr_operand(l_child, func); 
+
+            Node* r_child = node->get_child(1);
+            choose_expr_operand(r_child, func);
         }
         else{
             interpretation_error("Invalid operator type", node, func);

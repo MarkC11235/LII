@@ -178,7 +178,6 @@ bool is_unary_operator(std::string op){
     return std::get<1>(operators[op]) == "unary";
 }
 
-
 bool is_access_operator(std::string op){
     if(operators.find(op) == operators.end()){
         std::cout << "Unknown Operator: " + op << std::endl;
@@ -368,15 +367,15 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                         values.pop();
                     }
                     else if(is_access_operator(top->get_value())){ // Array access
-                        std::cout << "Array access" << std::endl;
+                        //std::cout << "Array access" << std::endl;
 
                         Node* index = values.top();
                         values.pop();
-                        index->print();
+                        //index->print();
                         
                         Node* array = values.top();
                         values.pop();
-                        array->print();
+                        //array->print();
 
                         top->add_child(array);
                         top->add_child(index);
@@ -389,8 +388,8 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 }
 
                 if(is_access_operator(value)){ // Array access
-                    std::cout << "Array access" << std::endl;
-                    std::cout << "Parsing index" << std::endl;
+                    //std::cout << "Array access" << std::endl;
+                    //std::cout << "Parsing index" << std::endl;
 
                     Node* expr = new Node(NodeType::EXPR_NODE, "");
                     parse_expr(tokens, expr);
@@ -443,15 +442,15 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
             values.push(top);
         }
         else if(is_access_operator(top->get_value())){ // Array access
-            std::cout << "Array access" << std::endl;
+            //std::cout << "Array access" << std::endl;
 
             Node* index = values.top();
             values.pop();
-            index->print();
+            //index->print();
             
             Node* array = values.top();
             values.pop();
-            array->print();
+            //array->print();
 
             top->add_child(array);
             top->add_child(index);
