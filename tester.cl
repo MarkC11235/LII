@@ -1,7 +1,4 @@
-let vec = [];
-let vec2 = [1, 2, 3, 4, 5];
-vec = $vector_push(vec, vec2);
-vec = $vector_push(vec, vec2);
-vec = $vector_push(vec, vec2);
+let vec = [1, 2, 3, 4, 5];
 
-print vec[0][0];
+vec[0][1] = 10;
+

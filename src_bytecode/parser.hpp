@@ -828,17 +828,17 @@ void parse_return(std::vector<Token>& tokens, Node* current){
 
 // Recursive function to handle nested accessors
 void parse_accessor(std::vector<Token>& tokens, Node* current){
-    Token token = pop(tokens); // Skip the dot
-    token = pop(tokens);
-    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
-        parsing_error("Syntax error: expected identifier", token);
+    Node* expr = new Node(NodeType::EXPR_NODE, "");
+    current->add_child(expr);
+    parse_expr(tokens, expr);
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
+        parsing_error("Syntax error: expected ']'", token);
     }
-    Node* field = new Node(NodeType::VAR_NODE, token.get_value());
-    current->add_child(field);
 
-    token = peek(tokens);
-    if(token.get_type() == TokenType::ACCESSOR_TOKEN){
-        parse_accessor(tokens, field);
+    if(peek(tokens).get_value() == "["){ // Check if there is another accessor
+        pop(tokens);
+        parse_accessor(tokens, current);
     }
 }
 
@@ -856,25 +856,13 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
 
     Node* var = new Node(NodeType::VAR_NODE, token.get_value()); // Variable to update
     update->add_child(var);
+   
+    if(peek(tokens).get_value() == "["){
+        pop(tokens);
+        parse_accessor(tokens, var);
+    }
 
     token = pop(tokens);
-    if(token.get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array update
-        Node* index = new Node(NodeType::EXPR_NODE, ""); // Index
-        update->add_child(index);
-        parse_expr(tokens, index); // Index
-        token = pop(tokens);
-        if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
-            parsing_error("Syntax error: expected ']'", token);
-        }
-
-        token = pop(tokens);
-    }
-    else if(token.get_type() == TokenType::ACCESSOR_TOKEN){ // Struct update
-        place_token_back(tokens, token);
-        parse_accessor(tokens, var);
-        token = pop(tokens);
-    }
-
     if(token.get_type() != TokenType::ASSIGNMENT_TOKEN){
         parsing_error("Syntax error: expected assignment operator", token);
     }
