@@ -203,7 +203,7 @@ std::vector<Token> analyze(std::string input, int line_number){
             case ' ':
                 break;
             case '[':
-                tokens.push_back(Token(TokenType::OPENSQUAREBRACKET_TOKEN, "[", line_number));
+                tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "[", line_number));
                 break;
             case ']':
                 tokens.push_back(Token(TokenType::CLOSESQUAREBRACKET_TOKEN, "]", line_number));

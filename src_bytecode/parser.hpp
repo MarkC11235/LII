@@ -134,6 +134,7 @@ void place_token_back(std::vector<Token>& tokens, Token token){
 }
 
 std::map<std::string, std::tuple<int, std::string>> operators = {
+    {"[", {20, "access"}}, // access
     {"u-", {11, "unary"}}, // Unary minus
     {"*", {10, "binary"}},
     {"/", {10, "binary"}},
@@ -177,6 +178,15 @@ bool is_unary_operator(std::string op){
     return std::get<1>(operators[op]) == "unary";
 }
 
+
+bool is_access_operator(std::string op){
+    if(operators.find(op) == operators.end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(operators[op]) == "access";
+}
 
 std::vector<std::string> splitStringByComma(const std::string& str) {
     std::vector<std::string> result;
@@ -320,32 +330,9 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                     parse_function_call(tokens, function_call);
                     values.push(function_call);
                 }
-                else if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array access
-                    pop(tokens); // Skip the '['
-                    Node* var = new Node(NodeType::VAR_NODE, value);
-                    Node* index = new Node(NodeType::EXPR_NODE, "");
-                    var->add_child(index);
-                    parse_expr(tokens, index);
-
-                    values.push(var);
-
-                    // check for closing bracket
-                    Token token = pop(tokens);
-                    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
-                        parsing_error("Syntax error: expected ']'", token);
-                    }
-                }
                 else { // Variable
-                    //check if the identifier is an accessor
-                    if(peek(tokens).get_type() == TokenType::ACCESSOR_TOKEN){
-                        Node* var = new Node(NodeType::VAR_NODE, value);
-                        parse_accessor(tokens, var);
-                        values.push(var);
-                    }
-                    else {
-                        Node* var = new Node(NodeType::VAR_NODE, value);
-                        values.push(var);
-                    }
+                    Node* var = new Node(NodeType::VAR_NODE, value);
+                    values.push(var);
                 }
                 break;
             }
@@ -358,6 +345,9 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                     }
                     else if(value == "!"){ // not
                         op->change_value("!", 0); // keeps it the same, just here so it does not go to the else
+                    }
+                    else if(value == "["){ // Array access
+                        op->change_value("[", 0); // keeps it the same, just here so it does not go to the else
                     }
                     else {
                         parsing_error("Syntax error: expected number or identifier", token);
@@ -377,10 +367,40 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                         top->add_child(values.top());
                         values.pop();
                     }
+                    else if(is_access_operator(top->get_value())){ // Array access
+                        std::cout << "Array access" << std::endl;
+
+                        Node* index = values.top();
+                        values.pop();
+                        index->print();
+                        
+                        Node* array = values.top();
+                        values.pop();
+                        array->print();
+
+                        top->add_child(array);
+                        top->add_child(index);
+
+                    }
                     else {
                         parsing_error("Syntax error: unknown operator", token);
                     }
                     values.push(top);
+                }
+
+                if(is_access_operator(value)){ // Array access
+                    std::cout << "Array access" << std::endl;
+                    std::cout << "Parsing index" << std::endl;
+
+                    Node* expr = new Node(NodeType::EXPR_NODE, "");
+                    parse_expr(tokens, expr);
+                    values.push(expr);
+
+                    // check for closing bracket
+                    Token token = pop(tokens);
+                    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
+                        parsing_error("Syntax error: expected ']'", token);
+                    }
                 }
 
                 ops.push(op);
@@ -421,6 +441,24 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
             top->add_child(values.top());
             values.pop();
             values.push(top);
+        }
+        else if(is_access_operator(top->get_value())){ // Array access
+            std::cout << "Array access" << std::endl;
+
+            Node* index = values.top();
+            values.pop();
+            index->print();
+            
+            Node* array = values.top();
+            values.pop();
+            array->print();
+
+            top->add_child(array);
+            top->add_child(index);
+            values.push(top);
+        }
+        else {
+            parsing_error("Syntax error: unknown operator", Token(TokenType::EOF_TOKEN, "EOF", -1));
         }
     }
 
@@ -678,7 +716,7 @@ void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const /
     } 
 
     //Find type of assignment
-    if(peek(tokens).get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){ // Array assignment
+    if(peek(tokens).get_value() == "["){ // Array assignment, check value because [ is an operator
         parse_list(tokens, assign);
     }
     else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
@@ -806,6 +844,8 @@ void parse_accessor(std::vector<Token>& tokens, Node* current){
 }
 
 // This is called when an identifier is encountered, with no let keyword
+// TODO: allow for user to assign structs and arrays to an already declared variable
+//      Ex: let a = [1, 2, 3]; a = [4, 5, 6];
 void parse_variable_update(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
