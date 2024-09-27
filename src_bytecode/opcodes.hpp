@@ -175,6 +175,19 @@ enum OpCode{
                 The struct or vector is below the index on the stack
     */
     OP_ACCESS,
+    /*
+    * OP_ACCESS_FOR_UPDATE: Access a value in a struct or vector, then push the original value back onto the stack, then the index, then the value to update
+                            Index is the top value on the stack
+                            The struct or vector is below the index on the stack
+    */
+    OP_ACCESS_FOR_UPDATE,
+    /*
+    * OP_UPDATE_STACK_ELEMENT: Update an element on the stack and push it back onto the stack
+                                Value is the top value on the stack
+                                Index is the next value on the stack
+                                element to update is below the index on the stack
+    */
+    OP_UPDATE_STACK_ELEMENT,
 
     // Control flow
 
@@ -286,6 +299,10 @@ std::string opcode_to_string(CODE_SIZE op){
             return "OP_UPDATE_STRUCT_ELEMENT";
         case OpCode::OP_ACCESS:
             return "OP_ACCESS";
+        case OpCode::OP_ACCESS_FOR_UPDATE:
+            return "OP_ACCESS_FOR_UPDATE";
+        case OpCode::OP_UPDATE_STACK_ELEMENT:
+            return "OP_UPDATE_STACK_ELEMENT";
         case OpCode::OP_RETURN:
             return "OP_RETURN";
         case OpCode::OP_JUMP:
