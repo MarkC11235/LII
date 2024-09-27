@@ -45,13 +45,11 @@ enum NodeType {
     FUNCTION_CALL_NODE
 };
 
+class Node;
+
 
 // Helper functions ---------------------------------------------------
-int parsing_error(std::string message, Token token){
-    std::cout << message << std::endl;
-    std::cout << "Token: " << token.get_value() << " at line " << token.get_line_number() << std::endl;
-    exit(1);
-}
+int parsing_error(std::string message, Token token);
 
 std::string node_type_to_string(NodeType type){
     switch(type){
@@ -264,7 +262,16 @@ public:
     }
 };
 
+Node* ROOT_NODE;
+
 // -------------------------------------------------------------------
+
+int parsing_error(std::string message, Token token){
+    std::cout << message << std::endl;
+    std::cout << "Token: " << token.get_value() << " at line " << token.get_line_number() << std::endl;
+    ROOT_NODE->print();
+    exit(1);
+}
 
 // Parsing functions -------------------------------------------------
 
@@ -291,6 +298,7 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
     bool loop = true;
 
     TokenType previos_token_type = TokenType::OPERATOR_TOKEN;
+    std::string previos_token_value = "";
 
     while(loop){
         Token token = pop(tokens);
@@ -338,7 +346,7 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
             case TokenType::OPERATOR_TOKEN: {
                 Node* op = new Node(NodeType::OP_NODE, value);
 
-                if(previos_token_type == TokenType::OPERATOR_TOKEN){
+                if(previos_token_type == TokenType::OPERATOR_TOKEN && previos_token_value != "["){ // Unary operator
                     if(value == "-"){ // Unary minus
                         op->change_value("u-", 0);
                     }
@@ -388,8 +396,12 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 }
 
                 if(is_access_operator(value)){ // Array access
-                    //std::cout << "Array access" << std::endl;
-                    //std::cout << "Parsing index" << std::endl;
+                    // std::cout << "Array access" << std::endl;
+                    // std::cout << "Parsing index" << std::endl;
+                    // // print tokens
+                    // for(int i = 0; i < int(tokens.size()); i++){
+                    //     std::cout << tokens[i].get_value() << " ";
+                    // }
 
                     Node* expr = new Node(NodeType::EXPR_NODE, "");
                     parse_expr(tokens, expr);
@@ -400,6 +412,10 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                     if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
                         parsing_error("Syntax error: expected ']'", token);
                     }
+                    // // print tokens
+                    // for(int i = 0; i < int(tokens.size()); i++){
+                    //     std::cout << tokens[i].get_value() << " ";
+                    // }
                 }
 
                 ops.push(op);
@@ -424,6 +440,7 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
         }
 
         previos_token_type = type;
+        previos_token_value = value;
     }
 
     while(ops.size() > 0){
@@ -1038,6 +1055,7 @@ void parse_stmt_list(std::vector<Token>& tokens, Node* current){
 Node* parse(std::vector<Token> tokens, bool verbose = false){
     // TODO: make stmt_list be able to be empty, so the grammar matches the language
     Node* root = new Node(NodeType::STMT_LIST_NODE, "");
+    ROOT_NODE = root;
     parse_stmt_list(tokens, root);
 
     // Print the AST

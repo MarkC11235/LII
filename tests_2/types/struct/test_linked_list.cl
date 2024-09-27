@@ -8,11 +8,11 @@ print head;
 
 for (let i = 0; i < 10; i = i + 1) {
     let node = Node;
-    node.value = i;
-    node.next = head;
+    node["value"] = i;
+    node["next"] = head;
     head = node;
 }
 
-for (let i = head; i.next != -1; i = i.next) {
-    print i.value;
+for (let i = head; i["next"] != -1; i = i["next"]) {
+    print i["value"];
 }

@@ -1,2 +1,1 @@
-Syntax error: expected assignment operator
-Token: [ at line 4
+[3, 4, Hello, World!2, 6, 7]

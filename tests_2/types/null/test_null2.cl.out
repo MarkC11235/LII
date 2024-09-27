@@ -1,2 +1,7 @@
 Syntax error: null cannot be used in expressions
 Token: null at line 1
+STMT_LIST
+   STMT
+     ASSIGN let
+       VAR x
+       EXPR

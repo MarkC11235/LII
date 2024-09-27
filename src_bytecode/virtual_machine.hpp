@@ -392,6 +392,79 @@ void vm_loop(bool verbose)
         }
         break;
     }
+    case OpCode::OP_ACCESS_FOR_UPDATE:
+    {
+        Value index = pop(&vm);
+        Value obj = pop(&vm);
+        push(&vm, obj);
+        push(&vm, index);
+
+        if (obj.type == Value_Type::STRUCT)
+        {
+            std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+            //check if the key exists
+            if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+            {
+                vm_error("Key does not exist in struct");
+            }
+            push(&vm, struct_map[VALUE_AS_STRING(index)]);
+        }
+        else if (obj.type == Value_Type::VECTOR)
+        {
+            std::vector<Value> vec = VALUE_AS_VECTOR(obj);
+            if (index.type != Value_Type::NUMBER)
+            {
+                vm_error("Invalid index type for vector access");
+            }
+            if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
+            {
+                vm_error("Index out of bounds");
+            }
+            push(&vm, vec[(int)VALUE_AS_NUMBER(index)]);
+        }
+        else
+        {
+            vm_error("Invalid type for access");
+        }
+        break;
+    }
+    case OpCode::OP_UPDATE_STACK_ELEMENT:
+    {
+        Value value = pop(&vm);
+        Value index = pop(&vm);
+        Value obj = pop(&vm);
+    
+        if (obj.type == Value_Type::STRUCT)
+        {
+            std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+            //check if the key exists
+            if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+            {
+                vm_error("Key does not exist in struct");
+            }
+            struct_map[VALUE_AS_STRING(index)] = value;
+            push(&vm, {Value_Type::STRUCT, struct_map});
+        }
+        else if (obj.type == Value_Type::VECTOR)
+        {
+            std::vector<Value> vec = VALUE_AS_VECTOR(obj);
+            if (index.type != Value_Type::NUMBER)
+            {
+                vm_error("Invalid index type for vector access");
+            }
+            if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
+            {
+                vm_error("Index out of bounds");
+            }
+            vec[(int)VALUE_AS_NUMBER(index)] = value;
+            push(&vm, {Value_Type::VECTOR, vec});
+        }
+        else
+        {
+            vm_error("Invalid type for access");
+        }
+        break;
+    }
 
     // Control flow operations
     case OpCode::OP_RETURN:

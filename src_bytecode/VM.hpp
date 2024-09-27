@@ -188,16 +188,6 @@ Value get_variable(VM* vm, const std::string &name)
     return Value(); // To avoid warning, but this line will never be reached because of vm_error
 }
 
-// Do this so that you can pass two strings to the function, one for the variable name and one for index
-// ADD: get array variable
-// ADD: set array variable
-// ADD: update array variable
-
-// Do this so that you can pass two strings to the function, one for the variable name and one for the entry
-// ADD: get struct variable
-// ADD: set struct variable
-// ADD: update struct variable
-
 Value get_function_variable(VM* vm, const std::string &name)
 {
     for(int j = 0; j < (int)vm->function_frames.size(); j++){

@@ -845,7 +845,7 @@ void interpret_update(Node *node, function *func)
     }
     else
     {                                           // Struct or vector update
-        std::cout << "Object update" << std::endl;
+        // std::cout << "Object update" << std::endl;
         std::vector<Node *> variable_children = variable->get_children();
 
         WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
