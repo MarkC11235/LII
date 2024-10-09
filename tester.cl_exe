@@ -1,8 +1,7 @@
 ./tester
-2
+1
 mat
-name
-10
+9
 number|1
 number|2
 number|3
@@ -12,8 +11,7 @@ number|6
 number|7
 number|8
 number|9
-number|0
-47
+39
 20
 20
 15
@@ -50,14 +48,6 @@ number|0
 21
 16
 0
-24
-16
-0
-15
-9
-26
-0
-1
 18
 0
 36
