@@ -145,9 +145,7 @@ void display_bytecode(function *func)
             std::cout << "OP_CREATE_VECTOR" << std::endl;
             break;
         case OpCode::OP_VECTOR_PUSH:
-            std::cout << "OP_VECTOR_PUSH";
-            std::cout << "          ";
-            std::cout << "Name: " << variable_names[(int)func->code[++i]] << std::endl;
+            std::cout << "OP_VECTOR_PUSH" << std::endl;
             break;
         // case OpCode::OP_LOAD_VECTOR_ELEMENT:
         //     std::cout << "OP_LOAD_VECTOR_ELEMENT";
@@ -670,13 +668,21 @@ void interpret_list(Node *node, function *func)
         interpretation_error("List doesn't start with LIST Node", node, func);
     }
 
-    // TODO: add support for nested lists
-
     for (int i = 0; i < (int)node->get_children().size(); i++)
     {
-        interpret_expr(node->get_child(i), func);
-        WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
-        WRITE_BYTE(variable_names.size() - 1, func); // Index of the vector in the variables map
+        Node* child = node->get_child(i);
+        if(child->get_type() == NodeType::EXPR_NODE){
+            interpret_expr(child, func);
+            WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
+        }
+        else if(child->get_type() == NodeType::LIST_NODE){
+            WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
+            interpret_list(child, func);
+            WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
+        }
+        else{
+            interpretation_error("Invalid child type for LIST Node", node, func);
+        }
     }
 }
 
@@ -698,10 +704,6 @@ void interpret_struct_assign(Node *node, function *func, std::string struct_name
     }
 
     // TODO: add support for nested structs and lists
-    // don't support lists in structs right now becasue of the OP_VECTOR_CREATE opcode
-    // it just stores the vector in the variables map, so it can't be used in a struct
-    // IDEA: make the OP_STORE_VAR opcode store any type of value in the variables map
-    // make it take another argument that is encoded in the bytecode that tells it what type of value it is
     switch (value->get_type())
     {
     case NodeType::EXPR_NODE:
@@ -762,11 +764,12 @@ void interpret_assign(Node *node, function *func)
     {
         WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
         WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
+
+        interpret_list(value, func); // interpret the list and leave the vector on the stack
+
         // Store var
         WRITE_BYTE(OpCode::OP_STORE_VAR, func); // takes the value from the stack and stores it in the variables map
         WRITE_BYTE(get_variable_index(var_name), func);
-
-        interpret_list(value, func);
     }
     break;
     case NodeType::NULL_NODE:

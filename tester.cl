@@ -1,10 +1,7 @@
-let vec = [1, 2, 3, 4, 5];
+let mat = [[1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9]];
 
-let vec1 = $vector_push(vec, vec);
-vec = $vector_push(vec, vec1);
-print vec;
+mat = [1, 2, 3];
 
-vec[5][5][0] = 10;
-
-print vec;
-print vec[5][5][0]; // 10
+print mat;

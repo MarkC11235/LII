@@ -279,15 +279,14 @@ void vm_loop(bool verbose)
     case OpCode::OP_VECTOR_PUSH:
     {
         Value value = pop(&vm);
-        Value vector = get_variable(&vm, vm.variable_names[get_ip(&vm)[1]]);
+        Value vector = pop(&vm);
         if (vector.type != Value_Type::VECTOR)
         {
             vm_error("Invalid type for vector push");
         }
         std::vector<Value> vec = VALUE_AS_VECTOR(vector);
         vec.push_back(value);
-        update_variable(&vm, vm.variable_names[get_ip(&vm)[1]], {Value_Type::VECTOR, vec});
-        increase_ip(&vm, 1);
+        push(&vm, {Value_Type::VECTOR, vec});
         break;
     }
     case OpCode::OP_UPDATE_VECTOR_ELEMENT:

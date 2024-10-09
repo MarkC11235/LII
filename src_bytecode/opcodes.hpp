@@ -131,8 +131,9 @@ enum OpCode{
     */
     OP_CREATE_VECTOR, 
     /*
-    * OP_VECTOR_PUSH: Push a value onto the vector
-                Index of the vector in the variable names array is the next byte
+    * OP_VECTOR_PUSH: Push a value into the back of the vector
+                    The value is on the stack
+                    The vector is below the value on the stack
     */
     OP_VECTOR_PUSH, 
     /*

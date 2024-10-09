@@ -662,10 +662,8 @@ void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
             continue;
         }
 
-        if(token.get_type() == TokenType::OPENSQUAREBRACKET_TOKEN){
-            Node* nested_list = new Node(NodeType::LIST_NODE, "");
-            list->add_child(nested_list);
-            parse_list(tokens, nested_list, level + 1);
+        if(token.get_value() == "["){ // Nested list
+            parse_list(tokens, list, level + 1);
         } 
         else {
             Node* expr = new Node(NodeType::EXPR_NODE, "");
@@ -873,20 +871,36 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
 
     Node* var = new Node(NodeType::VAR_NODE, token.get_value()); // Variable to update
     update->add_child(var);
-   
-    if(peek(tokens).get_value() == "["){
-        pop(tokens);
-        parse_accessor(tokens, var);
-    }
 
     token = pop(tokens);
     if(token.get_type() != TokenType::ASSIGNMENT_TOKEN){
         parsing_error("Syntax error: expected assignment operator", token);
     }
 
-    Node* expr = new Node(NodeType::EXPR_NODE, ""); // Expression to assign
-    update->add_child(expr);
-    parse_expr(tokens, expr);
+    // Node* expr = new Node(NodeType::EXPR_NODE, ""); // Expression to assign
+    // update->add_child(expr);
+    // parse_expr(tokens, expr);
+
+    //Find type of assignment
+    if(peek(tokens).get_value() == "["){ // Array assignment, check value because [ is an operator
+        parse_list(tokens, update);
+    }
+    else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
+        parse_function(tokens, update);
+    }
+    else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null assignment
+        pop(tokens);
+        Node* null_node = new Node(NodeType::NULL_NODE, "null");
+        update->add_child(null_node);
+    }
+    else if (peek(tokens).get_type() == TokenType::STRUCT_TOKEN){ // Struct assignment
+        parse_struct(tokens, update);
+    }
+    else{ // Expression assignment
+        Node* expr = new Node(NodeType::EXPR_NODE, "");
+        update->add_child(expr);
+        parse_expr(tokens, expr);
+    }
 }
 
 void parse_print(std::vector<Token>& tokens, Node* current){
