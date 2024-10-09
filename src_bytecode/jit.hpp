@@ -307,17 +307,16 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_VECTOR_PUSH:
         {
             program += R"(
-            Value value = pop(vm);                                                                    
-            Value index = pop(vm);                                                                    
-            Value vector = get_variable(vm, vm->variable_names[)" + std::to_string(func->code[++i]) + R"(]);)";
-            program += R"(
-            if (vector.type != Value_Type::VECTOR || index.type != Value_Type::NUMBER)                
-            {                                                                                      
-                vm_error("Invalid types for vector push back");                                     
-            }                                                                                      
-            std::vector<Value> vec = VALUE_AS_VECTOR(vector);                                        
-            vec.push_back(value);                                                                   
-            update_variable(vm, vm->variable_names[)" + std::to_string(func->code[i]) + R"(], {Value_Type::VECTOR, vec});)";
+            Value value = pop(vm);
+            Value vector = pop(vm);
+            if (vector.type != Value_Type::VECTOR)
+            {
+                vm_error("Invalid type for vector push");
+            }
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+            vec.push_back(value);
+            push(vm, {Value_Type::VECTOR, vec});
+            )";
             break;
         }
         case OpCode::OP_UPDATE_VECTOR_ELEMENT:
@@ -395,6 +394,120 @@ void jit_compile_function(VM* vm, function* func)
             }                                                                                      
             std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);                     
             push(vm, struct_map[vm->variable_names[)" + std::to_string(func->code[++i]) + R"(]]);)";
+            break;
+        }
+
+        // Access operations
+        case OpCode::OP_ACCESS:
+        {
+            program += R"(
+            Value index = pop(vm);
+            Value obj = pop(vm);
+            if (obj.type == Value_Type::STRUCT)
+            {
+                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                //check if the key exists
+                if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+                {
+                    vm_error("Key does not exist in struct");
+                }
+                push(vm, struct_map[VALUE_AS_STRING(index)]);
+            }
+            else if (obj.type == Value_Type::VECTOR)
+            {
+                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
+                if (index.type != Value_Type::NUMBER)
+                {
+                    vm_error("Invalid index type for vector access");
+                }
+                if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
+                {
+                    vm_error("Index out of bounds");
+                }
+                push(vm, vec[(int)VALUE_AS_NUMBER(index)]);
+            }
+            else
+            {
+                vm_error("Invalid type for access");
+            }
+            )";
+            break;
+        }
+        case OpCode::OP_ACCESS_FOR_UPDATE:
+        {
+            program += R"(
+            Value index = pop(vm);
+            Value obj = pop(vm);
+            push(vm, obj);
+            push(vm, index);
+
+            if (obj.type == Value_Type::STRUCT)
+            {
+                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                //check if the key exists
+                if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+                {
+                    vm_error("Key does not exist in struct");
+                }
+                push(vm, struct_map[VALUE_AS_STRING(index)]);
+            }
+            else if (obj.type == Value_Type::VECTOR)
+            {
+                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
+                if (index.type != Value_Type::NUMBER)
+                {
+                    vm_error("Invalid index type for vector access");
+                }
+                if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
+                {
+                    vm_error("Index out of bounds");
+                }
+                push(vm, vec[(int)VALUE_AS_NUMBER(index)]);
+            }
+            else
+            {
+                vm_error("Invalid type for access");
+            }
+            )";
+            break;
+        }
+        case OpCode::OP_UPDATE_STACK_ELEMENT:
+        {
+            program += R"(
+            Value value = pop(vm);
+            Value index = pop(vm);
+            Value obj = pop(vm);
+        
+            if (obj.type == Value_Type::STRUCT)
+            {
+                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                //check if the key exists
+                if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+                {
+                    vm_error("Key does not exist in struct");
+                }
+                struct_map[VALUE_AS_STRING(index)] = value;
+                push(vm, {Value_Type::STRUCT, struct_map});
+            }
+            else if (obj.type == Value_Type::VECTOR)
+            {
+                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
+                if (index.type != Value_Type::NUMBER)
+                {
+                    vm_error("Invalid index type for vector access");
+                }
+                if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
+                {
+                    vm_error("Index out of bounds");
+                }
+                vec[(int)VALUE_AS_NUMBER(index)] = value;
+                push(vm, {Value_Type::VECTOR, vec});
+            }
+            else
+            {
+                vm_error("Invalid type for access");
+            }
+            )";
             break;
         }
 

@@ -13,6 +13,9 @@ for (let i = 0; i < 10; i = i + 1) {
     head = node;
 }
 
+print head["next"]["value"];
+head["next"]["value"] = 10;
+
 for (let i = head; i["next"] != -1; i = i["next"]) {
     print i["value"];
 }
