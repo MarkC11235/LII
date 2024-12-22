@@ -436,11 +436,7 @@ void vm_loop(bool verbose)
         if (obj.type == Value_Type::STRUCT)
         {
             std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
-            //check if the key exists
-            if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
-            {
-                vm_error("Key does not exist in struct");
-            }
+            //if the key does not exist, it will be added
             struct_map[VALUE_AS_STRING(index)] = value;
             push(&vm, {Value_Type::STRUCT, struct_map});
         }

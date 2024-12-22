@@ -1,0 +1,5 @@
+{f = function () {15, 4, 30, }, l = [1, 2, 3], n = null, name = Bob, s = {inner = hello}}
+1
+[1, 2, 3]
+null
+{inner = hello}

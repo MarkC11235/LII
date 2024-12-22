@@ -112,3 +112,9 @@ clean:
 	@for i in tests/*.temp; do \
 		rm -f $$i; \
 	done
+	@for i in tests_2/*.temp; do \
+		rm -f $$i; \
+	done
+	@for i in jit_functions/*; do \
+		rm -f $$i; \
+	done
