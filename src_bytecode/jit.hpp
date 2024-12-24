@@ -175,32 +175,54 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_EQ:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
-            Value b = pop(vm);                                                                        
-            if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){                       
-                push(vm, {Value_Type::BOOL, VALUE_AS_STRING(a) == VALUE_AS_STRING(b)});                 
-            }                                                                                      
-            else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){                 
-                push(vm, {Value_Type::BOOL, VALUE_AS_NUMBER(a) == VALUE_AS_NUMBER(b)});                 
-            }                                                                                      
-            else{                                                                                  
-                push(vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) == VALUE_AS_BOOL(b)});                    
+            // If both are strings, compare the strings
+            // Else compare the bool values
+            Value a = pop(vm);
+            Value b = pop(vm);
+            if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
+                push(vm, {Value_Type::BOOL, VALUE_AS_STRING(a) == VALUE_AS_STRING(b)});
+            }
+            else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+                push(vm, {Value_Type::BOOL, VALUE_AS_NUMBER(a) == VALUE_AS_NUMBER(b)});
+            }
+            // Needs to be in this order 
+            // If both are null, return true
+            else if(a.type == Value_Type::NULL_VALUE && b.type == Value_Type::NULL_VALUE){
+                push(vm, {Value_Type::BOOL, true});
+            }
+            // If one of them is null, return false
+            else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
+                push(vm, {Value_Type::BOOL, false});
+            }
+            else{
+                push(vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) == VALUE_AS_BOOL(b)});
             })";
             break;
         }
         case OpCode::OP_NEQ:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
-            Value b = pop(vm);                                                                        
-            if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){                       
-                push(vm, {Value_Type::BOOL, VALUE_AS_STRING(a) != VALUE_AS_STRING(b)});                 
-            }                                                                                      
-            else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){                 
-                push(vm, {Value_Type::BOOL, VALUE_AS_NUMBER(a) != VALUE_AS_NUMBER(b)});                 
-            }                                                                                      
-            else{                                                                                  
-                push(vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) != VALUE_AS_BOOL(b)});                    
+            // If both are strings, compare the strings
+            // Else compare the bool values
+            Value a = pop(vm);
+            Value b = pop(vm);
+            if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
+                push(vm, {Value_Type::BOOL, VALUE_AS_STRING(a) != VALUE_AS_STRING(b)});
+            }
+            else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
+                push(vm, {Value_Type::BOOL, VALUE_AS_NUMBER(a) != VALUE_AS_NUMBER(b)});
+            }
+            // Needs to be in this order 
+            // If both are null, return false        
+            else if(a.type == Value_Type::NULL_VALUE && b.type == Value_Type::NULL_VALUE){
+                push(vm, {Value_Type::BOOL, false});
+            }
+            // If one of them is null, return true
+            else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
+                push(vm, {Value_Type::BOOL, true});
+            }
+            else{
+                push(vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) != VALUE_AS_BOOL(b)});
             })";
             break;
         }
@@ -481,11 +503,7 @@ void jit_compile_function(VM* vm, function* func)
             if (obj.type == Value_Type::STRUCT)
             {
                 std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
-                //check if the key exists
-                if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
-                {
-                    vm_error("Key does not exist in struct");
-                }
+                //if the key does not exist, it will be added
                 struct_map[VALUE_AS_STRING(index)] = value;
                 push(vm, {Value_Type::STRUCT, struct_map});
             }

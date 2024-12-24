@@ -28,7 +28,7 @@ typedef std::variant<
                     bool, // BOOL
                     std::string, // STRING
                     std::vector<Value>, // VECTOR
-                    function*,
+                    function*, // FUNCTION
                     std::nullptr_t, // NULL_VALUE
                     std::map<std::string, Value> // STRUCT
                     > Value_Content;

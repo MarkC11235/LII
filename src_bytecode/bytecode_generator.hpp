@@ -290,9 +290,17 @@ inline void WRITE_VALUE(const std::string &value)
     constants.push_back({Value_Type::STRING, value});
 }
 
+
+// TODO: fix
+// slightly janky, nullptr values go into this function as well
 inline void WRITE_VALUE(function *value)
 {
+    if(value == nullptr){
+        // std::cout << "Function is null" << std::endl;
+        constants.push_back({Value_Type::NULL_VALUE, nullptr});
+    } else {
     constants.push_back({Value_Type::FUNCTION, value});
+    }
 }
 
 inline void WRITE_VALUE(Value value)
@@ -517,6 +525,11 @@ void choose_expr_operand(Node *node, function *func)
         break;
     case NodeType::NUM_NODE:
         WRITE_VALUE(std::stod(opStr));
+        WRITE_BYTE(OpCode::OP_LOAD, func);
+        WRITE_BYTE(constants.size() - 1, func);
+        break;
+    case NodeType::NULL_NODE:
+        WRITE_VALUE(nullptr);
         WRITE_BYTE(OpCode::OP_LOAD, func);
         WRITE_BYTE(constants.size() - 1, func);
         break;

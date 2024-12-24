@@ -168,6 +168,15 @@ void vm_loop(bool verbose)
         else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
             push(&vm, {Value_Type::BOOL, VALUE_AS_NUMBER(a) == VALUE_AS_NUMBER(b)});
         }
+        // Needs to be in this order 
+        // If both are null, return true
+        else if(a.type == Value_Type::NULL_VALUE && b.type == Value_Type::NULL_VALUE){
+            push(&vm, {Value_Type::BOOL, true});
+        }
+        // If one of them is null, return false
+        else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
+            push(&vm, {Value_Type::BOOL, false});
+        }
         else{
             push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) == VALUE_AS_BOOL(b)});
         }
@@ -184,6 +193,15 @@ void vm_loop(bool verbose)
         }
         else if(a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER){
             push(&vm, {Value_Type::BOOL, VALUE_AS_NUMBER(a) != VALUE_AS_NUMBER(b)});
+        }
+        // Needs to be in this order 
+        // If both are null, return false        
+        else if(a.type == Value_Type::NULL_VALUE && b.type == Value_Type::NULL_VALUE){
+            push(&vm, {Value_Type::BOOL, false});
+        }
+        // If one of them is null, return true
+        else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
+            push(&vm, {Value_Type::BOOL, true});
         }
         else{
             push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) != VALUE_AS_BOOL(b)});

@@ -321,7 +321,9 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
                 break;
             }
             case TokenType::NULL_TOKEN: {
-                parsing_error("Syntax error: null cannot be used in expressions", token);
+                //parsing_error("Syntax error: null cannot be used in expressions", token);
+                Node* null_node = new Node(NodeType::NULL_NODE, "null");
+                values.push(null_node);
                 break;
             }
             case TokenType::STD_LIB_TOKEN: {

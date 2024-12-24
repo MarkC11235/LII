@@ -73,6 +73,9 @@ time_jit:
 	@echo "Timing $(INPUT_FILE) with jit enabled\n"
 	@$(EXE) $(INPUT_FILE) -jit -t
 
+compile_latex:
+	@pdflatex paper.tex
+
 debug:
 	@echo "Running $(INPUT_FILE) in debug mode\n"
 	@$(EXE) $(INPUT_FILE) -d -vV
