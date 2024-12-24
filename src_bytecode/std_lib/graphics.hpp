@@ -3,6 +3,9 @@
 
 #include <string>
 #include <iostream>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 #ifdef __has_include
 #if __has_include(<SDL2/SDL.h>)
@@ -10,7 +13,34 @@
 
     SDL_Window *win = nullptr;
     SDL_Renderer *ren = nullptr;
+    std::vector<SDL_Event> eventQueue;
+    std::mutex eventMutex;
+    std::atomic<bool> running(true);
+    std::thread eventThread;
 
+    /*
+    Event thread to handle SDL events.
+    Pushes events to the event queue that can be processed by the main thread.
+    */
+    void event_thread() {
+        SDL_Event event;
+        while (running) {
+            while (SDL_PollEvent(&event)) {
+                std::lock_guard<std::mutex> lock(eventMutex);
+                eventQueue.push_back(event);
+                if (event.type == SDL_QUIT) {
+                    running = false;
+                }
+            }
+            SDL_Delay(10); // Small delay to prevent high CPU usage
+        }
+    }
+
+    /*
+    Create a window and renderer for graphics output.
+    Needs to be called before any other graphics functions.
+    Sets up the event thread to handle events.
+    */
     int init_graphics(std::string title, int width, int height) {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
@@ -32,24 +62,64 @@
             return 1;
         }
 
+        eventThread = std::thread(event_thread);
+
         return 0;
     }
 
+    /*
+    Close the window and renderer.
+    Ends the event thread.
+    To be called when done with graphics output.
+    */
     void close_graphics() {
+        running = false;
+        eventThread.join();
+
         SDL_DestroyRenderer(ren);
         SDL_DestroyWindow(win);
         SDL_Quit();
     }
 
+    std::vector<Value> get_events() {
+        std::vector<Value> events;
+        std::lock_guard<std::mutex> lock(eventMutex);
+        for (auto &event : eventQueue) {
+            switch (event.type) {
+                case SDL_QUIT:
+                    events.push_back({Value_Type::STRING, "quit"});
+                    break;
+                case SDL_KEYDOWN:
+                    events.push_back({Value_Type::STRING, "keydown"});
+                    break;
+                default:
+                    events.push_back({Value_Type::STRING, "unknown"});
+                    break;
+            }
+        }
+        eventQueue.clear();
+        return events;
+    }
+
+    /*
+    Clear the screen to black.
+    */
     void clear_screen() {
         SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
         SDL_RenderClear(ren);
     }
 
+    /*
+    Update the screen with any changes made since the last update.
+    */
     void update_screen() {
         SDL_RenderPresent(ren);
     }
 
+    /*
+    Draw a rectangle on the screen.
+    Top-left corner is at (x, y), with width w and height h.
+    */
     void draw_rect(int x, int y, int w, int h) {
         SDL_Rect rect;
         rect.x = x;
@@ -62,7 +132,7 @@
     }
 
 #else
-    // SDL2 is not available, provide alternative implementations or stubs
+    // SDL2 is not available, provide alternative implementations or error messages
 
     int init_graphics(std::string title, int width, int height) {
         std::cerr << "Graphics not supported (SDL2 not available)" << std::endl;

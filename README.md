@@ -2,8 +2,9 @@
 
 ## **Intro**
 
-CastleLang is a dynamically typed, interpreted language. The language is designed to be easy to use and read. 
+CastleLang is a dynamically typed, interpreted language. Everything is passed by value. The language is designed to be easy to use and read. 
 The Castle Vitual Machine runs .cl_exe files. These files are compiled from .cl files which are written in CastleLang.
+
 
 To Use:
 

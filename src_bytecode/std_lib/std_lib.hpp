@@ -12,8 +12,9 @@
 #include "strings.hpp" // include the string functions
 #include "vectors.hpp" // include the vector functions
 #include "files.hpp" 
-//#include "graphics.hpp"
+#include "graphics.hpp"
 #include "random.hpp"
+#include "misc.hpp"
 
 
 //Allowed mappings of LII types to C++ types
@@ -86,14 +87,20 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"run_python_file", make_std_lib_function(run_python_file), "void", {"std::string"}},
 
     // graphics functions
-    // {"init_graphics", make_std_lib_function(init_graphics), "int", {"std::string", "int", "int"}},
-    // {"close_graphics", make_std_lib_function(close_graphics), "void", {}},
-    // {"clear_screen", make_std_lib_function(clear_screen), "void", {}},
-    // {"update_screen", make_std_lib_function(update_screen), "void", {}},
-    // {"draw_rect", make_std_lib_function(draw_rect), "void", {"int", "int", "int", "int"}},
+    {"event_thread", make_std_lib_function(event_thread), "void", {}},
+    {"get_events", make_std_lib_function(get_events), "std::vector<Value>", {}},
+    {"init_graphics", make_std_lib_function(init_graphics), "int", {"std::string", "int", "int"}},
+    {"close_graphics", make_std_lib_function(close_graphics), "void", {}},
+    {"clear_screen", make_std_lib_function(clear_screen), "void", {}},
+    {"update_screen", make_std_lib_function(update_screen), "void", {}},
+    {"draw_rect", make_std_lib_function(draw_rect), "void", {"int", "int", "int", "int"}},
 
     // random functions
     {"random_number", make_std_lib_function(random_number), "int", {"int", "int"}},
+
+    // misc functions
+    {"exit_program", make_std_lib_function(exit_program), "void", {"std::string"}},
+    {"wait", make_std_lib_function(wait), "void", {"double"}}
     
 };  
 

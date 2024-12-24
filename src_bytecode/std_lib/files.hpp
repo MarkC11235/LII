@@ -12,6 +12,9 @@
 std::string directory_path; // the directory path of the file that is being executed
                             // this is so the user can use relative paths in the file that is being executed instead of paths relative to the lii executable
 
+/*
+Takes in a file path and writes a string to the file
+*/
 void file_write(std::string file_path, std::string content){
     std::ofstream File(directory_path + file_path);
 
@@ -20,7 +23,9 @@ void file_write(std::string file_path, std::string content){
     File.close();
 }
 
-
+/*
+Reads a file and returns the content as a single string
+*/
 std::string file_read(std::string file_path){
     std::cout << "Reading file: " << directory_path + file_path << std::endl;
     std::ifstream file(directory_path + file_path);
@@ -34,6 +39,9 @@ std::string file_read(std::string file_path){
 }
 
 
+/*
+Runs a python file using the python3 command
+*/
 void run_python_file(std::string file_path){
     std::string command = "python3 " + file_path;
     system(command.c_str());
