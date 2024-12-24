@@ -172,8 +172,8 @@ The Parser takes in a list of tokens and creates an abstract syntax tree using r
 The Bytecode Generator takes in an abstract syntax tree and generates 
     1. bytecode
     2. constants array
+        - Numbers, Strings, Functions, null, and bools
     3. variable names array
-    4. function definitions
 
 4. Virtual Machine  
 The Virtual Machine takes in the bytecode generator output and steps through the bytecode array. The VM uses a stack to evaluate expressions and call functions.
