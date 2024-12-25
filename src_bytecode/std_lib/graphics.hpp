@@ -22,7 +22,7 @@
     Event thread to handle SDL events.
     Pushes events to the event queue that can be processed by the main thread.
     */
-    void event_thread() {
+    int event_thread() {
         SDL_Event event;
         while (running) {
             while (SDL_PollEvent(&event)) {
@@ -34,6 +34,8 @@
             }
             SDL_Delay(10); // Small delay to prevent high CPU usage
         }
+
+        return 0;
     }
 
     /*
@@ -72,13 +74,15 @@
     Ends the event thread.
     To be called when done with graphics output.
     */
-    void close_graphics() {
+    int close_graphics() {
         running = false;
         eventThread.join();
 
         SDL_DestroyRenderer(ren);
         SDL_DestroyWindow(win);
         SDL_Quit();
+
+        return 0;
     }
 
     std::vector<Value> get_events() {
@@ -104,23 +108,27 @@
     /*
     Clear the screen to black.
     */
-    void clear_screen() {
+    int clear_screen() {
         SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
         SDL_RenderClear(ren);
+
+        return 0;
     }
 
     /*
     Update the screen with any changes made since the last update.
     */
-    void update_screen() {
+    int update_screen() {
         SDL_RenderPresent(ren);
+
+        return 0;
     }
 
     /*
     Draw a rectangle on the screen.
     Top-left corner is at (x, y), with width w and height h.
     */
-    void draw_rect(int x, int y, int w, int h) {
+    int draw_rect(int x, int y, int w, int h) {
         SDL_Rect rect;
         rect.x = x;
         rect.y = y;
@@ -129,6 +137,8 @@
 
         SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
         SDL_RenderFillRect(ren, &rect);
+
+        return 0;
     }
 
 #else
@@ -139,20 +149,24 @@
         return 1;
     }
 
-    void close_graphics() {
+    int close_graphics() {
         std::cerr << "Graphics not supported (SDL2 not available)" << std::endl;
+        return 1;
     }
 
-    void clear_screen() {
+    int clear_screen() {
         std::cerr << "Graphics not supported (SDL2 not available)" << std::endl;
+        return 1;
     }
 
-    void update_screen() {
+    int update_screen() {
         std::cerr << "Graphics not supported (SDL2 not available)" << std::endl;
+        return 1;
     }
 
-    void draw_rect(int x, int y, int w, int h) {
+    int draw_rect(int x, int y, int w, int h) {
         std::cerr << "Graphics not supported (SDL2 not available)" << std::endl;
+        return 1;
     }
 
 #endif

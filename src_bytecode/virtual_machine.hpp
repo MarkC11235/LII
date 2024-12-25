@@ -627,6 +627,10 @@ void vm_loop(bool verbose)
                 push(&vm, std::any_cast<Value>(result));
             }
         }
+        else
+        {
+            vm_error("Invalid return type: void");
+        }
 
         break;
     }

@@ -39,8 +39,8 @@ template<typename Return, typename... Args>
 STD_LIB_FUNCTION make_std_lib_function(Return (*function)(Args...));
 
 // test functions
-void do_nothing(){
-    // do nothing
+int do_nothing(){
+    return 0;
 }
 
 double test(){
@@ -53,7 +53,7 @@ double inc(double a){
 
 const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     // test functions
-    {"do_nothing", make_std_lib_function(do_nothing), "void", {}}, 
+    {"do_nothing", make_std_lib_function(do_nothing), "int", {}}, 
     {"test", make_std_lib_function(test), "double", {}},
     {"inc", make_std_lib_function(inc), "double", {"double"}},
 
@@ -63,7 +63,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"string_len", make_std_lib_function(string_len), "int", {"std::string"}},
     {"char_at", make_std_lib_function(char_at), "std::string", {"std::string", "int"}},
     {"replace_char", make_std_lib_function(replace_char), "std::string", {"std::string", "int", "std::string"}},
-    {"print_colored_text", make_std_lib_function(print_colored_text), "void", {"std::string", "std::string"}},
+    {"print_colored_text", make_std_lib_function(print_colored_text), "int", {"std::string", "std::string"}},
     {"string_to_vector", make_std_lib_function(string_to_vector), "std::vector<Value>", {"std::string"}},
     {"string_split", make_std_lib_function(string_split), "std::vector<Value>", {"std::string", "std::string"}},
     
@@ -82,31 +82,31 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"vector_concat", make_std_lib_function(vector_concat), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
     
     // file functions
-    {"file_write", make_std_lib_function(file_write), "void", {"std::string", "std::string"}},
-    {"file_write_lines", make_std_lib_function(file_write_lines), "void", {"std::string", "std::vector<Value>"}},
+    {"file_write", make_std_lib_function(file_write), "int", {"std::string", "std::string"}},
+    {"file_write_lines", make_std_lib_function(file_write_lines), "int", {"std::string", "std::vector<Value>"}},
     {"file_read", make_std_lib_function(file_read), "std::string", {"std::string"}},
     {"file_read_lines", make_std_lib_function(file_read_lines), "std::vector<Value>", {"std::string"}},
     {"stdin_read", make_std_lib_function(stdin_read), "std::string", {}},
-    {"csv_write", make_std_lib_function(csv_write), "void", {"std::string", "std::vector<Value>"}},
-    {"csv_read", make_std_lib_function(csv_read), "std::vector<Value>", {"std::string"}},
-    {"run_python_file", make_std_lib_function(run_python_file), "void", {"std::string"}},
+    {"csv_write", make_std_lib_function(csv_write), "int", {"std::string", "std::vector<Value>"}},
+    {"csv_read", make_std_lib_function(csv_read), "std::vector<Value>", {"std::string"}}, // Returns a vector of vectors of strings
+    {"run_python_file", make_std_lib_function(run_python_file), "int", {"std::string"}},
 
     // graphics functions
-    {"event_thread", make_std_lib_function(event_thread), "void", {}},
+    // {"event_thread", make_std_lib_function(event_thread), "void", {}}, // Don't need to expose this function
     {"get_events", make_std_lib_function(get_events), "std::vector<Value>", {}},
     {"init_graphics", make_std_lib_function(init_graphics), "int", {"std::string", "int", "int"}},
-    {"close_graphics", make_std_lib_function(close_graphics), "void", {}},
-    {"clear_screen", make_std_lib_function(clear_screen), "void", {}},
-    {"update_screen", make_std_lib_function(update_screen), "void", {}},
-    {"draw_rect", make_std_lib_function(draw_rect), "void", {"int", "int", "int", "int"}},
+    {"close_graphics", make_std_lib_function(close_graphics), "int", {}},
+    {"clear_screen", make_std_lib_function(clear_screen), "int", {}},
+    {"update_screen", make_std_lib_function(update_screen), "int", {}},
+    {"draw_rect", make_std_lib_function(draw_rect), "int", {"int", "int", "int", "int"}},
 
     // random functions
     {"random_number", make_std_lib_function(random_number), "int", {"int", "int"}},
 
     // misc functions
-    {"exit_program", make_std_lib_function(exit_program), "void", {"std::string"}},
-    {"wait", make_std_lib_function(wait), "void", {"double"}},
-    {"system_command", make_std_lib_function(system_command), "void", {"std::string"}}
+    {"exit_program", make_std_lib_function(exit_program), "int", {"std::string"}},
+    {"wait", make_std_lib_function(wait), "int", {"double"}},
+    {"system_command", make_std_lib_function(system_command), "int", {"std::string"}}
     
 };  
 

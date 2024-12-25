@@ -6,7 +6,7 @@ x
 function|function (x) {16, 1, 18, 1, 30, }
 string|tester.calc
 number|1
-20
+21
 15
 0
 16
@@ -19,6 +19,7 @@ number|1
 36
 37
 0
+36
 37
 1
 36

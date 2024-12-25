@@ -20,7 +20,7 @@ void std_lib_error(const std::string &function, const std::string &error){
     std::cerr << "Error in function " << function << ": " << error << std::endl;
     std::cout << RESET_TEXT;
 
-    exit(1); // not the best way to handle errors, but it's fine for now
+    exit(1); // TODO: not the best way to handle errors, but it's fine for now
 }
 
 

@@ -15,18 +15,20 @@ std::string directory_path; // the directory path of the file that is being exec
 /*
 Takes in a file path and writes a string to the file
 */
-void file_write(std::string file_path, std::string content){
+int file_write(std::string file_path, std::string content){
     std::ofstream File(directory_path + file_path);
 
     File << content;
 
     File.close();
+
+    return 0;
 }
 
 /*
 Takes in a file path and writes a vector of strings line by line to the file
 */
-void file_write_lines(std::string file_path, std::vector<Value> lines){
+int file_write_lines(std::string file_path, std::vector<Value> lines){
     std::ofstream File(directory_path + file_path);
 
     for(int i = 0; i < (int)lines.size(); i++){
@@ -34,6 +36,8 @@ void file_write_lines(std::string file_path, std::vector<Value> lines){
     }
 
     File.close();
+
+    return 0;
 }
 
 /*
@@ -76,7 +80,7 @@ std::string stdin_read(){
 /*
 Writes a vector of vectors of strings to a csv file
 */
-void csv_write(std::string file_path, std::vector<Value> lines){
+int csv_write(std::string file_path, std::vector<Value> lines){
     std::ofstream file(directory_path + file_path);
 
     for(int i = 0; i < (int)lines.size(); i++){
@@ -91,6 +95,8 @@ void csv_write(std::string file_path, std::vector<Value> lines){
     }
 
     file.close();
+
+    return 0;
 }
 
 /*
@@ -120,9 +126,11 @@ std::vector<Value> csv_read(std::string file_path){
 /*
 Runs a python file using the python3 command
 */
-void run_python_file(std::string file_path){
+int run_python_file(std::string file_path){
     std::string command = "python3 " + file_path;
     system(command.c_str());
+
+    return 0;
 }
 
 

@@ -17,7 +17,7 @@
 
 #define RESET_TEXT "\033[0m"
 
-void print_colored_text(std::string text, std::string color){
+int print_colored_text(std::string text, std::string color){
     if(color == "red"){
         std::cout << RED_TEXT; 
     } else if(color == "green"){
@@ -30,9 +30,11 @@ void print_colored_text(std::string text, std::string color){
         std::cout << WHITE_TEXT;
     } else {
         std_lib_error("print_colored_text", "unknown color [" + color + "]");
+        return 1;
     }
 
     std::cout << text << std::endl << RESET_TEXT;
+    return 0;
 }
 
 std::string string_concat(std::string a, std::string b){

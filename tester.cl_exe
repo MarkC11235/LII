@@ -1,14 +1,18 @@
 ./tester
-0
 2
-string|echo 'Hello, world!'
-string|ls
-8
+e
+x
+1
+number|2.718282
+11
 15
 0
+16
+0
 37
-41
-15
+0
+16
 1
-37
-41
+18
+1
+36

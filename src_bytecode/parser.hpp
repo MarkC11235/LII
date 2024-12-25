@@ -1040,14 +1040,15 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             current->add_child(break_node);
         }
             break;
-        case TokenType::STD_LIB_TOKEN:
-            place_token_back(tokens, token); // parse_expr expects the std lib token
-            parse_expr(tokens, current);
-            token = pop(tokens);
-            if(token.get_type() != TokenType::SEMICOLON_TOKEN){
-                parsing_error("Syntax error: expected ';'", token);
-            }
-            break;
+        // Don't want to allow std lib calls outside of expressions
+        // case TokenType::STD_LIB_TOKEN:
+        //     place_token_back(tokens, token); // parse_expr expects the std lib token
+        //     parse_expr(tokens, current);
+        //     token = pop(tokens);
+        //     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+        //         parsing_error("Syntax error: expected ';'", token);
+        //     }
+        //     break;
         default:
             parsing_error("Syntax error: expected statement", token);
     }
