@@ -24,10 +24,23 @@ void file_write(std::string file_path, std::string content){
 }
 
 /*
+Takes in a file path and writes a vector of strings line by line to the file
+*/
+void file_write_lines(std::string file_path, std::vector<Value> lines){
+    std::ofstream File(directory_path + file_path);
+
+    for(int i = 0; i < (int)lines.size(); i++){
+        File << VALUE_AS_STRING(lines[i]) << std::endl;
+    }
+
+    File.close();
+}
+
+/*
 Reads a file and returns the content as a single string
 */
 std::string file_read(std::string file_path){
-    std::cout << "Reading file: " << directory_path + file_path << std::endl;
+    //std::cout << "Reading file: " << directory_path + file_path << std::endl;
     std::ifstream file(directory_path + file_path);
     std::string content(
         (std::istreambuf_iterator<char>(file)), // This creates an input iterator that reads characters from the input stream file.
@@ -38,6 +51,71 @@ std::string file_read(std::string file_path){
     return content;
 }
 
+/*
+Reads a file and returns the lines as a vector of strings
+*/
+std::vector<Value> file_read_lines(std::string file_path){
+    std::ifstream file(directory_path + file_path);
+    std::vector<Value> lines;
+    std::string line;
+    while(std::getline(file, line)){
+        lines.push_back({Value_Type::STRING, line});
+    }
+    return lines;
+}
+
+/*
+Reads a line from stdin
+*/
+std::string stdin_read(){
+    std::string input;
+    std::getline(std::cin, input);
+    return input;
+}
+
+/*
+Writes a vector of vectors of strings to a csv file
+*/
+void csv_write(std::string file_path, std::vector<Value> lines){
+    std::ofstream file(directory_path + file_path);
+
+    for(int i = 0; i < (int)lines.size(); i++){
+        std::vector<Value> row = VALUE_AS_VECTOR(lines[i]);
+        for(int j = 0; j < (int)row.size(); j++){
+            file << VALUE_AS_STRING(row[j]);
+            if(j != (int)row.size() - 1){
+                file << ",";
+            }
+        }
+        file << std::endl;
+    }
+
+    file.close();
+}
+
+/*
+Reads a csv file and returns the content as a vector of vectors of strings
+*/
+std::vector<Value> csv_read(std::string file_path){
+    std::ifstream file(directory_path + file_path);
+    std::vector<Value> lines;
+    std::string line;
+    while(std::getline(file, line)){
+        std::vector<Value> row;
+        std::string cell;
+        for(int i = 0; i < (int)line.size(); i++){
+            if(line[i] == ','){
+                row.push_back({Value_Type::STRING, cell});
+                cell = "";
+            }else{
+                cell += line[i];
+            }
+        }
+        row.push_back({Value_Type::STRING, cell});
+        lines.push_back({Value_Type::VECTOR, row});
+    }
+    return lines;
+}
 
 /*
 Runs a python file using the python3 command
@@ -46,6 +124,7 @@ void run_python_file(std::string file_path){
     std::string command = "python3 " + file_path;
     system(command.c_str());
 }
+
 
 
 #endif // FILES_HPP

@@ -83,7 +83,12 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     
     // file functions
     {"file_write", make_std_lib_function(file_write), "void", {"std::string", "std::string"}},
+    {"file_write_lines", make_std_lib_function(file_write_lines), "void", {"std::string", "std::vector<Value>"}},
     {"file_read", make_std_lib_function(file_read), "std::string", {"std::string"}},
+    {"file_read_lines", make_std_lib_function(file_read_lines), "std::vector<Value>", {"std::string"}},
+    {"stdin_read", make_std_lib_function(stdin_read), "std::string", {}},
+    {"csv_write", make_std_lib_function(csv_write), "void", {"std::string", "std::vector<Value>"}},
+    {"csv_read", make_std_lib_function(csv_read), "std::vector<Value>", {"std::string"}},
     {"run_python_file", make_std_lib_function(run_python_file), "void", {"std::string"}},
 
     // graphics functions
@@ -100,7 +105,8 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
 
     // misc functions
     {"exit_program", make_std_lib_function(exit_program), "void", {"std::string"}},
-    {"wait", make_std_lib_function(wait), "void", {"double"}}
+    {"wait", make_std_lib_function(wait), "void", {"double"}},
+    {"system_command", make_std_lib_function(system_command), "void", {"std::string"}}
     
 };  
 

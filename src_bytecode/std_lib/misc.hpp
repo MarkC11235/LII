@@ -15,4 +15,8 @@ void wait(double seconds){
     while (clock() < endwait) {}
 }
 
+void system_command(std::string command){
+    system(command.c_str());
+}
+
 #endif // MISC_HPP
