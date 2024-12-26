@@ -15,6 +15,12 @@ To Use:
 5. Run the command 'lii your-file.cl'
 
 
+## **Syntax Highlighting for Visual Studio Code**
+
+https://marketplace.visualstudio.com/items?itemName=MarkCastle.cl  
+
+Extension Name: CastleLang Theme
+
 ## **Values**
 
 Types of Values

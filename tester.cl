@@ -1,3 +1,6 @@
-let e = 2.7182818284590452353602874713527;
-let x = $do_nothing();
+let x = 5;
 print x;
+
+for (let i = 0; i < 10; i = i + 1) {
+    print i;
+}
