@@ -15,6 +15,7 @@
 #include "graphics.hpp"
 #include "random.hpp"
 #include "misc.hpp"
+#include "http_utils.hpp"
 
 
 //Allowed mappings of LII types to C++ types
@@ -114,8 +115,11 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     // misc functions
     {"exit_program", make_std_lib_function(exit_program), "int", {"std::string"}},
     {"wait", make_std_lib_function(wait), "int", {"double"}},
-    {"system_command", make_std_lib_function(system_command), "int", {"std::string"}}
-    
+    {"system_command", make_std_lib_function(system_command), "int", {"std::string"}},
+
+    // http functions
+    {"start_server", make_std_lib_function(start_server), "int", {"int"}},
+    {"stop_server", make_std_lib_function(stop_server), "int", {}}    
 };  
 
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){

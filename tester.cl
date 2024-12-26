@@ -1,13 +1,23 @@
-let point2 = struct{
-    let x = 0;
-    let y = 0;
-};
+let res = $start_server(8080);
+if(res == 0){
+    print "Server started";
+}
+else{
+    print "Server failed to start";
+}
+// for(let i = 0; i < 10; i = i + 1){
+//     let res = $get_request();
+//     print(res);
+// }
 
-let point_extended = struct{
-    let z = 0;
-    let q = 0;
-};
+for(let i = 0; i < 3; i = i + 1){
+    let res = $wait(1);
+}
 
-let new_map = $map_extend(point2, point_extended);
-
-print new_map;
+let res = $stop_server();
+if(res == 0){
+    print "Server stopped";
+}
+else{
+    print "Server failed to stop";
+}
