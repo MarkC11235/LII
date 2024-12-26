@@ -5,22 +5,20 @@ if(res == 0){
 else{
     print "Server failed to start";
 }
+// for(let i = 0; i < 10; i = i + 1){
+//     let res = $get_request();
+//     print(res);
+// }
 
 for(let i = 0; i < 10; i = i + 1){
-    let req = $pop_request();
+    let req = $get_request();
     print req;
     if($map_size(req) == 0){
         print "No request";
     }
     else{
-        let response = struct{
-            let status = "HTTP/1.1 200 OK";
-            let content_type = "Content-Type: text/html";
-            let content_length = "Content-Length: 5";
-            let body = "Hello " + $random_number(0, 100);
-        };
-        let res = $push_response(req["client_fd"], response);
-        print res;
+        let res = $send_response(req["client_fd"], "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 5\r\n\r\nHello");
+        break;
     }
     let res = $wait(1);
 }

@@ -630,8 +630,7 @@ void vm_loop(bool verbose)
             {
                 push(&vm, std::any_cast<Value>(result));
             }
-            else
-            {
+            else{
                 vm_error("Invalid return type: " + func.return_type);
             }
         }

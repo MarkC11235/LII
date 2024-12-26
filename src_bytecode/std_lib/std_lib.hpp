@@ -16,6 +16,7 @@
 #include "random.hpp"
 #include "misc.hpp"
 #include "http_utils.hpp"
+#include "maps.hpp"
 
 
 //Allowed mappings of LII types to C++ types
@@ -90,6 +91,9 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"vector_reverse", make_std_lib_function(vector_reverse), "std::vector<Value>", {"std::vector<Value>"}},
     {"vector_concat", make_std_lib_function(vector_concat), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
     
+    // map functions
+    {"map_size", make_std_lib_function(map_size), "int", {"std::map<std::string, Value>"}},
+    
     // file functions
     {"file_write", make_std_lib_function(file_write), "int", {"std::string", "std::string"}},
     {"file_write_lines", make_std_lib_function(file_write_lines), "int", {"std::string", "std::vector<Value>"}},
@@ -119,7 +123,9 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
 
     // http functions
     {"start_server", make_std_lib_function(start_server), "int", {"int"}},
-    {"stop_server", make_std_lib_function(stop_server), "int", {}}    
+    {"stop_server", make_std_lib_function(stop_server), "int", {}},
+    {"pop_request", make_std_lib_function(pop_request), "std::map<std::string, Value>", {}},
+    {"push_response", make_std_lib_function(push_response), "int", {"int", "std::map<std::string, Value>"}},
 };  
 
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){
