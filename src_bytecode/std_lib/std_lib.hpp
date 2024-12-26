@@ -51,11 +51,19 @@ double inc(double a){
     return a + 1;
 }
 
+std::map<std::string, Value> map_extend(std::map<std::string, Value> a, std::map<std::string, Value> b){
+    for(auto it = b.begin(); it != b.end(); it++){
+        a[it->first] = it->second;
+    }
+    return a;
+}
+
 const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     // test functions
     {"do_nothing", make_std_lib_function(do_nothing), "int", {}}, 
     {"test", make_std_lib_function(test), "double", {}},
     {"inc", make_std_lib_function(inc), "double", {"double"}},
+    {"map_extend", make_std_lib_function(map_extend), "std::map<std::string, Value>", {"std::map<std::string, Value>", "std::map<std::string, Value>"}},
 
     // string functions
     {"string_concat", make_std_lib_function(string_concat), "std::string", {"std::string", "std::string"}},
@@ -150,6 +158,11 @@ bool LII_type_matches_cpp_type(Value value, std::string type){
         case FUNCTION:
             return false;
             break;
+        case STRUCT:
+            if(type == "std::map<std::string, Value>"){
+                return true;
+            }
+            break;
         default:
             break;
     }
@@ -173,6 +186,9 @@ bool any_type_check(std::any value, std::string type){
     }else if(type == "std::vector<Value>"){
         return value.type() == typeid(std::vector<Value>);
     }
+    else if(type == "std::map<std::string, Value>"){
+        return value.type() == typeid(std::map<std::string, Value>);
+    }
     else if(type == "Value"){
         return true; // Value can be used as a generic type
     }
@@ -193,7 +209,10 @@ std::any cast_LII_type_to_cpp_type(Value value, std::string type){
         return VALUE_AS_STRING(value);
     }else if(type == "std::vector<Value>"){
         return VALUE_AS_VECTOR(value);
-    }else if(type == "Value"){
+    }else if(type == "std::map<std::string, Value>"){
+        return VALUE_AS_STRUCT(value);
+    }
+    else if(type == "Value"){
         return std::any(value);
     }
     else{

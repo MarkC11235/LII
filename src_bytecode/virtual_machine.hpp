@@ -622,9 +622,17 @@ void vm_loop(bool verbose)
             {
                 push(&vm, {Value_Type::VECTOR, std::any_cast<std::vector<Value>>(result)});
             }
+            else if (func.return_type == "std::map<std::string, Value>")
+            {
+                push(&vm, {Value_Type::STRUCT, std::any_cast<std::map<std::string, Value>>(result)});
+            }
             else if (func.return_type == "Value")
             {
                 push(&vm, std::any_cast<Value>(result));
+            }
+            else
+            {
+                vm_error("Invalid return type: " + func.return_type);
             }
         }
         else
