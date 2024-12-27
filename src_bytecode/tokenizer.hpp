@@ -22,6 +22,7 @@ enum TokenType {
     BREAK_TOKEN,
     CONTINUE_TOKEN,
     IF_TOKEN,
+    ELSE_IF_TOKEN,
     ELSE_TOKEN,
     OPENPAR_TOKEN,
     CLOSEPAR_TOKEN,
@@ -72,6 +73,8 @@ std::string token_type_to_string(TokenType type){
             return "CONTINUE";
         case TokenType::IF_TOKEN:
             return "IF";
+        case TokenType::ELSE_IF_TOKEN:
+            return "ELSE_IF";
         case TokenType::ELSE_TOKEN:
             return "ELSE";
         case TokenType::OPENPAR_TOKEN:
@@ -326,26 +329,28 @@ std::vector<Token> analyze(std::string input, int line_number){
                     std::string identifier = "";
                     while(true)
                     {
-                        bool clear_identifier = false; // if you just clear inside the if, then the dot gets attached to the next identifier
+                        // bool clear_identifier = false; // if you just clear inside the if, then the dot gets attached to the next identifier
                         if(!(i < int(input.length()) 
                             && (isalnum(input[i]) || input[i] == '_')
                             && input[i] != ' ')){
                             
-                            if(i < int(input.length()) && input[i] == '.'){
-                                tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
-                                clear_identifier = true;
-                                tokens.push_back(Token(TokenType::ACCESSOR_TOKEN, ".", line_number));
-                            }
-                            else{
-                                break;
-                            }
+                            // if(i < int(input.length()) && input[i] == '.'){
+                            //     tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
+                            //     clear_identifier = true;
+                            //     tokens.push_back(Token(TokenType::ACCESSOR_TOKEN, ".", line_number));
+                            // }
+                            // else{
+                            //     break;
+                            // }
+
+                            break;
                         }
 
 
                         identifier += input[i];
-                        if(clear_identifier){
-                            identifier = "";
-                        }
+                        // if(clear_identifier){
+                        //     identifier = "";
+                        // }
                         i++;
                         //std::cout << identifier << std::endl;
                     }
@@ -354,7 +359,16 @@ std::vector<Token> analyze(std::string input, int line_number){
                         tokens.push_back(Token(TokenType::IF_TOKEN, "if", line_number));
                     }
                     else if(identifier == "else"){
-                        tokens.push_back(Token(TokenType::ELSE_TOKEN, "else", line_number));
+                        // tokens.push_back(Token(TokenType::ELSE_TOKEN, "else", line_number));
+
+                        //check if its an else if
+                        if(i + 3 < int(input.length()) && input[i+1] == ' ' && input[i + 2] == 'i' && input[i + 3] == 'f'){
+                            tokens.push_back(Token(TokenType::ELSE_IF_TOKEN, "else if", line_number));
+                            i += 3;
+                        }
+                        else{
+                            tokens.push_back(Token(TokenType::ELSE_TOKEN, "else", line_number));
+                        }
                     }
                     else if(identifier == "return"){
                         tokens.push_back(Token(TokenType::RETURN_TOKEN, "return", line_number));

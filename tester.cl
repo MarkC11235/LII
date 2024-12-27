@@ -1,10 +1,11 @@
-let http_req = struct{
-    let method = "GET";
-    let path = "/";
-    let version = "HTTP/1.1";
-    let headers = struct{
-        let Host = "localhost";
-    };
-}; 
-let res = $send_request("127.0.0.1", 8080, http_req);
-print res;
+let cond = 1;
+
+if(cond == 1){
+    print "cond is 1";
+}
+else if(cond == 2){
+    print "cond is 2";
+}
+else{
+    print "cond is neither 1 nor 2";
+}

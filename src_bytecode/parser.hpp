@@ -759,6 +759,75 @@ void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const /
 }
 
 void parse_if(std::vector<Token>& tokens, Node* current){
+    // Node* if_node = new Node(NodeType::IF_NODE, "");
+    // current->add_child(if_node);
+
+    // Token token = pop(tokens);
+    // if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    //     parsing_error("Syntax error: expected '('", token);
+    // }
+
+    // // Parse the condition
+    // Node* expr = new Node(NodeType::EXPR_NODE, "");
+    // if_node->add_child(expr);
+    // parse_expr(tokens, expr);
+
+    // token = pop(tokens);
+    // if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+    //     parsing_error("Syntax error: expected ')'", token);
+    // }
+
+    // // if block 
+    // token = pop(tokens);
+    // if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+    //     parsing_error("Syntax error: expected '{'", token);
+    // }
+
+    // if(peek(tokens).get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are statements inside the if block
+    //     Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
+    //     if_node->add_child(stmt_list);
+    //     parse_stmt_list(tokens, stmt_list);
+    // }
+
+    // token = pop(tokens);
+    // if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+    //     parsing_error("Syntax error: expected '}'", token);
+    // }
+
+
+    // // else block 
+    // // Check for else
+    // token = peek(tokens);
+    // if(token.get_type() != TokenType::ELSE_TOKEN){
+    //     return; // No else block
+    // }
+
+    // // Parse else
+    // pop(tokens);
+
+    // token = pop(tokens);
+    // if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+    //     parsing_error("Syntax error: expected '{'", token);
+    // }
+
+    // // Check if there are statements inside the else block
+    // if(peek(tokens).get_type() == TokenType::CLOSEBRACKET_TOKEN){
+    //     pop(tokens);
+    //     return; // Empty else block
+    // }
+
+    // // Parse else block
+    // Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
+    // if_node->add_child(stmt_list);
+    // parse_stmt_list(tokens, stmt_list);
+
+    // token = pop(tokens);
+    // if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+    //     parsing_error("Syntax error: expected '}'", token); 
+    // }
+
+    // parse if block
+
     Node* if_node = new Node(NodeType::IF_NODE, "");
     current->add_child(if_node);
 
@@ -777,15 +846,15 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected ')'", token);
     }
 
-    // if block 
     token = pop(tokens);
     if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
         parsing_error("Syntax error: expected '{'", token);
     }
 
+
+    Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
+    if_node->add_child(stmt_list);
     if(peek(tokens).get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are statements inside the if block
-        Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
-        if_node->add_child(stmt_list);
         parse_stmt_list(tokens, stmt_list);
     }
 
@@ -794,38 +863,60 @@ void parse_if(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected '}'", token);
     }
 
+    // parse else if blocks (if they exist)
 
-    // else block 
-    // Check for else
-    token = peek(tokens);
-    if(token.get_type() != TokenType::ELSE_TOKEN){
-        return; // No else block
+    while(peek(tokens).get_type() == TokenType::ELSE_IF_TOKEN){
+        pop(tokens); // Skip the 'else if' keyword
+        if(pop(tokens).get_type() != TokenType::OPENPAR_TOKEN){
+            parsing_error("Syntax error: expected '('", token);
+        }
+
+        // Parse the condition
+        Node* expr = new Node(NodeType::EXPR_NODE, "");
+        if_node->add_child(expr);
+        parse_expr(tokens, expr);
+
+        token = pop(tokens);
+        if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+            parsing_error("Syntax error: expected ')'", token);
+        }
+
+        token = pop(tokens);
+        if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+            parsing_error("Syntax error: expected '{'", token);
+        }
+
+        Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
+        if_node->add_child(stmt_list);
+        if(peek(tokens).get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are statements inside the if block
+            parse_stmt_list(tokens, stmt_list);
+        }
+
+        token = pop(tokens);
+        if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+            parsing_error("Syntax error: expected '}'", token);
+        }
     }
 
-    // Parse else
-    pop(tokens);
+    // parse else block (if it exists)
+    if(peek(tokens).get_type() == TokenType::ELSE_TOKEN){
+        pop(tokens); // Skip the 'else' keyword
+        token = pop(tokens);
+        if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+            parsing_error("Syntax error: expected '{'", token);
+        }
 
-    token = pop(tokens);
-    if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
-        parsing_error("Syntax error: expected '{'", token);
+        Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
+        if_node->add_child(stmt_list);
+        if(peek(tokens).get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are statements inside the if block
+            parse_stmt_list(tokens, stmt_list);
+        }
+
+        token = pop(tokens);
+        if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+            parsing_error("Syntax error: expected '}'", token);
+        }
     }
-
-    // Check if there are statements inside the else block
-    if(peek(tokens).get_type() == TokenType::CLOSEBRACKET_TOKEN){
-        pop(tokens);
-        return; // Empty else block
-    }
-
-    // Parse else block
-    Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
-    if_node->add_child(stmt_list);
-    parse_stmt_list(tokens, stmt_list);
-
-    token = pop(tokens);
-    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
-        parsing_error("Syntax error: expected '}'", token); 
-    }
-
 }
 
 void parse_return(std::vector<Token>& tokens, Node* current){
