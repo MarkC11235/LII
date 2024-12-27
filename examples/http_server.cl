@@ -3,22 +3,35 @@ if(res == 0){
     print "Server started";
 }
 else{
-    print "Server failed to start";
+    let res = $exit_program("Server failed to start");
 }
-// for(let i = 0; i < 10; i = i + 1){
-//     let res = $get_request();
-//     print(res);
-// }
 
-for(let i = 0; i < 10; i = i + 1){
-    let req = $get_request();
+for(;;){
+    if($server_should_close() == true){
+        break;
+    }
+
+    let req = $pop_request();
     print req;
     if($map_size(req) == 0){
         print "No request";
     }
     else{
-        let res = $send_response(req["client_fd"], "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 5\r\n\r\nHello");
-        break;
+        let body = "Hello ";
+        if(req["path"] == "/"){
+            body = body + "World";
+        }
+        else{
+            body = body + "Hackerman";
+        }
+        let response = struct{
+            let status = "HTTP/1.1 200 OK";
+            let content_type = "Content-Type: text/html";
+            let content_length = "Content-Length: 5";
+            let body = body;
+        };
+        let res = $push_response(req["client_fd"], response);
+        print res;
     }
     let res = $wait(1);
 }
@@ -28,5 +41,5 @@ if(res == 0){
     print "Server stopped";
 }
 else{
-    print "Server failed to stop";
+    let res = $exit_program("Server failed to stop");
 }

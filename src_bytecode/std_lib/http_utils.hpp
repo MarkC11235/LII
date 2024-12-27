@@ -17,11 +17,13 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <csignal>
 
 
 #include "../Value.hpp"
 
 std::atomic<bool> server_running(true);
+std::atomic<bool> sever_should_close(false);
 std::thread server_thread;
 int sockfd;
 
@@ -55,16 +57,35 @@ std::vector<std::string> split(const std::string& s, const std::string& delimite
     return tokens;
 }
 
+std::vector<std::string> split_first(const std::string& s, const std::string& delimiter) {
+    std::vector<std::string> tokens;
+    size_t pos = s.find(delimiter);
+
+    if (pos != std::string::npos) {
+        tokens.push_back(s.substr(0, pos));
+        tokens.push_back(s.substr(pos + delimiter.length()));
+    } else {
+        tokens.push_back(s); // No delimiter found, return the whole string
+    }
+
+    return tokens;
+}
+
 std::map<std::string, Value> parse_request(const std::string& request){
     std::map<std::string, Value> parsed_request;
+    std::cout << "Parsing request: " << request << std::endl;
 
     // split the request into lines
     std::vector<std::string> lines = split(request, "\r\n");
+    for(int i = 0; i < (int)lines.size(); i++){
+        std::cout << "Line " << i << ": " << lines[i] << std::endl;
+    }
 
     // parse the first line
     std::vector<std::string> first_line = split(lines[0], " ");
     if(first_line.size() != 3){
-        std::cerr << "Invalid request\n";
+        parsed_request.clear();
+        parsed_request["error"] = Value{Value_Type::STRING, "Invalid request"};
         return parsed_request;
     }
 
@@ -75,9 +96,15 @@ std::map<std::string, Value> parse_request(const std::string& request){
     // parse the headers
     std::map<std::string, Value> headers;
     for(int i = 1; i < (int)lines.size(); i++){
-        std::vector<std::string> header = split(lines[i], ": ");
-        if(header.size() != 2){
-            std::cerr << "Invalid header\n";
+        std::vector<std::string> header = split_first(lines[i], ": ");
+        if(header.size() == 1){
+            break; // end of headers
+        }
+        else if(header.size() != 2){
+            std::cout << "Header size: " << header.size() << std::endl;
+            std::cout << "Invalid header " << i << ": " << lines[i] << std::endl;
+            parsed_request.clear();
+            parsed_request["error"] = Value{Value_Type::STRING, "Invalid header"};
             return parsed_request;
         }
 
@@ -86,7 +113,7 @@ std::map<std::string, Value> parse_request(const std::string& request){
 
     parsed_request["headers"] = Value{Value_Type::STRUCT, headers};
 
-    // parse the body
+    // TODO: parse the body
 
 
     return parsed_request;
@@ -94,14 +121,16 @@ std::map<std::string, Value> parse_request(const std::string& request){
 
 void handle_client(int client_fd) {
     try {
-        char buffer[256] = {0};
+        //char buffer[256] = {0};
+        constexpr int buffer_size = 1024*1024;
+        char buffer[buffer_size] = {0};
         ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received < 0) {
             std::cerr << "Error reading from socket\n";
             close(client_fd);
             return;
         }
-        else if(bytes_received > 255) {
+        else if(bytes_received > buffer_size-1) {
             std::cerr << "Request too large\n";
             close(client_fd);
             return;
@@ -111,6 +140,12 @@ void handle_client(int client_fd) {
 
         // parse the request
         std::map<std::string, Value> request = parse_request(buffer);
+
+        if(request.find("error") != request.end() && request.size() == 1){
+            std::cerr << VALUE_AS_STRING(request["error"]) << std::endl;
+            close(client_fd);
+            return;
+        }
 
         // push the request to the queue
         {
@@ -180,11 +215,30 @@ int server_loop(int sockfd) {
     return 0;
 }
 
+void signal_handler(int signal) {
+    if (signal == SIGINT || signal == SIGTERM) {
+        std::cerr << "Signal received, stopping server...\n";
+        sever_should_close = true;
+    }
+}
+
 int start_server(int port) {
     try {
+        std::signal(SIGINT, signal_handler);
+        std::signal(SIGTERM, signal_handler);
+
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0) {
             std::cerr << "Failed to create socket\n";
+            return 1;
+        }
+
+        // Set the SO_REUSEADDR option
+        // fixes issue with trying to start the server soon after it was stopped
+        int opt = 1;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+            std::cerr << "Failed to set SO_REUSEADDR\n";
+            close(sockfd);
             return 1;
         }
 
@@ -214,6 +268,10 @@ int start_server(int port) {
         std::cerr << "Unknown exception in start_server" << std::endl;
         return 1;
     }
+}
+
+bool server_should_close() {
+    return sever_should_close;
 }
 
 int stop_server() {
