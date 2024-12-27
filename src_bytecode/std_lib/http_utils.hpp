@@ -18,9 +18,12 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <csignal>
+#include <netdb.h>
 
 
 #include "../Value.hpp"
+
+// HTTP SERVER
 
 std::atomic<bool> server_running(true);
 std::atomic<bool> sever_should_close(false);
@@ -40,6 +43,12 @@ int stop_server();
 std::map<std::string, Value> pop_request();
 int push_response(int client_fd, std::map<std::string, Value> response);
 int send_response(int client_fd);
+
+std::map<std::string, Value> make_error_map(const std::string& error) {
+    std::map<std::string, Value> error_map;
+    error_map["error"] = Value{Value_Type::STRING, error};
+    return error_map;
+}
 
 // Function to split a string by a delimiter
 std::vector<std::string> split(const std::string& s, const std::string& delimiter) {
@@ -375,5 +384,97 @@ int send_response(int client_fd) {
 
     return 1;
 }
+
+
+// HTTP CLIENT
+
+std::string build_request(std::map<std::string, Value> request) {
+    std::string request_str = VALUE_AS_STRING(request["method"]) + " " + VALUE_AS_STRING(request["path"]) + " HTTP/1.1\r\n";
+
+    if(request.find("headers") == request.end()){
+        request["headers"] = Value{Value_Type::STRUCT, std::map<std::string, Value>()};
+    }
+    std::map<std::string, Value> headers = VALUE_AS_STRUCT(request["headers"]);
+    for (const auto& [key, value] : headers) {
+        request_str += key + ": " + VALUE_AS_STRING(value) + "\r\n";
+    }
+
+    request_str += "\r\n";
+
+    if(request.find("body") == request.end()){
+        request["body"] = Value{Value_Type::STRING, ""};
+    }
+    std::map<std::string, Value> body = VALUE_AS_STRUCT(request["body"]);
+    if (body.size() > 0) {
+        request_str += VALUE_AS_STRING(body["body"]);
+    }
+
+    return request_str;
+}
+
+std::map<std::string, Value> send_request(std::string host, int port, std::map<std::string, Value> request) {
+    try {
+        int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) {
+            std::cerr << "Failed to create socket\n";
+            return make_error_map("Failed to create socket");
+        }
+
+        struct hostent* server = gethostbyname(host.c_str());
+        if (server == nullptr) {
+            std::cerr << "Failed to get host\n";
+            close(sockfd);
+            return make_error_map("Failed to get host");
+        }
+
+        struct sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        memcpy(&addr.sin_addr.s_addr, server->h_addr, server->h_length);
+
+        if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+            std::cerr << "Failed to connect\n";
+            close(sockfd);
+            return make_error_map("Failed to connect");
+        }
+
+        
+        std::string request_str = build_request(request);
+        if (send(sockfd, request_str.c_str(), request_str.size(), 0) < 0) {
+            std::cerr << "Failed to send request\n";
+            close(sockfd);
+            return make_error_map("Failed to send request");
+        }
+
+        constexpr int buffer_size = 1024*1024;
+        char buffer[buffer_size] = {0};
+        ssize_t bytes_received = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received < 0) {
+            std::cerr << "Error reading from socket\n";
+            close(sockfd);
+            return make_error_map("Error reading from socket");
+        }
+        else if(bytes_received > buffer_size-1) {
+            std::cerr << "Response too large\n";
+            close(sockfd);
+            return make_error_map("Response too large");
+        }
+
+        buffer[bytes_received] = '\0';
+
+        close(sockfd);
+
+        std::map<std::string, Value> response;
+        response["body"] = Value{Value_Type::STRING, std::string(buffer)};
+        return response;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in send_request: " << e.what() << std::endl;
+        return make_error_map("Exception in send_request");
+    } catch (...) {
+        std::cerr << "Unknown exception in send_request" << std::endl;
+        return make_error_map("Unknown exception in send_request");
+    }
+}
+
 
 #endif // HTTP_UTILS_HPP

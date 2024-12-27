@@ -27,7 +27,7 @@ for(;;){
         let response = struct{
             let status = "HTTP/1.1 200 OK";
             let content_type = "Content-Type: text/html";
-            let content_length = "Content-Length: 5";
+            let content_length = "Content-Length: " + $string_len(body);
             let body = body;
         };
         let res = $push_response(req["client_fd"], response);

@@ -126,7 +126,11 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"stop_server", make_std_lib_function(stop_server), "int", {}},
     {"pop_request", make_std_lib_function(pop_request), "std::map<std::string, Value>", {}},
     {"push_response", make_std_lib_function(push_response), "int", {"int", "std::map<std::string, Value>"}},
-    {"server_should_close", make_std_lib_function(server_should_close), "bool", {}}
+    {"server_should_close", make_std_lib_function(server_should_close), "bool", {}},
+
+
+    // http client functions
+    {"send_request", make_std_lib_function(send_request), "std::map<std::string, Value>", {"std::string", "int", "std::map<std::string, Value>"}},
 };  
 
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){
