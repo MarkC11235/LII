@@ -680,35 +680,68 @@ void interpret_if(Node *node, function *func)
         interpretation_error("If doesn't start with IF Node", node, func);
     }
 
+    int start_byte = func->count;
+
     interpret_expr(node->get_child(0), func);
     WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
     WRITE_BYTE(0, func); // Placeholder for the jump index
     int jump_if_false_byte = func->count - 1;
 
     WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the if block
-
     interpret_stmt_list(node->get_child(1), func);
-
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the if block
+    WRITE_BYTE(OpCode::OP_JUMP, func); // Jump to the end of the if, else if, else block becasue the if block was executed
+    WRITE_BYTE(0, func); // Placeholder for the jump index
+    FLAG_BYTE(func->count - 1, "if_executed", func);
 
     CHANGE_BYTE(jump_if_false_byte, func->count - 1, func); // Jump to the end of the if block
 
-    // check if there is an else block
-    if (node->get_children().size() == 3)
+    int current_index = 2;
+    while (node->get_children().size() > current_index && node->get_child(current_index)->get_type() == NodeType::EXPR_NODE)
     {
-        WRITE_BYTE(OpCode::OP_JUMP, func); // Jump to the end of the else block, because the if block was executed
-        WRITE_BYTE(0, func);               // Placeholder for the jump index of the end of the else block
-        int jump_byte = func->count - 1;
+        interpret_expr(node->get_child(current_index), func);
+        WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
+        WRITE_BYTE(0, func); // Placeholder for the jump index
+        jump_if_false_byte = func->count - 1;
 
+        WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the else if block
+        interpret_stmt_list(node->get_child(current_index + 1), func);
+        WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the else if block
+        WRITE_BYTE(OpCode::OP_JUMP, func); // Jump to the end of the if, else if, else block becasue the else if block was executed
+        WRITE_BYTE(0, func); // Placeholder for the jump index
+        FLAG_BYTE(func->count - 1, "if_executed", func);
+
+        CHANGE_BYTE(jump_if_false_byte, func->count - 1, func); // Jump to the end of the else if block
+
+        current_index+=2;
+    }
+
+    // check if there is an else block
+    if (node->get_children().size() % 2 == 1) // There is an else block (no condition, just stmt_list)
+    {
         CHANGE_BYTE(jump_if_false_byte, func->count - 1, func); // Jump to the else block
 
         WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the else block
-
-        interpret_stmt_list(node->get_child(2), func);
-
+        interpret_stmt_list(node->get_child(node->get_children().size() - 1), func);
         WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the else block
+    }
 
-        CHANGE_BYTE(jump_byte, func->count - 1, func); // Jump to the end of the else block
+    //find all if_executed falgs from the start of the if block to the end of the else block
+    // find all flagged bytes from start_byte to the end of the for loop
+    std::vector<int> indices_to_remove;
+    for(int i = 0; i < (int)func->flags.size(); i++){
+        if(std::get<1>(func->flags[i]) == "if_executed"){
+            if(std::get<0>(func->flags[i]) >= start_byte && std::get<0>(func->flags[i]) < func->count){
+                // change the jump index to the end of the else block
+                CHANGE_BYTE(std::get<0>(func->flags[i]), func->count - 1, func); // -1 because the vm will increment the ip
+                //func->flags.erase(func->flags.begin() + i);
+                indices_to_remove.push_back(i);
+            }
+        }
+    }
+
+    for(int i = 0; i < (int)indices_to_remove.size(); i++){
+        func->flags.erase(func->flags.begin() + indices_to_remove[i]);
     }
 }
 

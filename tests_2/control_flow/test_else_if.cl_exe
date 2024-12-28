@@ -1,4 +1,4 @@
-./tester
+./tests_2/control_flow/test_else_if
 1
 cond
 11

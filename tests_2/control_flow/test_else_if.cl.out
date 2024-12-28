@@ -1,0 +1,6 @@
+cond is not 1, 2 or 3
+cond is 1
+cond is 2
+cond is 3
+cond is not 1, 2 or 3
+done
