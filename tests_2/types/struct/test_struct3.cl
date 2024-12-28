@@ -1,4 +1,4 @@
-let Person = struct{
+let Person = map{
     let name = "Bob";
 };
 

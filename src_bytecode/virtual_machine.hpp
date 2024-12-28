@@ -344,35 +344,35 @@ void vm_loop(bool verbose)
         break;
     }
 
-    // Struct operations
-    case OpCode::OP_CREATE_STRUCT:
+    // Map operations
+    case OpCode::OP_CREATE_MAP:
     {
-        push(&vm, {Value_Type::STRUCT, std::map<std::string, Value>()});
+        push(&vm, {Value_Type::MAP, std::map<std::string, Value>()});
         break;
     }
-    case OpCode::OP_UPDATE_STRUCT_ELEMENT:
+    case OpCode::OP_UPDATE_MAP_ELEMENT:
     {
         Value value = pop(&vm);
-        Value struct_ = get_variable(&vm, vm.variable_names[get_ip(&vm)[1]]);
-        if (struct_.type != Value_Type::STRUCT)
+        Value map_ = get_variable(&vm, vm.variable_names[get_ip(&vm)[1]]);
+        if (map_.type != Value_Type::MAP)
         {
-            vm_error("Not a struct");
+            vm_error("Not a map");
         }
-        std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);
-        struct_map[vm.variable_names[get_ip(&vm)[2]]] = value;
-        update_variable(&vm, vm.variable_names[get_ip(&vm)[1]], {Value_Type::STRUCT, struct_map});
+        std::map<std::string, Value> map_map = VALUE_AS_MAP(map_);
+        map_map[vm.variable_names[get_ip(&vm)[2]]] = value;
+        update_variable(&vm, vm.variable_names[get_ip(&vm)[1]], {Value_Type::MAP, map_map});
         increase_ip(&vm, 2);
         break;
     }
-    case OpCode::OP_LOAD_STRUCT_ELEMENT:
+    case OpCode::OP_LOAD_MAP_ELEMENT:
     {
-        Value struct_ = get_variable(&vm, vm.variable_names[get_ip(&vm)[1]]);
-        if (struct_.type != Value_Type::STRUCT)
+        Value map_ = get_variable(&vm, vm.variable_names[get_ip(&vm)[1]]);
+        if (map_.type != Value_Type::MAP)
         {
-            vm_error("Not a struct");
+            vm_error("Not a map");
         }
-        std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(struct_);
-        push(&vm, struct_map[vm.variable_names[get_ip(&vm)[2]]]);
+        std::map<std::string, Value> map_map = VALUE_AS_MAP(map_);
+        push(&vm, map_map[vm.variable_names[get_ip(&vm)[2]]]);
         increase_ip(&vm, 2);
         break;
     }
@@ -380,15 +380,15 @@ void vm_loop(bool verbose)
     {
         Value index = pop(&vm);
         Value obj = pop(&vm);
-        if (obj.type == Value_Type::STRUCT)
+        if (obj.type == Value_Type::MAP)
         {
-            std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+            std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
             //check if the key exists
-            if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+            if (map_map.find(VALUE_AS_STRING(index)) == map_map.end())
             {
-                vm_error("Key does not exist in struct");
+                vm_error("Key does not exist in map");
             }
-            push(&vm, struct_map[VALUE_AS_STRING(index)]);
+            push(&vm, map_map[VALUE_AS_STRING(index)]);
         }
         else if (obj.type == Value_Type::VECTOR)
         {
@@ -416,15 +416,15 @@ void vm_loop(bool verbose)
         push(&vm, obj);
         push(&vm, index);
 
-        if (obj.type == Value_Type::STRUCT)
+        if (obj.type == Value_Type::MAP)
         {
-            std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+            std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
             //check if the key exists
-            if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+            if (map_map.find(VALUE_AS_STRING(index)) == map_map.end())
             {
-                vm_error("Key does not exist in struct");
+                vm_error("Key does not exist in map");
             }
-            push(&vm, struct_map[VALUE_AS_STRING(index)]);
+            push(&vm, map_map[VALUE_AS_STRING(index)]);
         }
         else if (obj.type == Value_Type::VECTOR)
         {
@@ -451,12 +451,12 @@ void vm_loop(bool verbose)
         Value index = pop(&vm);
         Value obj = pop(&vm);
     
-        if (obj.type == Value_Type::STRUCT)
+        if (obj.type == Value_Type::MAP)
         {
-            std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+            std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
             //if the key does not exist, it will be added
-            struct_map[VALUE_AS_STRING(index)] = value;
-            push(&vm, {Value_Type::STRUCT, struct_map});
+            map_map[VALUE_AS_STRING(index)] = value;
+            push(&vm, {Value_Type::MAP, map_map});
         }
         else if (obj.type == Value_Type::VECTOR)
         {
@@ -624,7 +624,7 @@ void vm_loop(bool verbose)
             }
             else if (func.return_type == "std::map<std::string, Value>")
             {
-                push(&vm, {Value_Type::STRUCT, std::any_cast<std::map<std::string, Value>>(result)});
+                push(&vm, {Value_Type::MAP, std::any_cast<std::map<std::string, Value>>(result)});
             }
             else if (func.return_type == "Value")
             {

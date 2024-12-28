@@ -173,7 +173,7 @@ bool LII_type_matches_cpp_type(Value value, std::string type){
         case FUNCTION:
             return false;
             break;
-        case STRUCT:
+        case MAP:
             if(type == "std::map<std::string, Value>"){
                 return true;
             }
@@ -225,7 +225,7 @@ std::any cast_LII_type_to_cpp_type(Value value, std::string type){
     }else if(type == "std::vector<Value>"){
         return VALUE_AS_VECTOR(value);
     }else if(type == "std::map<std::string, Value>"){
-        return VALUE_AS_STRUCT(value);
+        return VALUE_AS_MAP(value);
     }
     else if(type == "Value"){
         return std::any(value);

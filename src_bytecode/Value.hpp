@@ -17,7 +17,7 @@ enum Value_Type{
     VECTOR,
     FUNCTION,
     NULL_VALUE,
-    STRUCT,
+    MAP,
 };
 
 // forward declare Value for the typedef
@@ -30,7 +30,7 @@ typedef std::variant<
                     std::vector<Value>, // VECTOR
                     function*, // FUNCTION
                     std::nullptr_t, // NULL_VALUE
-                    std::map<std::string, Value> // STRUCT
+                    std::map<std::string, Value> // MAP
                     > Value_Content;
 
 struct Value{
@@ -67,8 +67,8 @@ Value_Type get_value_type_from_string(std::string type){
         return Value_Type::FUNCTION;
     } else if(type == "null"){
         return Value_Type::NULL_VALUE;
-    } else if(type == "struct"){
-        return Value_Type::STRUCT;
+    } else if(type == "map"){
+        return Value_Type::MAP;
     } else {
         return Value_Type::NULL_VALUE;
     }
@@ -88,8 +88,8 @@ std::string get_value_type_string(Value value){
             return "function";
         case NULL_VALUE:
             return "null";
-        case STRUCT:
-            return "struct";
+        case MAP:
+            return "map";
         default:
             return "unknown"; // Should never reach here, but to avoid warnings
     }
@@ -179,7 +179,7 @@ std::string VALUE_AS_STRING(Value value){
         }
         case NULL_VALUE:
             return "null";
-        case STRUCT:
+        case MAP:
         {
             std::string str = "{";
 
@@ -220,9 +220,9 @@ function* VALUE_AS_FUNCTION(Value value){
     return nullptr; // will never reach here
 }
 
-std::map<std::string, Value> VALUE_AS_STRUCT(Value value){
+std::map<std::string, Value> VALUE_AS_MAP(Value value){
     switch(value.type){
-        case STRUCT:
+        case MAP:
             return std::get<std::map<std::string, Value>>(value.data);
         default:
             return {}; // Should never reach here, but to avoid warnings

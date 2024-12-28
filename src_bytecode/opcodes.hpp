@@ -110,7 +110,7 @@ enum OpCode{
                 var type is the next byte -> 
                     0: normal variable (number, bool, string, function, null)
                     1: vector
-                    2: struct
+                    2: map
     */
     OP_UPDATE_VAR, 
     /*
@@ -150,36 +150,36 @@ enum OpCode{
     */
     OP_UPDATE_VECTOR_ELEMENT,
 
-    // Structs
+    // maps
 
     /*
-    * OP_CREATE_STRUCT: Make an empty struct and push it onto the stack
+    * OP_CREATE_MAP: Make an empty map and push it onto the stack
     */
-    OP_CREATE_STRUCT, 
+    OP_CREATE_MAP, 
     /*
-    * OP_LOAD_STRUCT_ELEMENT: Load a value from the struct and push it onto the stack
-                Index of the struct in the variable names array is the next byte
-                Name of the element in the struct is the next byte
+    * OP_LOAD_MAP_ELEMENT: Load a value from the map and push it onto the stack
+                Index of the map in the variable names array is the next byte
+                Name of the element in the map is the next byte
     */
-    OP_LOAD_STRUCT_ELEMENT, 
+    OP_LOAD_MAP_ELEMENT, 
     /*
-    * OP_UPDATE_STRUCT_ELEMENT: Update a value in the struct
-                Index of the struct in the variable names array is the next byte
-                Name of the element in the struct is the next byte
+    * OP_UPDATE_MAP_ELEMENT: Update a value in the map
+                Index of the map in the variable names array is the next byte
+                Name of the element in the map is the next byte
                 The value to update is on the stack
     */
-    OP_UPDATE_STRUCT_ELEMENT, 
+    OP_UPDATE_MAP_ELEMENT, 
 
     /*
-    * OP_ACCESS: Access a value in a struct or vector
+    * OP_ACCESS: Access a value in a map or vector
                 Index is the top value on the stack
-                The struct or vector is below the index on the stack
+                The map or vector is below the index on the stack
     */
     OP_ACCESS,
     /*
-    * OP_ACCESS_FOR_UPDATE: Access a value in a struct or vector, then push the original value back onto the stack, then the index, then the value to update
+    * OP_ACCESS_FOR_UPDATE: Access a value in a map or vector, then push the original value back onto the stack, then the index, then the value to update
                             Index is the top value on the stack
-                            The struct or vector is below the index on the stack
+                            The map or vector is below the index on the stack
     */
     OP_ACCESS_FOR_UPDATE,
     /*
@@ -292,12 +292,12 @@ std::string opcode_to_string(CODE_SIZE op){
             return "OP_LOAD_VECTOR_ELEMENT";
         case OpCode::OP_UPDATE_VECTOR_ELEMENT:
             return "OP_UPDATE_VECTOR_ELEMENT";
-        case OpCode::OP_CREATE_STRUCT:
-            return "OP_CREATE_STRUCT";
-        case OpCode::OP_LOAD_STRUCT_ELEMENT:
-            return "OP_LOAD_STRUCT_ELEMENT";
-        case OpCode::OP_UPDATE_STRUCT_ELEMENT:
-            return "OP_UPDATE_STRUCT_ELEMENT";
+        case OpCode::OP_CREATE_MAP:
+            return "OP_CREATE_MAP";
+        case OpCode::OP_LOAD_MAP_ELEMENT:
+            return "OP_LOAD_MAP_ELEMENT";
+        case OpCode::OP_UPDATE_MAP_ELEMENT:
+            return "OP_UPDATE_MAP_ELEMENT";
         case OpCode::OP_ACCESS:
             return "OP_ACCESS";
         case OpCode::OP_ACCESS_FOR_UPDATE:

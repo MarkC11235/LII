@@ -120,7 +120,7 @@ std::map<std::string, Value> parse_request(const std::string& request){
         headers[header[0]] = Value{Value_Type::STRING, header[1]};
     }
 
-    parsed_request["headers"] = Value{Value_Type::STRUCT, headers};
+    parsed_request["headers"] = Value{Value_Type::MAP, headers};
 
     // TODO: parse the body
 
@@ -392,9 +392,9 @@ std::string build_request(std::map<std::string, Value> request) {
     std::string request_str = VALUE_AS_STRING(request["method"]) + " " + VALUE_AS_STRING(request["path"]) + " HTTP/1.1\r\n";
 
     if(request.find("headers") == request.end()){
-        request["headers"] = Value{Value_Type::STRUCT, std::map<std::string, Value>()};
+        request["headers"] = Value{Value_Type::MAP, std::map<std::string, Value>()};
     }
-    std::map<std::string, Value> headers = VALUE_AS_STRUCT(request["headers"]);
+    std::map<std::string, Value> headers = VALUE_AS_MAP(request["headers"]);
     for (const auto& [key, value] : headers) {
         request_str += key + ": " + VALUE_AS_STRING(value) + "\r\n";
     }
@@ -404,7 +404,7 @@ std::string build_request(std::map<std::string, Value> request) {
     if(request.find("body") == request.end()){
         request["body"] = Value{Value_Type::STRING, ""};
     }
-    std::map<std::string, Value> body = VALUE_AS_STRUCT(request["body"]);
+    std::map<std::string, Value> body = VALUE_AS_MAP(request["body"]);
     if (body.size() > 0) {
         request_str += VALUE_AS_STRING(body["body"]);
     }

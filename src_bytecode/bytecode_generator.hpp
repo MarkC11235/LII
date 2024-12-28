@@ -160,22 +160,14 @@ void display_bytecode(function *func)
             std::cout << std::endl;
             break;
 
-        // Structs
-        case OpCode::OP_CREATE_STRUCT:
-            std::cout << "OP_CREATE_STRUCT" << std::endl;
+        // maps
+        case OpCode::OP_CREATE_MAP:
+            std::cout << "OP_CREATE_MAP" << std::endl;
             break;
-        // case OpCode::OP_LOAD_STRUCT_ELEMENT:
-        //     std::cout << "OP_LOAD_STRUCT_ELEMENT";
-        //     std::cout << "          ";
-        //     std::cout << "Struct Name: " << variable_names[(int)func->code[++i]];
-        //     std::cout << "          ";
-        //     std::cout << "Element Name: " << variable_names[(int)func->code[++i]];
-        //     std::cout << std::endl;
-        //     break;
-        case OpCode::OP_UPDATE_STRUCT_ELEMENT:
-            std::cout << "OP_UPDATE_STRUCT_ELEMENT";
+        case OpCode::OP_UPDATE_MAP_ELEMENT:
+            std::cout << "OP_UPDATE_MAP_ELEMENT";
             std::cout << "          ";
-            std::cout << "Struct Name: " << variable_names[(int)func->code[++i]];
+            std::cout << "Map Name: " << variable_names[(int)func->code[++i]];
             std::cout << "          ";
             std::cout << "Element Name: " << variable_names[(int)func->code[++i]];
             std::cout << std::endl;
@@ -367,7 +359,7 @@ void interpret_function(Node *node, function *func);
 void interpret_function_call(Node *node, function *func);
 void interpret_std_lib_call(Node *node, function *func);
 void interpret_list(Node *node, function *func);
-void interpret_struct_assign(Node *node, function *func);
+void interpret_map_assign(Node *node, function *func);
 
 void interpretation_error(std::string message, Node *node, function *func)
 {
@@ -390,7 +382,7 @@ void interpretation_error(std::string message, Node *node, function *func)
 /*
 Takes a node that contains some kind of value
 Evaluates the value and pushes it to the stack
-Types: EXPR_NODE, FUNCTION_NODE, LIST_NODE, NULL_NODE, STRUCT_NODE
+Types: EXPR_NODE, FUNCTION_NODE, LIST_NODE, NULL_NODE, MAP_NODE
 */
 void evaluate(Node *value, function *func)
 {
@@ -419,12 +411,12 @@ void evaluate(Node *value, function *func)
         WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
     }
     break;
-    case NodeType::STRUCT_NODE:
+    case NodeType::MAP_NODE:
     {
-        // Create the struct
-        WRITE_BYTE(OpCode::OP_CREATE_STRUCT, func); // Create an empty struct
+        // Create the map
+        WRITE_BYTE(OpCode::OP_CREATE_MAP, func); // Create an empty map
 
-        // Assign the values to the struct
+        // Assign the values to the map
         Node *list = value->get_child(0);
         for (int i = 0; i < (int)list->get_children().size(); i++)
         {
@@ -432,7 +424,7 @@ void evaluate(Node *value, function *func)
             Node *assign = list->get_child(i);
             if (assign->get_type() != NodeType::ASSIGN_NODE)
             {
-                interpretation_error("Struct assignment doesn't start with ASSIGN Node", assign, func);
+                interpretation_error("Map assignment doesn't start with ASSIGN Node", assign, func);
             }
 
             //assign children
@@ -447,7 +439,7 @@ void evaluate(Node *value, function *func)
             WRITE_VALUE({Value_Type::STRING, assign_var_name});
 
             Node* assign_value = assign_children[1];
-            interpret_struct_assign(assign_value, func);   
+            interpret_map_assign(assign_value, func);   
         }
     }
     break;
@@ -548,31 +540,6 @@ void choose_expr_operand(Node *node, function *func)
             }
             WRITE_BYTE(get_variable_index(node->get_value()), func);
         }
-        // else if(node->get_children().size() == 1){ // Vector access or struct access
-        //     Node* child = node->get_child(0);
-        //     if(child->get_type() == NodeType::EXPR_NODE){ // Vector access
-        //         interpret_expr(child, func); // Expression for vector index, first on the stack
-        //         WRITE_BYTE(OpCode::OP_LOAD_VECTOR_ELEMENT, func); // Load the value from the vector
-        //         if(get_variable_index(opStr) == -1){
-        //             interpretation_error("Variable not found", node, func);
-        //         }
-        //         WRITE_BYTE(get_variable_index(opStr), func); // Index of the vector in the variables map
-        //     }
-        //     else if(child->get_type() == NodeType::VAR_NODE){ // Struct access
-        //         WRITE_BYTE(OpCode::OP_LOAD_STRUCT_ELEMENT, func); // Load the value from the struct
-        //         if(get_variable_index(node->get_value()) == -1){
-        //             interpretation_error("Variable not found", node, func);
-        //         }
-        //         WRITE_BYTE(get_variable_index(opStr), func); // Index of the struct in the variables map
-        //         if(get_variable_index(child->get_value()) == -1){
-        //             interpretation_error("Variable not found", node, func);
-        //         }
-        //         WRITE_BYTE(get_variable_index(child->get_value()), func); // Index of the struct element in the struct
-        //     }
-        //     else{
-        //         interpretation_error("Invalid child type for VAR Node", node, func);
-        //     }
-        // }
         else
         {
             interpretation_error("Invalid number of children for VAR Node", node, func);
@@ -807,11 +774,11 @@ void interpret_list(Node *node, function *func)
     }
 }
 
-void interpret_struct_assign(Node *node, function *func)
+void interpret_map_assign(Node *node, function *func)
 {
     evaluate(node, func);
 
-    // Store the value in the struct thats on the stack
+    // Store the value in the map thats on the stack
     WRITE_BYTE(OpCode::OP_UPDATE_STACK_ELEMENT, func);
 }
 
@@ -866,7 +833,7 @@ void interpret_update(Node *node, function *func)
         // make switch statement for different types of updates
         // expr
         // func
-        // struct
+        // map
         // vector
         // null
         //interpret_expr(node_children[1], func); // Expression to update variable with
@@ -881,7 +848,7 @@ void interpret_update(Node *node, function *func)
         WRITE_BYTE(index, func);
     }
     else
-    {                                           // Struct or vector update
+    {                                           // map or vector update
         // std::cout << "Object update" << std::endl;
         std::vector<Node *> variable_children = variable->get_children();
 
@@ -904,7 +871,7 @@ void interpret_update(Node *node, function *func)
         // make switch statement for different types of updates
         // expr
         // func
-        // struct
+        // map
         // vector
         // null
         //interpret_expr(node_children[1], func); // Expression to update variable with

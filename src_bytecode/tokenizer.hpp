@@ -15,7 +15,7 @@ enum TokenType {
     CONST_TOKEN,
     ASSIGNMENT_TOKEN,
     FUNC_TOKEN,
-    STRUCT_TOKEN,
+    MAP_TOKEN,
     ACCESSOR_TOKEN,
     WHILE_TOKEN,
     FOR_TOKEN,
@@ -59,8 +59,8 @@ std::string token_type_to_string(TokenType type){
             return "ASSIGNMENT";
         case TokenType::FUNC_TOKEN:
             return "FUNC";
-        case TokenType::STRUCT_TOKEN:
-            return "STRUCT";
+        case TokenType::MAP_TOKEN:
+            return "MAP";
         case TokenType::ACCESSOR_TOKEN:
             return "ACCESSOR";
         case TokenType::WHILE_TOKEN:
@@ -394,8 +394,8 @@ std::vector<Token> analyze(std::string input, int line_number){
                     else if(identifier == "null"){
                         tokens.push_back(Token(TokenType::NULL_TOKEN, "null", line_number));
                     }
-                    else if(identifier == "struct"){
-                        tokens.push_back(Token(TokenType::STRUCT_TOKEN, "struct", line_number));
+                    else if(identifier == "map"){
+                        tokens.push_back(Token(TokenType::MAP_TOKEN, "map", line_number));
                     }
                     else if(identifier == "const"){
                         tokens.push_back(Token(TokenType::CONST_TOKEN, "const", line_number));

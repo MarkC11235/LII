@@ -70,12 +70,12 @@ label_16:
             Value index = pop(vm);
             Value obj = pop(vm);
         
-            if (obj.type == Value_Type::STRUCT)
+            if (obj.type == Value_Type::MAP)
             {
-                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
                 //if the key does not exist, it will be added
-                struct_map[VALUE_AS_STRING(index)] = value;
-                push(vm, {Value_Type::STRUCT, struct_map});
+                map_map[VALUE_AS_STRING(index)] = value;
+                push(vm, {Value_Type::MAP, map_map});
             }
             else if (obj.type == Value_Type::VECTOR)
             {
@@ -134,12 +134,12 @@ label_25:
             Value index = pop(vm);
             Value obj = pop(vm);
         
-            if (obj.type == Value_Type::STRUCT)
+            if (obj.type == Value_Type::MAP)
             {
-                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
                 //if the key does not exist, it will be added
-                struct_map[VALUE_AS_STRING(index)] = value;
-                push(vm, {Value_Type::STRUCT, struct_map});
+                map_map[VALUE_AS_STRING(index)] = value;
+                push(vm, {Value_Type::MAP, map_map});
             }
             else if (obj.type == Value_Type::VECTOR)
             {

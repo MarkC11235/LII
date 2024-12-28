@@ -40,15 +40,15 @@ label_8:
 
             Value index = pop(vm);
             Value obj = pop(vm);
-            if (obj.type == Value_Type::STRUCT)
+            if (obj.type == Value_Type::MAP)
             {
-                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
                 //check if the key exists
-                if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+                if (map_map.find(VALUE_AS_STRING(index)) == map_map.end())
                 {
-                    vm_error("Key does not exist in struct");
+                    vm_error("Key does not exist in map");
                 }
-                push(vm, struct_map[VALUE_AS_STRING(index)]);
+                push(vm, map_map[VALUE_AS_STRING(index)]);
             }
             else if (obj.type == Value_Type::VECTOR)
             {
@@ -105,15 +105,15 @@ label_16:
 
             Value index = pop(vm);
             Value obj = pop(vm);
-            if (obj.type == Value_Type::STRUCT)
+            if (obj.type == Value_Type::MAP)
             {
-                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
                 //check if the key exists
-                if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+                if (map_map.find(VALUE_AS_STRING(index)) == map_map.end())
                 {
-                    vm_error("Key does not exist in struct");
+                    vm_error("Key does not exist in map");
                 }
-                push(vm, struct_map[VALUE_AS_STRING(index)]);
+                push(vm, map_map[VALUE_AS_STRING(index)]);
             }
             else if (obj.type == Value_Type::VECTOR)
             {
@@ -209,15 +209,15 @@ label_27:
 
             Value index = pop(vm);
             Value obj = pop(vm);
-            if (obj.type == Value_Type::STRUCT)
+            if (obj.type == Value_Type::MAP)
             {
-                std::map<std::string, Value> struct_map = VALUE_AS_STRUCT(obj);
+                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
                 //check if the key exists
-                if (struct_map.find(VALUE_AS_STRING(index)) == struct_map.end())
+                if (map_map.find(VALUE_AS_STRING(index)) == map_map.end())
                 {
-                    vm_error("Key does not exist in struct");
+                    vm_error("Key does not exist in map");
                 }
-                push(vm, struct_map[VALUE_AS_STRING(index)]);
+                push(vm, map_map[VALUE_AS_STRING(index)]);
             }
             else if (obj.type == Value_Type::VECTOR)
             {

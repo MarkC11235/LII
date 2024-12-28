@@ -1,4 +1,4 @@
-let Node = struct{
+let Node = map{
     let value = -1;
     let next = null;
 };

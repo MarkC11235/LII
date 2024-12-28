@@ -1,9 +1,9 @@
-let Person = struct{
+let Person = map{
     let name = "Bob";
     let f = func(){return 1;};
     let l = [1, 2, 3];
     let n = null;
-    let s = struct{let inner = "hello";};
+    let s = map{let inner = "hello";};
 };
 
 print Person;
