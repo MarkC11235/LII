@@ -25,7 +25,7 @@ build_bytecode:
 
 run_jit: build_bytecode
 	@echo "Running $(INPUT_FILE)\n"
-	@$(EXE) $(INPUT_FILE) -jit 
+	@$(EXE) $(INPUT_FILE) -jit -v
 
 compare_normal_jit_times: build_bytecode
 	@echo "Running $(INPUT_FILE) in normal mode\n"

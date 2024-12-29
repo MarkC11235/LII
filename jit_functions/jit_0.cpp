@@ -21,33 +21,58 @@ label_2:
 }
 
 label_4: 
+// OP_LOAD
+{
+
+            push(vm, get_vm_constant(vm, 2));
+}
+
+label_6: 
+// OP_LOAD_FUNCTION_VAR
+{
+
+            push(vm, get_function_variable(vm, vm->variable_names[1]));
+}
+
+label_8: 
+// OP_FUNCTION_CALL
+{
+
+            function* func = VALUE_AS_FUNCTION(pop(vm));
+            func->times_called++;
+            if(vm->jit && func->times_called == CALLS_TO_JIT){ 
+                jit_compile_function(vm, func);
+            }
+
+            if(vm->jit && func->jit_index != -1){
+                vm->function_frames.push_back(create_function_frame(func));
+                jit_run_function(vm, func->jit_index);
+            }
+            else{
+                vm->function_frames.push_back(create_function_frame(func));
+
+                get_current_function_frame(vm)->ip = func->code - 1; // -1 because the ip will be increased by 1
+
+                run_vm();
+            }
+}
+
+label_9: 
+// OP_PRINT
+{
+
+            print_value(pop(vm));
+            std::cout << std::endl;
+}
+
+label_10: 
 // OP_LOAD_VAR
 {
 
             push(vm, get_variable(vm, vm->variable_names[1]));
 }
 
-label_6: 
-// OP_ADD
-{
-
-            Value a = pop(vm);                                                                       
-            Value b = pop(vm);                                                                        
-            if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
-            {
-                push(vm, {Value_Type::NUMBER, std::get<double>(a.data) + std::get<double>(b.data)});
-            }
-            else if (a.type == Value_Type::STRING || b.type == Value_Type::STRING)
-            {
-                push(vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
-            }
-            else
-            {
-                vm_error("Invalid types for addition");
-            }
-}
-
-label_7: 
+label_12: 
 // OP_RETURN
 {
 

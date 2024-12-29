@@ -188,3 +188,8 @@ The Virtual Machine takes in the bytecode generator output and steps through the
 ## **Debugger**
 
 Can run the bytecode in debug mode using the -d flag. This allows you to step through the bytecode one instruction at a time and after each instruction the debugger will print useful information.
+
+
+## **Known Issues**
+
+Cannot print functions inside of a JITed function.  

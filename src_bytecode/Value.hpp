@@ -212,7 +212,8 @@ std::vector<Value> VALUE_AS_VECTOR(Value value){
 
 function* VALUE_AS_FUNCTION(Value value){
     if(value.type == Value_Type::FUNCTION){
-        return std::get<function*>(value.data);
+        function* func = std::get<function*>(value.data);
+        return func;
     }
 
     std::cout << "ERROR: casting non function to function" << std::endl;
@@ -230,6 +231,7 @@ std::map<std::string, Value> VALUE_AS_MAP(Value value){
 }
 
 void print_value(Value value, bool verbose = false){
+    // TODO: Add support for printing functions inside JITed functions
     if(verbose) {
         std::cout << "Type: " << get_value_type_string(value) << " | ";
     }

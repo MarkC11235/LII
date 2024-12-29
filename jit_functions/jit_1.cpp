@@ -10,173 +10,51 @@ label_0:
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[3], pop(vm));
+            set_variable(vm, vm->variable_names[4], pop(vm));
 }
 
 label_2: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[2], pop(vm));
+            set_variable(vm, vm->variable_names[3], pop(vm));
 }
 
 label_4: 
-// OP_STORE_VAR
+// OP_LOAD_VAR
 {
 
-            set_variable(vm, vm->variable_names[0], pop(vm));
+            push(vm, get_variable(vm, vm->variable_names[4]));
 }
 
 label_6: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[0]));
-}
-
-label_8: 
-// OP_STORE_VAR
-{
-
-            set_variable(vm, vm->variable_names[4], pop(vm));
-}
-
-label_10: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[4]));
-}
-
-label_12: 
-// OP_LOAD
-{
-
-            push(vm, get_vm_constant(vm, 12));
-}
-
-label_14: 
-// OP_LOAD_VAR
-{
-
             push(vm, get_variable(vm, vm->variable_names[3]));
 }
 
-label_16: 
-// OP_UPDATE_STACK_ELEMENT
+label_8: 
+// OP_ADD
 {
 
-            Value value = pop(vm);
-            Value index = pop(vm);
-            Value obj = pop(vm);
-        
-            if (obj.type == Value_Type::MAP)
+            Value a = pop(vm);                                                                       
+            Value b = pop(vm);                                                                        
+            if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
-                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
-                //if the key does not exist, it will be added
-                map_map[VALUE_AS_STRING(index)] = value;
-                push(vm, {Value_Type::MAP, map_map});
+                push(vm, {Value_Type::NUMBER, std::get<double>(a.data) + std::get<double>(b.data)});
             }
-            else if (obj.type == Value_Type::VECTOR)
+            else if (a.type == Value_Type::STRING || b.type == Value_Type::STRING)
             {
-                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
-                if (index.type != Value_Type::NUMBER)
-                {
-                    vm_error("Invalid index type for vector access");
-                }
-                if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
-                {
-                    vm_error("Index out of bounds");
-                }
-                vec[(int)VALUE_AS_NUMBER(index)] = value;
-                push(vm, {Value_Type::VECTOR, vec});
+                push(vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
             }
             else
             {
-                vm_error("Invalid type for access");
+                vm_error("Invalid types for addition");
             }
-            
 }
 
-label_17: 
-// OP_UPDATE_VAR
-{
-
-            update_variable(vm, vm->variable_names[4], pop(vm));
-}
-
-label_19: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[4]));
-}
-
-label_21: 
-// OP_LOAD
-{
-
-            push(vm, get_vm_constant(vm, 13));
-}
-
-label_23: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[2]));
-}
-
-label_25: 
-// OP_UPDATE_STACK_ELEMENT
-{
-
-            Value value = pop(vm);
-            Value index = pop(vm);
-            Value obj = pop(vm);
-        
-            if (obj.type == Value_Type::MAP)
-            {
-                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
-                //if the key does not exist, it will be added
-                map_map[VALUE_AS_STRING(index)] = value;
-                push(vm, {Value_Type::MAP, map_map});
-            }
-            else if (obj.type == Value_Type::VECTOR)
-            {
-                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
-                if (index.type != Value_Type::NUMBER)
-                {
-                    vm_error("Invalid index type for vector access");
-                }
-                if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
-                {
-                    vm_error("Index out of bounds");
-                }
-                vec[(int)VALUE_AS_NUMBER(index)] = value;
-                push(vm, {Value_Type::VECTOR, vec});
-            }
-            else
-            {
-                vm_error("Invalid type for access");
-            }
-            
-}
-
-label_26: 
-// OP_UPDATE_VAR
-{
-
-            update_variable(vm, vm->variable_names[4], pop(vm));
-}
-
-label_28: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[4]));
-}
-
-label_30: 
+label_9: 
 // OP_RETURN
 {
 
