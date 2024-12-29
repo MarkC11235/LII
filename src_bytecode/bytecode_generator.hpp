@@ -463,7 +463,8 @@ void interpret_function_call(Node *node, function *func)
     Node *arg_list = node->get_child(0);
     for (int i = 0; i < (int)arg_list->get_children().size(); i++)
     {
-        interpret_expr(arg_list->get_child(i), func);
+        //interpret_expr(arg_list->get_child(i), func);
+        evaluate(arg_list->get_child(i), func);
     }
 
     // Push the function onto the stack
@@ -491,7 +492,8 @@ void interpret_std_lib_call(Node *node, function *func)
     Node *arg_list = node->get_child(0);
     for (int i = 0; i < (int)arg_list->get_children().size(); i++)
     {
-        interpret_expr(arg_list->get_child(i), func);
+        //interpret_expr(arg_list->get_child(i), func);
+        evaluate(arg_list->get_child(i), func);
     }
 
     WRITE_BYTE(OpCode::OP_STD_LIB_CALL, func);
@@ -635,7 +637,9 @@ void interpret_return(Node *node, function *func)
         interpretation_error("Return doesn't start with RETURN Node", node, func);
     }
 
-    interpret_expr(node->get_child(0), func); // Expression to return
+    //interpret_expr(node->get_child(0), func); // Expression to return
+
+    evaluate(node->get_child(0), func);
 
     WRITE_BYTE(OpCode::OP_RETURN, func);
 }
@@ -759,18 +763,20 @@ void interpret_list(Node *node, function *func)
     for (int i = 0; i < (int)node->get_children().size(); i++)
     {
         Node* child = node->get_child(i);
-        if(child->get_type() == NodeType::EXPR_NODE){
-            interpret_expr(child, func);
-            WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
-        }
-        else if(child->get_type() == NodeType::LIST_NODE){
-            WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
-            interpret_list(child, func);
-            WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
-        }
-        else{
-            interpretation_error("Invalid child type for LIST Node", node, func);
-        }
+        // if(child->get_type() == NodeType::EXPR_NODE){
+        //     interpret_expr(child, func);
+        //     WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
+        // }
+        // else if(child->get_type() == NodeType::LIST_NODE){
+        //     WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
+        //     interpret_list(child, func);
+        //     WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
+        // }
+        // else{
+        //     interpretation_error("Invalid child type for LIST Node", node, func);
+        // }
+        evaluate(child, func);
+        WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
     }
 }
 
@@ -893,7 +899,8 @@ void interpret_print(Node *node, function *func)
         interpretation_error("Print doesn't start with PRINT Node", node, func);
     }
 
-    interpret_expr(node->get_child(0), func); // Expression to print
+    //interpret_expr(node->get_child(0), func); // Expression to print
+    evaluate(node->get_child(0), func);
 
     WRITE_BYTE(OpCode::OP_PRINT, func);
 }

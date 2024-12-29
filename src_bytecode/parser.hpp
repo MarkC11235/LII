@@ -571,9 +571,10 @@ void parse_std_lib_call(std::vector<Token>& tokens, Node* current){
     token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
         for(;;){ // Can have 0 or more parameters
-            Node* expr = new Node(NodeType::EXPR_NODE, "");
-            list->add_child(expr);
-            parse_expr(tokens, expr);
+            // Node* expr = new Node(NodeType::EXPR_NODE, "");
+            // list->add_child(expr);
+            // parse_expr(tokens, expr);
+            parse_value(tokens, list);
 
             token = peek(tokens);
             if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
@@ -692,9 +693,10 @@ void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
             parse_list(tokens, list, level + 1);
         } 
         else {
-            Node* expr = new Node(NodeType::EXPR_NODE, "");
-            list->add_child(expr);
-            parse_expr(tokens, expr);
+            // Node* expr = new Node(NodeType::EXPR_NODE, "");
+            // list->add_child(expr);
+            // parse_expr(tokens, expr);
+            parse_value(tokens, list);
         }
         prev_was_comma = false;
     }
