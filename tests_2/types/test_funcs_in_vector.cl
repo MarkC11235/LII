@@ -1,9 +1,3 @@
-// let add = func (a, b) {
-//     return a + b;
-// };
-
-// print add();
-
 
 let func_vec = [
     func (a, b) {
