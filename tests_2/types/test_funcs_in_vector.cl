@@ -1,4 +1,3 @@
-
 let func_vec = [
     func (a, b) {
         return a + b;

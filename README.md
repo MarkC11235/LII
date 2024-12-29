@@ -193,3 +193,6 @@ Can run the bytecode in debug mode using the -d flag. This allows you to step th
 ## **Known Issues**
 
 Cannot print functions inside of a JITed function.  
+
+No checking for the proper number of arguments when calling a function.  
+

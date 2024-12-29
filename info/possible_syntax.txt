@@ -4,14 +4,6 @@ or
 
 print [1, 2, 3][0];
 
-or 
-
-let func_runner = func(f, x) {
-    return f(x);
-};
-
-print func_runner(func(x) { return x + 1; }, 1);
-
 ####################################################
 
 let f_maker = func() {
