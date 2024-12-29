@@ -486,6 +486,29 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
     current->add_child(values.top());
 }
 
+void parse_value(std::vector<Token>& tokens, Node* current){
+    // Find type of value
+    if(peek(tokens).get_value() == "["){ // Array, check value because [ is an operator
+        parse_list(tokens, current, 0);
+    }
+    else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function
+        parse_function(tokens, current);
+    }
+    else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null
+        pop(tokens);
+        Node* null_node = new Node(NodeType::NULL_NODE, "null");
+        current->add_child(null_node);
+    }
+    else if (peek(tokens).get_type() == TokenType::MAP_TOKEN){ // map
+        parse_map(tokens, current);
+    }
+    else{ // Expression
+        Node* expr = new Node(NodeType::EXPR_NODE, "");
+        current->add_child(expr);
+        parse_expr(tokens, expr);
+    }
+}
+
 void parse_function_call(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
@@ -505,9 +528,10 @@ void parse_function_call(std::vector<Token>& tokens, Node* current){
     token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
         for(;;){ // Can have 0 or more parameters
-            Node* expr = new Node(NodeType::EXPR_NODE, "");
-            list->add_child(expr);
-            parse_expr(tokens, expr);
+            // Node* expr = new Node(NodeType::EXPR_NODE, "");
+            // list->add_child(expr);
+            // parse_expr(tokens, expr);
+            parse_value(tokens, list);
 
             token = peek(tokens);
             if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
@@ -732,25 +756,27 @@ void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const /
     } 
 
     //Find type of assignment
-    if(peek(tokens).get_value() == "["){ // Array assignment, check value because [ is an operator
-        parse_list(tokens, assign);
-    }
-    else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
-        parse_function(tokens, assign);
-    }
-    else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null assignment
-        pop(tokens);
-        Node* null_node = new Node(NodeType::NULL_NODE, "null");
-        assign->add_child(null_node);
-    }
-    else if (peek(tokens).get_type() == TokenType::MAP_TOKEN){ // map assignment
-        parse_map(tokens, assign);
-    }
-    else{ // Expression assignment
-        Node* expr = new Node(NodeType::EXPR_NODE, "");
-        assign->add_child(expr);
-        parse_expr(tokens, expr);
-    }
+    // if(peek(tokens).get_value() == "["){ // Array assignment, check value because [ is an operator
+    //     parse_list(tokens, assign);
+    // }
+    // else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
+    //     parse_function(tokens, assign);
+    // }
+    // else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null assignment
+    //     pop(tokens);
+    //     Node* null_node = new Node(NodeType::NULL_NODE, "null");
+    //     assign->add_child(null_node);
+    // }
+    // else if (peek(tokens).get_type() == TokenType::MAP_TOKEN){ // map assignment
+    //     parse_map(tokens, assign);
+    // }
+    // else{ // Expression assignment
+    //     Node* expr = new Node(NodeType::EXPR_NODE, "");
+    //     assign->add_child(expr);
+    //     parse_expr(tokens, expr);
+    // }
+
+    parse_value(tokens, assign);
 
     token = pop(tokens);
     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
@@ -924,9 +950,10 @@ void parse_return(std::vector<Token>& tokens, Node* current){
     current->add_child(return_node);
 
     // Expression to return
-    Node* expr = new Node(NodeType::EXPR_NODE, "");
-    return_node->add_child(expr);
-    parse_expr(tokens, expr);
+    // Node* expr = new Node(NodeType::EXPR_NODE, "");
+    // return_node->add_child(expr);
+    // parse_expr(tokens, expr);
+    parse_value(tokens, return_node);
 
     Token token = pop(tokens);
     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
@@ -980,34 +1007,38 @@ void parse_variable_update(std::vector<Token>& tokens, Node* current){
     // parse_expr(tokens, expr);
 
     //Find type of assignment
-    if(peek(tokens).get_value() == "["){ // Array assignment, check value because [ is an operator
-        parse_list(tokens, update);
-    }
-    else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
-        parse_function(tokens, update);
-    }
-    else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null assignment
-        pop(tokens);
-        Node* null_node = new Node(NodeType::NULL_NODE, "null");
-        update->add_child(null_node);
-    }
-    else if (peek(tokens).get_type() == TokenType::MAP_TOKEN){ // map assignment
-        parse_map(tokens, update);
-    }
-    else{ // Expression assignment
-        Node* expr = new Node(NodeType::EXPR_NODE, "");
-        update->add_child(expr);
-        parse_expr(tokens, expr);
-    }
+    // if(peek(tokens).get_value() == "["){ // Array assignment, check value because [ is an operator
+    //     parse_list(tokens, update);
+    // }
+    // else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function assignment
+    //     parse_function(tokens, update);
+    // }
+    // else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null assignment
+    //     pop(tokens);
+    //     Node* null_node = new Node(NodeType::NULL_NODE, "null");
+    //     update->add_child(null_node);
+    // }
+    // else if (peek(tokens).get_type() == TokenType::MAP_TOKEN){ // map assignment
+    //     parse_map(tokens, update);
+    // }
+    // else{ // Expression assignment
+    //     Node* expr = new Node(NodeType::EXPR_NODE, "");
+    //     update->add_child(expr);
+    //     parse_expr(tokens, expr);
+    // }
+
+    parse_value(tokens, update);
 }
 
 void parse_print(std::vector<Token>& tokens, Node* current){
     Node* print = new Node(NodeType::PRINT_NODE, "");
     current->add_child(print);
 
-    Node* expr = new Node(NodeType::EXPR_NODE, ""); // Expression to print
-    print->add_child(expr);
-    parse_expr(tokens, expr);
+    // Node* expr = new Node(NodeType::EXPR_NODE, ""); // Expression to print
+    // print->add_child(expr);
+    // parse_expr(tokens, expr);
+
+    parse_value(tokens, print);
 
     Token token = pop(tokens);
     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
