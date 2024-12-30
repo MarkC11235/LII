@@ -19,6 +19,9 @@ enum TokenType {
     ACCESSOR_TOKEN,
     WHILE_TOKEN,
     FOR_TOKEN,
+    FOREACH_TOKEN,
+    COLON_TOKEN,
+    IN_TOKEN,
     BREAK_TOKEN,
     CONTINUE_TOKEN,
     IF_TOKEN,
@@ -67,6 +70,12 @@ std::string token_type_to_string(TokenType type){
             return "WHILE";
         case TokenType::FOR_TOKEN:
             return "FOR";
+        case TokenType::FOREACH_TOKEN:
+            return "FOREACH";
+        case TokenType::COLON_TOKEN:
+            return "COLON";
+        case TokenType::IN_TOKEN:
+            return "IN";
         case TokenType::BREAK_TOKEN:
             return "BREAK";
         case TokenType::CONTINUE_TOKEN:
@@ -307,6 +316,9 @@ std::vector<Token> analyze(std::string input, int line_number){
                 tokens.push_back(Token(TokenType::STRING_TOKEN, string, line_number));
             }
                 break;
+            case ':':
+                tokens.push_back(Token(TokenType::COLON_TOKEN, ":", line_number));
+                break;
             default:
                 if(isdigit(input[i]) || input[i] == '.'){
                     std::string number = "";
@@ -378,6 +390,12 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "for"){
                         tokens.push_back(Token(TokenType::FOR_TOKEN, "for", line_number));
+                    }
+                    else if(identifier == "foreach"){
+                        tokens.push_back(Token(TokenType::FOREACH_TOKEN, "foreach", line_number));
+                    }
+                    else if(identifier == "in"){
+                        tokens.push_back(Token(TokenType::IN_TOKEN, "in", line_number));
                     }
                     else if(identifier == "let"){
                         tokens.push_back(Token(TokenType::LET_TOKEN, "let", line_number));

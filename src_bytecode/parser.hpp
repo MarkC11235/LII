@@ -20,6 +20,7 @@ enum NodeType {
     // CONTROL FLOW
     WHILE_NODE,
     FOR_NODE,
+    FOREACH_NODE,
     IF_NODE,
     RETURN_NODE,
     BREAK_NODE,
@@ -67,6 +68,8 @@ std::string node_type_to_string(NodeType type){
             return "WHILE";
         case NodeType::FOR_NODE:
             return "FOR";
+        case NodeType::FOREACH_NODE:
+            return "FOREACH";
         case NodeType::IF_NODE:
             return "IF";
         case NodeType::RETURN_NODE:
@@ -1110,6 +1113,74 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     }
 }
 
+void parse_foreach(std::vector<Token>& tokens, Node* current){
+    Node* foreach_node = new Node(NodeType::FOREACH_NODE, "");
+    current->add_child(foreach_node);
+    
+    Token token = pop(tokens);    
+    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+        parsing_error("Syntax error: expected '('", token);
+    }
+
+    // key
+    token = pop(tokens);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
+    }
+    Node* key = new Node(NodeType::VAR_NODE, token.get_value());
+    foreach_node->add_child(key);
+
+    // :
+    token = pop(tokens);
+    if(token.get_type() != TokenType::COLON_TOKEN){
+        parsing_error("Syntax error: expected ':'", token);
+    }
+
+    // value
+    token = pop(tokens);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
+    }
+    Node* value = new Node(NodeType::VAR_NODE, token.get_value());
+    foreach_node->add_child(value);
+
+    // in
+    token = pop(tokens);
+    if(token.get_type() != TokenType::IN_TOKEN){
+        parsing_error("Syntax error: expected 'in'", token);
+    }
+
+    // list
+    parse_value(tokens, foreach_node);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
+    }
+
+    // foreach body
+    token = pop(tokens);
+    if(token.get_type() != TokenType::OPENBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '{'", token);
+    }
+
+    // Check if there are statements inside the foreach block
+    if(peek(tokens).get_type() == TokenType::CLOSEBRACKET_TOKEN){
+        pop(tokens);
+        return; // Empty foreach block
+    }
+
+    // Parse foreach block
+    Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
+    foreach_node->add_child(stmt_list);
+    parse_stmt_list(tokens, stmt_list);
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){
+        parsing_error("Syntax error: expected '}'", token);
+    }
+}
+
 void parse_stmt(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     switch(token.get_type()){
@@ -1143,6 +1214,9 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             break;
         case TokenType::FOR_TOKEN:
             parse_for(tokens, current);
+            break;
+        case TokenType::FOREACH_TOKEN:
+            parse_foreach(tokens, current);
             break;
         case TokenType::CONTINUE_TOKEN:
         {

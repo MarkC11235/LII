@@ -1,6 +1,5 @@
-let pprint = func(m){
-    print "x: " + m["x"] + ", y: " + m["y"];
-    return 0;
-};
+let vec = [4, 5, 6];
 
-let res = pprint(map{let x = 1; let y = 2;});
+foreach(key:value in vec) {
+    print key + ":" + value;
+}
