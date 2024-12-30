@@ -10,47 +10,43 @@ label_0:
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[4], pop(vm));
+            set_variable(vm, vm->variable_names[2], pop(vm));
 }
 
 label_2: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[3], pop(vm));
+            set_variable(vm, vm->variable_names[1], pop(vm));
 }
 
 label_4: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[4]));
+            push(vm, get_variable(vm, vm->variable_names[2]));
 }
 
 label_6: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[3]));
+            push(vm, get_variable(vm, vm->variable_names[1]));
 }
 
 label_8: 
-// OP_ADD
+// OP_SUB
 {
 
             Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
-                push(vm, {Value_Type::NUMBER, std::get<double>(a.data) + std::get<double>(b.data)});
-            }
-            else if (a.type == Value_Type::STRING || b.type == Value_Type::STRING)
-            {
-                push(vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
+                push(vm, {Value_Type::NUMBER, std::get<double>(a.data) - std::get<double>(b.data)});
             }
             else
             {
-                vm_error("Invalid types for addition");
+                vm_error("Invalid types for subtraction");
             }
 }
 

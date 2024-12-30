@@ -9,7 +9,7 @@ s
 string|name
 string|Bob
 string|f
-function|function () {15, 4, 30, }
+function|function () {15, 4, 33, }
 number|1
 string|l
 number|1
@@ -67,7 +67,7 @@ string|s
 0
 18
 0
-36
+39
 18
 0
 15
@@ -77,8 +77,8 @@ string|s
 1
 19
 1
-33
 36
+39
 18
 0
 15
@@ -88,7 +88,7 @@ string|s
 2
 18
 2
-36
+39
 18
 0
 15
@@ -98,7 +98,7 @@ string|s
 3
 18
 3
-36
+39
 18
 0
 15
@@ -108,4 +108,4 @@ string|s
 4
 18
 4
-36
+39

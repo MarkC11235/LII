@@ -189,6 +189,20 @@ enum OpCode{
                                 element to update is below the index on the stack
     */
     OP_UPDATE_STACK_ELEMENT,
+    /*
+    * OP_ACCESS_STACK_ELEMENT_QUEUE: pop an element on the stack, get the first key:value pair, remove them from the map, push map back on stack, push the key and value back onto the stack
+                                     Element is the top value on the stack
+    */
+    OP_ACCESS_STACK_ELEMENT_QUEUE,
+    /*
+    * OP_NOT_EMPTY: Check if the top value on the stack is not empty and push the value back onto the stack
+                    Pushes the result back onto the stack
+    */
+    OP_NOT_EMPTY,
+    /*
+    * OP_POP: Pop the top value off the stack
+    */
+    OP_POP,
 
     // Control flow
 
@@ -304,6 +318,12 @@ std::string opcode_to_string(CODE_SIZE op){
             return "OP_ACCESS_FOR_UPDATE";
         case OpCode::OP_UPDATE_STACK_ELEMENT:
             return "OP_UPDATE_STACK_ELEMENT";
+        case OpCode::OP_ACCESS_STACK_ELEMENT_QUEUE:
+            return "OP_ACCESS_STACK_ELEMENT_QUEUE";
+        case OpCode::OP_NOT_EMPTY:
+            return "OP_NOT_EMPTY";
+        case OpCode::OP_POP:
+            return "OP_POP";
         case OpCode::OP_RETURN:
             return "OP_RETURN";
         case OpCode::OP_JUMP:

@@ -4,11 +4,11 @@ a
 x
 b
 6
-function|function () {15, 1, 16, 1, 19, 1, 33, 30, }
-function|function () {15, 2, 30, }
+function|function () {15, 1, 16, 1, 19, 1, 36, 33, }
+function|function () {15, 2, 33, }
 number|1
-function|function () {15, 4, 16, 1, 19, 1, 33, 30, }
-function|function () {15, 5, 30, }
+function|function () {15, 4, 16, 1, 19, 1, 36, 33, }
+function|function () {15, 5, 33, }
 number|2
 16
 15
@@ -21,9 +21,9 @@ number|2
 2
 19
 0
-33
 36
+39
 19
 2
-33
 36
+39

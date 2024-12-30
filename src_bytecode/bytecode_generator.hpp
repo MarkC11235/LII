@@ -178,9 +178,21 @@ void display_bytecode(function *func)
         case OpCode::OP_ACCESS_FOR_UPDATE:
             std::cout << "OP_ACCESS_FOR_UPDATE" << std::endl;
             break;
+
+        // Stack
         case OpCode::OP_UPDATE_STACK_ELEMENT:
             std::cout << "OP_UPDATE_STACK_ELEMENT" << std::endl;
             break;
+        case OpCode::OP_ACCESS_STACK_ELEMENT_QUEUE:
+            std::cout << "OP_ACCESS_STACK_ELEMENT_QUEUE" << std::endl;
+            break;
+        case OpCode::OP_NOT_EMPTY:
+            std::cout << "OP_NOT_EMPTY" << std::endl;   
+            break;
+        case OpCode::OP_POP:
+            std::cout << "OP_POP" << std::endl;
+            break;
+        
 
         // Control flow
         case OpCode::OP_RETURN:
@@ -916,7 +928,6 @@ void interpret_for(Node *node, function *func)
 
     std::vector<Node *> children = node->get_children();
     std::vector<NodeType> child_types;
-    // print the children
     for (int i = 0; i < (int)children.size(); i++)
     {
         child_types.push_back(children[i]->get_type());
@@ -1032,6 +1043,109 @@ void interpret_for(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }
 
+void interpret_foreach(Node *node, function *func)
+{
+    if (node->get_type() != NodeType::FOREACH_NODE)
+    {
+        interpretation_error("Foreach doesn't start with FOREACH Node", node, func);
+    }
+
+    WRITE_BYTE(OpCode::OP_INC_SCOPE, func); // Increase the scope for the foreach loop
+
+    std::vector<Node *> children = node->get_children();
+    std::vector<NodeType> child_types;
+    for (int i = 0; i < (int)children.size(); i++)
+    {
+        child_types.push_back(children[i]->get_type());
+    }
+
+    // check that there is at least 3 children
+    if (children.size() < 3)
+    {
+        interpretation_error("Invalid number of children for FOREACH Node", node, func);
+    }
+
+    // Assign the key and value to the variables map
+    std::string key_name = node->get_child(0)->get_value();
+    std::string value_name = node->get_child(1)->get_value();
+
+    WRITE_VAR_NAME_IF_NOT_EXISTS(key_name);
+    WRITE_VAR_NAME_IF_NOT_EXISTS(value_name);
+
+    //push a 0 to the stack, this will be the current iteration index
+    WRITE_BYTE(OpCode::OP_LOAD, func);
+    WRITE_BYTE(constants.size(), func);
+    WRITE_VALUE(0.0);
+
+
+    // push the map to the stack
+    evaluate(node->get_child(2), func);
+
+    // get the index to jump back to
+    int start_byte = func->count - 1;
+
+    // check if the map is empty
+    WRITE_BYTE(OpCode::OP_NOT_EMPTY, func);
+    WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
+    WRITE_BYTE(0, func); // Placeholder for the jump index
+    int jump_to_end_byte = func->count - 1;
+
+    // get a key value pair from the map
+    WRITE_BYTE(OpCode::OP_ACCESS_STACK_ELEMENT_QUEUE, func);
+
+    // assign pair to identifiers
+    WRITE_BYTE(OpCode::OP_STORE_VAR, func);
+    WRITE_BYTE(get_variable_index(key_name), func);
+
+    WRITE_BYTE(OpCode::OP_STORE_VAR, func);
+    WRITE_BYTE(get_variable_index(value_name), func);
+
+    // interpret the statement list
+    if(children.size() == 4){
+        interpret_stmt_list(node->get_child(3), func);
+    }
+
+    // jump back to the start
+    WRITE_BYTE(OpCode::OP_JUMP, func);
+    WRITE_BYTE(start_byte, func);
+
+    // find all flagged bytes from start_byte to the end of the for loop
+    for (int i = start_byte; i < func->count; i++)
+    {
+        if (func->flags.size() == 0)
+        {
+            break;
+        }
+        for (int j = 0; j < (int)func->flags.size(); j++)
+        {
+            if (std::get<0>(func->flags[j]) == i)
+            {
+                if (std::get<1>(func->flags[j]) == "continue")
+                {
+                    CHANGE_BYTE(i, func->count - 1, func); // jump to the update part of the for loop
+                    func->flags.erase(func->flags.begin() + j);
+                }
+                else if (std::get<1>(func->flags[j]) == "break")
+                {
+                    CHANGE_BYTE(i, func->count - 1, func); // jump to the end of the for loop
+                    func->flags.erase(func->flags.begin() + j);
+                }
+                break;
+            }
+        }
+    }
+
+    // jump to the end of the for loop
+    CHANGE_BYTE(jump_to_end_byte, func->count - 1, func);
+
+    // remove the map and the index from the stack
+    WRITE_BYTE(OpCode::OP_POP, func);
+    WRITE_BYTE(OpCode::OP_POP, func);
+
+    WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
+}
+
+
 void interpret_stmt(Node *node, function *func)
 {
     if (node->get_type() == NodeType::STMT_NODE)
@@ -1059,6 +1173,9 @@ void interpret_stmt(Node *node, function *func)
             break;
         case NodeType::FOR_NODE:
             interpret_for(child, func);
+            break;
+        case NodeType::FOREACH_NODE:
+            interpret_foreach(child, func);
             break;
         case NodeType::CONTINUE_NODE:
             // add a jump and flag the bytecode

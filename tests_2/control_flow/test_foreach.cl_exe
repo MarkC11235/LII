@@ -1,4 +1,4 @@
-./tester
+./tests_2/control_flow/test_foreach
 6
 alphabet
 key
