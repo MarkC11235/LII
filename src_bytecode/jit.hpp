@@ -528,6 +528,78 @@ void jit_compile_function(VM* vm, function* func)
             )";
             break;
         }
+        case OpCode::OP_ACCESS_STACK_ELEMENT_QUEUE:
+        {
+            program += R"(
+            Value obj = pop(vm);
+            int index = VALUE_AS_NUMBER(pop(vm));
+            if (obj.type == Value_Type::MAP)
+            {
+                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
+                if (map_map.size() == 0)
+                {
+                    vm_error("Map is empty");
+                }
+                auto it = map_map.begin();
+                //get the first key:value pair
+                Value key = {Value_Type::STRING, it->first};
+                Value value = it->second;
+                map_map.erase(it);
+
+                push(vm, {Value_Type::NUMBER, (double)(index + 1)});
+                push(vm, {Value_Type::MAP, map_map});
+                push(vm, value);
+                push(vm, key);
+            }
+            else if (obj.type == Value_Type::VECTOR)
+            {
+                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
+                if (vec.size() == 0)
+                {
+                    vm_error("Vector is empty");
+                }
+                Value value = vec[0];
+                vec.erase(vec.begin());
+                push(vm, {Value_Type::NUMBER, (double)(index + 1)}); // continue to use as the index
+                push(vm, {Value_Type::VECTOR, vec});
+                push(vm, value);
+                push(vm, {Value_Type::NUMBER, (double)(index)}); // use as the key
+            }
+            else
+            {
+                vm_error("Invalid type for access");
+            }
+            )";
+            break;
+        }
+        case OpCode::OP_NOT_EMPTY:
+        {
+            program += R"(
+            Value obj = pop(vm);
+            push(vm, obj);
+            if (obj.type == Value_Type::MAP)
+            {
+                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
+                push(vm, {Value_Type::BOOL, map_map.size() > 0});
+            }
+            else if (obj.type == Value_Type::VECTOR)
+            {
+                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
+                push(vm, {Value_Type::BOOL, vec.size() > 0});
+            }
+            else
+            {
+                vm_error("Invalid type for not empty check");
+            }
+            )";
+            break;
+        }
+        case OpCode::OP_POP:
+        {
+            program += R"(
+            pop(vm);)";
+            break;
+        }
 
         // Control flow operations
         case OpCode::OP_RETURN:

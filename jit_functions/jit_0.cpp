@@ -10,31 +10,24 @@ label_0:
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[2], pop(vm));
+            set_variable(vm, vm->variable_names[1], pop(vm));
 }
 
 label_2: 
-// OP_STORE_VAR
+// OP_LOAD
 {
 
-            set_variable(vm, vm->variable_names[1], pop(vm));
+            push(vm, get_vm_constant(vm, 1));
 }
 
 label_4: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[2]));
-}
-
-label_6: 
-// OP_LOAD_VAR
-{
-
             push(vm, get_variable(vm, vm->variable_names[1]));
 }
 
-label_8: 
+label_6: 
 // OP_ADD
 {
 
@@ -54,7 +47,7 @@ label_8:
             }
 }
 
-label_9: 
+label_7: 
 // OP_RETURN
 {
 

@@ -7,13 +7,54 @@
                         #include "../src_bytecode/jit.hpp"
                         extern "C" void jit_3(VM* vm){
 label_0: 
-// OP_LOAD
+// OP_STORE_VAR
 {
 
-            push(vm, get_vm_constant(vm, 5));
+            set_variable(vm, vm->variable_names[2], pop(vm));
 }
 
 label_2: 
+// OP_STORE_VAR
+{
+
+            set_variable(vm, vm->variable_names[1], pop(vm));
+}
+
+label_4: 
+// OP_LOAD_VAR
+{
+
+            push(vm, get_variable(vm, vm->variable_names[2]));
+}
+
+label_6: 
+// OP_LOAD_VAR
+{
+
+            push(vm, get_variable(vm, vm->variable_names[1]));
+}
+
+label_8: 
+// OP_DIV
+{
+
+            Value a = pop(vm);                                                                       
+            Value b = pop(vm);                                                                        
+            if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
+            {
+                if (std::get<double>(b.data) == 0)                                                  
+                {
+                    vm_error("Division by zero");
+                }
+                push(vm, {Value_Type::NUMBER, std::get<double>(a.data) / std::get<double>(b.data)});
+            }
+            else
+            {
+                vm_error("Invalid types for division");
+            }
+}
+
+label_9: 
 // OP_RETURN
 {
 
