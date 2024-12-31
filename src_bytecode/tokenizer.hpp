@@ -49,7 +49,7 @@ enum TokenType {
     EOF_TOKEN
 };
 
-// Helper functions ---------------------------------------------------
+
 std::string token_type_to_string(TokenType type){
     switch(type){
         case TokenType::PRINT_TOKEN:
@@ -135,9 +135,7 @@ std::string removeWhitespace(std::string str) {
     return str;
 }
 
-// -------------------------------------------------------------------
 
-// Data structures ---------------------------------------------------
 class Token{
     TokenType type;
     std::string value;
@@ -163,9 +161,6 @@ public:
     }
 };
 
-// -------------------------------------------------------------------
-
-// Forward declarations ----------------------------------------------
 std::vector<Token> analyze(std::string input, int line_number);
 std::vector<Token> includes(std::vector<Token> tokens, bool verbose);
 std::vector<Token> read_input(std::string file_path, bool verbose, bool include);
@@ -183,7 +178,10 @@ void tokenization_error(std::string error_message, int line_number, Token token)
     exit(1);
 }
 
-// Tokenizer ---------------------------------------------------------
+/*
+Takes in a string which is a line of code and a line number
+Returns a vector of tokens
+*/
 std::vector<Token> analyze(std::string input, int line_number){
     std::vector<Token> tokens;
     for(int i = 0; i < int(input.length()); i++){
@@ -312,7 +310,6 @@ std::vector<Token> analyze(std::string input, int line_number){
                 if(i == int(input.length())){
                     return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "No closing quotes", line_number)};
                 }
-                //std::cout << string << std::endl;
                 tokens.push_back(Token(TokenType::STRING_TOKEN, string, line_number));
             }
                 break;
@@ -341,38 +338,22 @@ std::vector<Token> analyze(std::string input, int line_number){
                     std::string identifier = "";
                     while(true)
                     {
-                        // bool clear_identifier = false; // if you just clear inside the if, then the dot gets attached to the next identifier
-                        if(!(i < int(input.length()) 
+                        if(
+                            !(i < int(input.length()) 
                             && (isalnum(input[i]) || input[i] == '_')
-                            && input[i] != ' ')){
-                            
-                            // if(i < int(input.length()) && input[i] == '.'){
-                            //     tokens.push_back(Token(TokenType::IDENTIFIER_TOKEN, identifier, line_number));
-                            //     clear_identifier = true;
-                            //     tokens.push_back(Token(TokenType::ACCESSOR_TOKEN, ".", line_number));
-                            // }
-                            // else{
-                            //     break;
-                            // }
-
+                            && input[i] != ' ')
+                          ){
                             break;
                         }
 
-
                         identifier += input[i];
-                        // if(clear_identifier){
-                        //     identifier = "";
-                        // }
                         i++;
-                        //std::cout << identifier << std::endl;
                     }
                     i--;
                     if(identifier == "if"){
                         tokens.push_back(Token(TokenType::IF_TOKEN, "if", line_number));
                     }
                     else if(identifier == "else"){
-                        // tokens.push_back(Token(TokenType::ELSE_TOKEN, "else", line_number));
-
                         //check if its an else if
                         if(i + 3 < int(input.length()) && input[i+1] == ' ' && input[i + 2] == 'i' && input[i + 3] == 'f'){
                             tokens.push_back(Token(TokenType::ELSE_IF_TOKEN, "else if", line_number));
@@ -439,6 +420,10 @@ std::vector<Token> analyze(std::string input, int line_number){
     return tokens;
 }
 
+/*
+Takes in the current vector of tokens whenever an include token is found (#"file_name.clh")
+Tokenizes the included file and returns a new vector of tokens with the included file's tokens inserted in place of the include token
+*/
 std::vector<Token> includes(std::vector<Token> tokens, bool verbose = false){
     std::vector<Token> new_tokens;
     for(int i = 0; i < int(tokens.size()); i++){
@@ -454,6 +439,9 @@ std::vector<Token> includes(std::vector<Token> tokens, bool verbose = false){
     return new_tokens;
 }
 
+/*
+Takes in a file path and returns a vector of tokens
+*/
 std::vector<Token> read_input(std::string file_path, bool verbose = false, bool include = false){
     // Open the file
     std::ifstream File(file_path); 
@@ -476,7 +464,6 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false, bool 
         tokens.insert(tokens.end(), line_tokens.begin(), line_tokens.end());
     }
 
-    // Close the file
     File.close();
 
     // Recursively include files
@@ -489,7 +476,5 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false, bool 
 
     return tokens;
 }
-
-// -------------------------------------------------------------------
 
 #endif // TOKENIZER_HPP
