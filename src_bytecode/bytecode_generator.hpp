@@ -17,7 +17,11 @@
 #include "cl_exe_file.hpp"
 #include "opcodes.hpp"
 
-// For athritmetic and comparison operations
+void interpretation_error(std::string message, Node *node, function *func);
+
+/*
+For athritmetic and boolean operations
+*/
 std::unordered_map<std::string, OpCode> opCodeMap = {
     {"[", OpCode::OP_ACCESS},
     {"u-", OpCode::OP_U_SUB},
@@ -36,13 +40,17 @@ std::unordered_map<std::string, OpCode> opCodeMap = {
     {"||", OpCode::OP_OR},
     {"!", OpCode::OP_NOT}};
 
-// Data Structures ---------------------------------------------------
-std::vector<Value> constants; // Statically allocated because only one constants array is needed
-                              // This array stores constant values Ex: let x = 5; 5 is a constant
+/*
+This vector stores constant values Ex: let x = 5; 5 is a constant
+Types of constants: NUMBER, BOOL, STRING, FUNCTION, NULL_VALUE
+*/
+std::vector<Value> constants; 
 
-std::vector<std::string> variable_names; // Statically allocated because only one variable names array is needed
-                                         // This array stores the names of the variables, functions are included in this array
-// -------------------------------------------------------------------
+/*
+This array stores the names of the variables
+*/
+std::vector<std::string> variable_names; 
+
 
 // Visual Representation for debugging -------------------------------
 void display_bytecode(function *func)
@@ -147,12 +155,6 @@ void display_bytecode(function *func)
         case OpCode::OP_VECTOR_PUSH:
             std::cout << "OP_VECTOR_PUSH" << std::endl;
             break;
-        // case OpCode::OP_LOAD_VECTOR_ELEMENT:
-        //     std::cout << "OP_LOAD_VECTOR_ELEMENT";
-        //     std::cout << "          ";
-        //     std::cout << "Vector Name: " << variable_names[(int)func->code[++i]];
-        //     std::cout << std::endl;
-        //     break;
         case OpCode::OP_UPDATE_VECTOR_ELEMENT:
             std::cout << "OP_UPDATE_VECTOR_ELEMENT";
             std::cout << "          ";
@@ -258,12 +260,18 @@ void display_variables()
 }
 // -------------------------------------------------------------------
 
-// Helper functions --------------------------------------------------
+
+/*
+Writes a byte to the end of the current function's code array
+*/
 inline void WRITE_BYTE(CODE_SIZE byte, function *func)
 {
     func->code[func->count++] = byte;
 }
 
+/*
+Changes a byte at a specific index in the current function's code array
+*/
 inline void CHANGE_BYTE(int index, CODE_SIZE byte, function *func)
 {
     if (index >= func->count || index < 0)
@@ -274,11 +282,17 @@ inline void CHANGE_BYTE(int index, CODE_SIZE byte, function *func)
     func->code[index] = byte;
 }
 
+/*
+Adds a flag to the current function's flags array
+Used to siginify a specific byte to be changed later
+*/
 inline void FLAG_BYTE(int index, std::string flag, function *func)
 {
     func->flags.push_back({index, flag});
 }
 
+
+// Writing values to the constants array ----------------------------
 inline void WRITE_VALUE(double value)
 {
     constants.push_back({Value_Type::NUMBER, value});
@@ -294,9 +308,9 @@ inline void WRITE_VALUE(const std::string &value)
     constants.push_back({Value_Type::STRING, value});
 }
 
-
-// TODO: fix
-// slightly janky, nullptr values go into this function as well
+/*
+TODO: fix, nullptr values go into this function as well, because of the null value type
+*/
 inline void WRITE_VALUE(function *value)
 {
     if(value == nullptr){
@@ -311,12 +325,31 @@ inline void WRITE_VALUE(Value value)
 {
     constants.push_back(value);
 }
+// -------------------------------------------------------------------
 
+/*
+Returns the constant at the given index
+*/
+inline Value get_constant(int index)
+{
+    if(index < 0 || index >= (int)constants.size()){
+        interpretation_error("Constant index out of bounds", nullptr, nullptr);
+    }
+    return constants[index];
+}
+
+/*
+Writes the name of a variable to the variable names array
+Names can be duplicated (Probably not the most space efficient, but it is faster than searching for the name every time O(n))
+*/
 inline void WRITE_VAR_NAME(const std::string &name)
 {
     variable_names.push_back(name);
 }
 
+/*
+Returns the index of the variable in the variable names array or -1 if it doesn't exist
+*/
 int get_variable_index(const std::string &name)
 { // returns the index of the variable in the variable names array
     for (int i = 0; i < (int)variable_names.size(); i++)
@@ -329,6 +362,9 @@ int get_variable_index(const std::string &name)
     return -1;
 }
 
+/*
+Writes the name of a variable to the variable names array if it doesn't already exist
+*/
 void WRITE_VAR_NAME_IF_NOT_EXISTS(const std::string &name)
 {
     if (get_variable_index(name) == -1)
@@ -337,13 +373,23 @@ void WRITE_VAR_NAME_IF_NOT_EXISTS(const std::string &name)
     }
 }
 
+/*
+Returns the name of the variable at the given index
+*/
 std::string get_variable_name(int index)
 {
+    if(index < 0 || index >= (int)variable_names.size()){
+        interpretation_error("Variable index out of bounds", nullptr, nullptr);
+    }
     return variable_names[index];
 }
 
-// Constructor for the function struct
-function *create_function(int capacity, function *parent = nullptr)
+
+/*
+Creates a new function
+Capacity is the initial size of the code array
+*/
+function *create_function(int capacity)
 {
     function *func = new function;
     func->code = new CODE_SIZE[capacity];
@@ -353,11 +399,6 @@ function *create_function(int capacity, function *parent = nullptr)
     return func;
 }
 
-inline Value get_constant(int index)
-{
-    return constants[index];
-}
-// -------------------------------------------------------------------
 
 // Interpretation ----------------------------------------------------
 void interpret(Node *node, function *func);
@@ -373,6 +414,11 @@ void interpret_std_lib_call(Node *node, function *func);
 void interpret_list(Node *node, function *func);
 void interpret_map_assign(Node *node, function *func);
 
+/*
+Called when an error occurs during interpretation
+Prints the error message, the node that caused the error, and the current state of the bytecode 
+Exits the program
+*/
 void interpretation_error(std::string message, Node *node, function *func)
 {
     std::cout << "Bytecode generation failed" << std::endl;
@@ -461,6 +507,11 @@ void evaluate(Node *value, function *func)
     }
 }
 
+/*
+Pushes the arguments of a function call to the stack
+Pushes the function to the stack
+Calls the function
+*/
 void interpret_function_call(Node *node, function *func)
 {
     if (node->get_type() != NodeType::FUNCTION_CALL_NODE)
@@ -475,7 +526,6 @@ void interpret_function_call(Node *node, function *func)
     Node *arg_list = node->get_child(0);
     for (int i = 0; i < (int)arg_list->get_children().size(); i++)
     {
-        //interpret_expr(arg_list->get_child(i), func);
         evaluate(arg_list->get_child(i), func);
     }
 
@@ -491,6 +541,10 @@ void interpret_function_call(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_FUNCTION_CALL, func);
 }
 
+/*
+Pushes the arguments of an stdlib call to the stack
+Calls the stdlib function if it is found in STD_LIB_FUNCTIONS_DEFINITIONS
+*/
 void interpret_std_lib_call(Node *node, function *func)
 {
     if (node->get_type() != NodeType::STD_LIB_CALL_NODE)
@@ -504,7 +558,6 @@ void interpret_std_lib_call(Node *node, function *func)
     Node *arg_list = node->get_child(0);
     for (int i = 0; i < (int)arg_list->get_children().size(); i++)
     {
-        //interpret_expr(arg_list->get_child(i), func);
         evaluate(arg_list->get_child(i), func);
     }
 
@@ -521,6 +574,9 @@ void interpret_std_lib_call(Node *node, function *func)
     interpretation_error("Std Lib function not found: " + function_name, node, func);
 }
 
+/*
+Takes a node and writes its value to the stack
+*/
 void choose_expr_operand(Node *node, function *func)
 {
     std::string opStr = node->get_value();
@@ -579,12 +635,14 @@ void choose_expr_operand(Node *node, function *func)
     }
 }
 
+/*
+Determines the type and class of the operator and gets the operands accordingly
+*/
 void interpret_op(Node *node, function *func)
 {
     if (node->get_type() == NodeType::OP_NODE)
     {
         std::string opStr = node->get_value();
-        // std::cout << "opStr: " << opStr << std::endl;
 
         if (opCodeMap.find(opStr) == opCodeMap.end())
         {
@@ -630,6 +688,9 @@ void interpret_op(Node *node, function *func)
     }
 }
 
+/*
+Checks if the node is an expression node and then calls choose_expr_operand
+*/
 void interpret_expr(Node *node, function *func)
 {
     if (node->get_type() == NodeType::EXPR_NODE)
@@ -642,6 +703,9 @@ void interpret_expr(Node *node, function *func)
     }
 }
 
+/*
+Writes the return value to the stack and returns to caller
+*/
 void interpret_return(Node *node, function *func)
 {
     if (node->get_type() != NodeType::RETURN_NODE)
@@ -649,13 +713,14 @@ void interpret_return(Node *node, function *func)
         interpretation_error("Return doesn't start with RETURN Node", node, func);
     }
 
-    //interpret_expr(node->get_child(0), func); // Expression to return
-
     evaluate(node->get_child(0), func);
 
     WRITE_BYTE(OpCode::OP_RETURN, func);
 }
 
+/*
+Interprets an if, else if, else block chain
+*/
 void interpret_if(Node *node, function *func)
 {
     if (node->get_type() != NodeType::IF_NODE)
@@ -665,6 +730,7 @@ void interpret_if(Node *node, function *func)
 
     int start_byte = func->count;
 
+    // if block
     interpret_expr(node->get_child(0), func);
     WRITE_BYTE(OpCode::OP_JUMP_IF_FALSE, func);
     WRITE_BYTE(0, func); // Placeholder for the jump index
@@ -679,6 +745,7 @@ void interpret_if(Node *node, function *func)
 
     CHANGE_BYTE(jump_if_false_byte, func->count - 1, func); // Jump to the end of the if block
 
+    // else if blocks
     int current_index = 2;
     while (node->get_children().size() > current_index && node->get_child(current_index)->get_type() == NodeType::EXPR_NODE)
     {
@@ -717,7 +784,6 @@ void interpret_if(Node *node, function *func)
             if(std::get<0>(func->flags[i]) >= start_byte && std::get<0>(func->flags[i]) < func->count){
                 // change the jump index to the end of the else block
                 CHANGE_BYTE(std::get<0>(func->flags[i]), func->count - 1, func); // -1 because the vm will increment the ip
-                //func->flags.erase(func->flags.begin() + i);
                 indices_to_remove.push_back(i);
             }
         }
@@ -728,6 +794,10 @@ void interpret_if(Node *node, function *func)
     }
 }
 
+/*
+Creates a new function and adds it to the constants array
+Interprets the stmt_list of the function and adds the bytecode to the function
+*/
 void interpret_function(Node *node, function *func)
 {
     if (node->get_type() != NodeType::FUNCTION_NODE)
@@ -735,7 +805,7 @@ void interpret_function(Node *node, function *func)
         interpretation_error("Function doesn't start with FUNCTION Node", node, func);
     }
 
-    function *new_func = create_function(1000, func);
+    function *new_func = create_function(1000);
     WRITE_VALUE(new_func); // Add the function to the constants array
 
     WRITE_BYTE(OpCode::OP_LOAD, func); // push function pointer to stack
@@ -765,6 +835,9 @@ void interpret_function(Node *node, function *func)
     interpret_stmt_list(node->get_child(1), new_func);
 }
 
+/*
+Evaluates each value in the list and pushes it to the vector
+*/
 void interpret_list(Node *node, function *func)
 {
     if (node->get_type() != NodeType::LIST_NODE)
@@ -775,23 +848,14 @@ void interpret_list(Node *node, function *func)
     for (int i = 0; i < (int)node->get_children().size(); i++)
     {
         Node* child = node->get_child(i);
-        // if(child->get_type() == NodeType::EXPR_NODE){
-        //     interpret_expr(child, func);
-        //     WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
-        // }
-        // else if(child->get_type() == NodeType::LIST_NODE){
-        //     WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
-        //     interpret_list(child, func);
-        //     WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
-        // }
-        // else{
-        //     interpretation_error("Invalid child type for LIST Node", node, func);
-        // }
         evaluate(child, func);
         WRITE_BYTE(OpCode::OP_VECTOR_PUSH, func);    // Insert the value into the vector
     }
 }
 
+/*
+Interprets a value and updates the map on the stack with the value
+*/
 void interpret_map_assign(Node *node, function *func)
 {
     evaluate(node, func);
@@ -800,6 +864,9 @@ void interpret_map_assign(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_UPDATE_STACK_ELEMENT, func);
 }
 
+/*
+Evaluates a value and assigns it to a variable
+*/
 void interpret_assign(Node *node, function *func)
 {
     if (node->get_type() != NodeType::ASSIGN_NODE)
@@ -824,6 +891,10 @@ void interpret_assign(Node *node, function *func)
     WRITE_BYTE(get_variable_index(var_name), func);
 }
 
+/*
+Evaluates a value and updates the variable with the value
+Variable can be normal, Ex: x, or a map or vector, Ex: x[0]["key"]
+*/
 void interpret_update(Node *node, function *func)
 {
     if (node->get_type() != NodeType::UPDATE_NODE)
@@ -848,13 +919,6 @@ void interpret_update(Node *node, function *func)
 
     if (variable_children.size() == 0)
     {                                           // Normal update
-        // make switch statement for different types of updates
-        // expr
-        // func
-        // map
-        // vector
-        // null
-        //interpret_expr(node_children[1], func); // Expression to update variable with
         evaluate(node_children[1], func);
 
         WRITE_BYTE(OpCode::OP_UPDATE_VAR, func); // takes the value from the stack and updates the value in the variables map
@@ -867,7 +931,6 @@ void interpret_update(Node *node, function *func)
     }
     else
     {                                           // map or vector update
-        // std::cout << "Object update" << std::endl;
         std::vector<Node *> variable_children = variable->get_children();
 
         WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
@@ -886,13 +949,6 @@ void interpret_update(Node *node, function *func)
 
         interpret_expr(variable_children[num_accesses - 1], func); // Index to update
 
-        // make switch statement for different types of updates
-        // expr
-        // func
-        // map
-        // vector
-        // null
-        //interpret_expr(node_children[1], func); // Expression to update variable with
         evaluate(node_children[1], func);
 
         for(int i = 0; i < num_accesses; i++){
@@ -904,6 +960,9 @@ void interpret_update(Node *node, function *func)
     }
 }
 
+/*
+Evaluates a value and prints it to the stdout
+*/
 void interpret_print(Node *node, function *func)
 {
     if (node->get_type() != NodeType::PRINT_NODE)
@@ -917,6 +976,13 @@ void interpret_print(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_PRINT, func);
 }
 
+/*
+Interprets a loop 
+Starts with a variable assignment (optional)
+Then an expression to check if the loop should continue (optional)
+Then a statement list (optional)
+Then an update statement (optional)
+*/
 void interpret_for(Node *node, function *func)
 {
     if (node->get_type() != NodeType::FOR_NODE)
@@ -1043,6 +1109,12 @@ void interpret_for(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }
 
+/*
+Interprets a foreach loop
+Starts with a key and value assignment
+Then a map/vector to iterate over
+Then a statement list (optional)
+*/
 void interpret_foreach(Node *node, function *func)
 {
     if (node->get_type() != NodeType::FOREACH_NODE)
@@ -1145,7 +1217,9 @@ void interpret_foreach(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }
 
-
+/*
+Determines the type of statement and calls the appropriate function
+*/
 void interpret_stmt(Node *node, function *func)
 {
     if (node->get_type() == NodeType::STMT_NODE)
@@ -1203,6 +1277,9 @@ void interpret_stmt(Node *node, function *func)
     }
 }
 
+/*
+Interprets a list of statements
+*/
 void interpret_stmt_list(Node *node, function *func)
 {
     if (node->get_children().size() == 0)
@@ -1222,6 +1299,9 @@ void interpret_stmt_list(Node *node, function *func)
     }
 }
 
+/*
+Interprets the program
+*/
 void interpret(Node *node, function *func)
 {
     if (node->get_type() != NodeType::STMT_LIST_NODE)
@@ -1232,6 +1312,10 @@ void interpret(Node *node, function *func)
     interpret_stmt_list(node, func);
 }
 
+/*
+Generates the bytecode for the given AST
+Writes the bytecode to a cl_exe file with the given name
+*/
 function *generate_bytecode(Node *ast, std::string name)
 {
     function *func = create_function(1000);
