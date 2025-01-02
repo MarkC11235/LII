@@ -11,6 +11,9 @@
 #include "jit.hpp"
 
 // Initializes the virtual machine ----------------------------------
+/*
+VM constructor from a cl_exe object
+*/
 void init_vm(cl_exe* exe, bool jit, int stack_capacity = 256)
 {
     vm.stack = new Value[stack_capacity];
@@ -29,6 +32,9 @@ void init_vm(cl_exe* exe, bool jit, int stack_capacity = 256)
 // -------------------------------------------------------------------
 
 // Runs the virtual machine ------------------------------------------
+/*
+Switches on the current instruction and executes the corresponding operation
+*/
 void vm_loop(bool verbose)
 {
     // Meat of the VM
@@ -569,10 +575,6 @@ void vm_loop(bool verbose)
         // remove the current function frame
         delete get_current_function_frame(&vm);
         vm.function_frames.pop_back();
-
-        // set the ip to the next instruction
-        //get_current_function_frame()->ip += 1;
-
         break;
     }
     case OpCode::OP_JUMP:
@@ -735,6 +737,11 @@ void vm_loop(bool verbose)
     }
 }
 
+/*
+Loops and calls vm_loop until the end of the program is reached
+The end of the program is reached when the current function frame is 
+the main function frame and the ip is at the end of the code or a return statement in the main function is reached
+*/
 void run_vm(bool verbose = false)
 {
     if (verbose)
@@ -761,6 +768,9 @@ void run_vm(bool verbose = false)
     }
 }
 
+/*
+Called on each step of the VM when in debug mode
+*/
 void display_debug_info()
 {
     function_frame* ff = get_current_function_frame(&vm);
@@ -793,12 +803,18 @@ void display_debug_info()
     std::cout << "--------------------------------------------------------------------" << std::endl;
 }
 
+/*
+Wait for the user to press enter
+*/
 void wait_for_continue()
 {
     std::cout << "Press Enter to continue...";
     std::cin.get();
 }
 
+/*
+Runs the VM loop in debug mode
+*/
 void debug_vm(bool verbose = false)
 {
     if (verbose)
@@ -823,7 +839,9 @@ void debug_vm(bool verbose = false)
 
 // -------------------------------------------------------------------
 
-// Starts the interpretation process ---------------------------------
+/*
+Entry point for the virtual machine
+*/
 void interpret_bytecode(std::string path, bool verbose = false, bool debug = false, bool jit = false)
 {
     cl_exe* exe = read_cl_exe(path);
@@ -833,7 +851,5 @@ void interpret_bytecode(std::string path, bool verbose = false, bool debug = fal
 
     delete exe;
 }
-
-// -------------------------------------------------------------------
 
 #endif // VIRUTAL_MACHINE_HPP

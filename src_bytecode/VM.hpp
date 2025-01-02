@@ -6,7 +6,10 @@
 
 #include "Value.hpp"
 
-
+/*
+This holds information about the current function being executed
+Is created when starting a program and for each function call
+*/
 struct function_frame
 {
     function *func;
@@ -26,6 +29,10 @@ typedef void (*JIT_FUNCTION)(VM* vm);
 #define CALLS_TO_JIT 1
 #define JIT_OPTIMIZATION_LEVEL "-O3"
 
+/*
+Created when starting the program
+Holds all data about the program
+*/
 struct VM
 {
     Value *stack;
@@ -49,8 +56,8 @@ void vm_error(const std::string &message)
     exit(1);
 }
 
-// Helper functions ---------------------------------------------------
 
+// Function frame operations ----------------------------------------
 function_frame *get_current_function_frame(VM* vm)
 {
     return vm->function_frames.back();
@@ -73,8 +80,12 @@ function_frame *create_function_frame(function *func)
 
     return frame;
 }
+// -------------------------------------------------------------------
 
-
+/*
+Increments the instruction pointer by the given offset
+Returns false if the end of the function is reached, occurs in main function because there is no return required in the main function
+*/
 bool increase_ip(VM* vm, int offset)
 {
     function_frame *frame = get_current_function_frame(vm);
@@ -94,6 +105,10 @@ bool increase_ip(VM* vm, int offset)
     return true;
 }
 
+/*
+Sets the instruction pointer to the given index
+Returns false if the index is out of bounds
+*/
 bool goto_ip(VM* vm, int index)
 {
     function_frame *frame = get_current_function_frame(vm);
@@ -108,33 +123,63 @@ bool goto_ip(VM* vm, int index)
     return true;
 }
 
+/*
+Returns the current instruction of the current function frame
+Throws an error if the instruction is out of bounds
+*/
 Value get_vm_constant(VM* vm, int index)
 {
+    if(index >= (int)vm->constants.size() || index < 0){
+        vm_error("get_vm_constant: Constant index out of bounds");
+    }
     return vm->constants[index];
 }
 
-// get ip from the current function frame
+/*
+Gets the current instruction pointer of the current function frame
+*/
 CODE_SIZE *get_ip(VM* vm)
 {
     return get_current_function_frame(vm)->ip;
 }
 
+
 // Stack operations -------------------------------------------------
+/*
+Pushes a value to the stack
+*/
 void push(VM* vm, Value value)
 {
     vm->stack[vm->stack_count++] = value;
 }
 
+/*
+Pops a value from the stack and returns it
+Throws an error if the stack is empty
+*/
 Value pop(VM* vm)
 {
+    if(vm->stack_count == 0){
+        vm_error("pop: Stack underflow");
+    }
     return vm->stack[--vm->stack_count];
 }
 
+/*
+Returns the top value of the stack without popping it
+Throws an error if the stack is empty
+*/
 Value top(VM* vm)
 {
+    if(vm->stack_count <= 0){
+        vm_error("top: Stack underflow");
+    }
     return vm->stack[vm->stack_count - 1];
 }
 
+/*
+Prints the stack from bottom to top
+*/
 void print_stack(VM* vm)
 {
     for (int i = 0; i < vm->stack_count; i++)
@@ -144,20 +189,24 @@ void print_stack(VM* vm)
     }
     std::cout << std::endl;
 }
-
 // -------------------------------------------------------------------
 
-// Map operations -----------------------------------------------------
 
-// Creates a new variable in the current scope
+// Variable operations ----------------------------------------------
+/*
+Creates a new variable in the current scope of the function frame
+Will overwrite the variable if one with the same name already exists
+*/
 void set_variable(VM* vm, const std::string &name, Value value)
 {
     function_frame *frame = get_current_function_frame(vm);
     frame->variables[frame->current_scope][name] = value;
 }
 
-// Updates a variable in the current function frame, does not look in the parent frames
-// Looks for the variable in the closest scope, so climbs out of ifs, loops, etc.
+/*
+Updates a variable in the current function frame, does not look in the parent frames
+Looks for the variable in the closest scope, so climbs out of ifs, loops, etc.
+*/
 void update_variable(VM* vm, const std::string &name, Value value)
 {
     function_frame *frame = get_current_function_frame(vm);
@@ -172,8 +221,10 @@ void update_variable(VM* vm, const std::string &name, Value value)
     vm_error("update variable: Variable " + name + " not found");
 }
 
-// Gets a variable in the current function frame, does not look in the parent frames
-// Looks for the variable in the closest scope, so climbs out of ifs, loops, etc.
+/*
+Gets a variable in the current function frame, does not look in the parent frames
+Looks for the variable in the closest scope, so climbs out of ifs, loops, etc.
+*/
 Value get_variable(VM* vm, const std::string &name)
 {
     function_frame *frame = get_current_function_frame(vm);
@@ -188,9 +239,13 @@ Value get_variable(VM* vm, const std::string &name)
     return Value(); // To avoid warning, but this line will never be reached because of vm_error
 }
 
+/*
+Will look for the variable in the current function frame and all parent frames
+Looks for the variable in the closest scope, so climbs out of ifs, loops, etc. and also the closest function frame
+*/
 Value get_function_variable(VM* vm, const std::string &name)
 {
-    for(int j = 0; j < (int)vm->function_frames.size(); j++){
+    for(int j = (int)vm->function_frames.size() - 1; j >= 0; j--){
         function_frame *frame = vm->function_frames[j];
         for (int i = frame->current_scope; i >= 0; i--)
         {
