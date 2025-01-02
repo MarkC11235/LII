@@ -12,8 +12,11 @@ std::string CODE_TO_NUMBER_STRING(CODE_SIZE code){
     return std::to_string((int)code);
 }
 
-struct function; // Forward declaration
+struct function; 
 
+/*
+Defines a function object, which contains the bytecode array, the arguments, and jit information
+*/
 struct function {
     CODE_SIZE* code; // Bytecode array
     int count;

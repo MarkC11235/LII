@@ -12,16 +12,27 @@
 #include "Value.hpp"
 #include "opcodes.hpp"
 
+/*
+Adds the function to the jit_functions vector
+*/
 void jit_add_function(VM* vm, JIT_FUNCTION func)
 {
     vm->jit_functions.push_back(func);
 }
 
+/*
+Calls a jit function at the given index
+*/
 void jit_run_function(VM* vm, int index)
 {
     vm->jit_functions[index](vm);
 }
 
+/*
+Creates the boilerplate code for the JIT function
+Then writes the text representation of what the switch case in vm_loop would look like for each opcode
+Then compiles the code into a shared object file
+*/
 void jit_compile_function(VM* vm, function* func)
 {
     std::string jit_name = "jit_" + std::to_string(vm->jit_functions.size());

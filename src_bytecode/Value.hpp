@@ -10,6 +10,9 @@
 
 void display_bytecode(function* func);
 
+/*
+All the types that the language supports
+*/
 enum Value_Type{
     NUMBER,
     BOOL,
@@ -20,7 +23,7 @@ enum Value_Type{
     MAP,
 };
 
-// forward declare Value for the typedef
+// forward declare Value for the typedef (recursive for map and vector)
 struct Value;
 
 typedef std::variant<
@@ -33,6 +36,9 @@ typedef std::variant<
                     std::map<std::string, Value> // MAP
                     > Value_Content;
 
+/*
+Value struct that holds the type and the data
+*/
 struct Value{
     Value_Type type;
     Value_Content data;
@@ -50,10 +56,17 @@ struct Value{
     }
 };
 
+/*
+Pass in a Value and get the Value_Type of the Value
+*/
 Value_Type get_value_type(Value value){
     return value.type;
 }
 
+/*
+Pass in the string representation of the type and get the Value_Type
+Returns NULL_VALUE if the type is not found 
+*/
 Value_Type get_value_type_from_string(std::string type){
     if(type == "number"){
         return Value_Type::NUMBER;
@@ -74,6 +87,10 @@ Value_Type get_value_type_from_string(std::string type){
     }
 }
 
+/*
+Pass in a Value and get the string representation of the type
+Returns "unknown" if the type is not found
+*/
 std::string get_value_type_string(Value value){
     switch(value.type){
         case NUMBER:
@@ -95,6 +112,9 @@ std::string get_value_type_string(Value value){
     }
 }
 
+/*
+Pass in a Value and coerse the value to a bool
+*/
 bool VALUE_AS_BOOL(Value value){
     switch(value.type){
         case BOOL:
@@ -108,6 +128,9 @@ bool VALUE_AS_BOOL(Value value){
     }
 }
 
+/*
+Pass in a Value and coerse the value to a double
+*/
 double VALUE_AS_NUMBER(Value value){
     switch(value.type){
         case NUMBER:
@@ -121,6 +144,9 @@ double VALUE_AS_NUMBER(Value value){
     }
 }
 
+/*
+Pass in a Value and coerse the value to a string
+*/
 std::string VALUE_AS_STRING(Value value){
     // std::cout << "VALUE AS STRING | Value_Type: " << get_value_type_string(value) << std::endl;
     switch(value.type){
@@ -201,6 +227,9 @@ std::string VALUE_AS_STRING(Value value){
     }
 }
 
+/*
+Pass in a Value and coerse the value to a vector
+*/
 std::vector<Value> VALUE_AS_VECTOR(Value value){
     switch(value.type){
         case VECTOR:
@@ -210,6 +239,9 @@ std::vector<Value> VALUE_AS_VECTOR(Value value){
     }
 }
 
+/*
+Pass in a Value and coerse the value to a function
+*/
 function* VALUE_AS_FUNCTION(Value value){
     if(value.type == Value_Type::FUNCTION){
         function* func = std::get<function*>(value.data);
@@ -221,6 +253,9 @@ function* VALUE_AS_FUNCTION(Value value){
     return nullptr; // will never reach here
 }
 
+/*
+Pass in a Value and coerse the value to a map
+*/
 std::map<std::string, Value> VALUE_AS_MAP(Value value){
     switch(value.type){
         case MAP:
@@ -230,6 +265,9 @@ std::map<std::string, Value> VALUE_AS_MAP(Value value){
     }
 }
 
+/*
+Pass in a Value and print the string representation of the value
+*/
 void print_value(Value value, bool verbose = false){
     // TODO: Add support for printing functions inside JITed functions
     if(verbose) {

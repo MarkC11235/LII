@@ -8,6 +8,9 @@
 #include "Value.hpp"
 #include "Function.hpp"
 
+/*
+All information needed to run a program is stored in a .cl_exe file
+*/
 struct cl_exe{
     std::string name;
     
@@ -17,10 +20,12 @@ struct cl_exe{
     function* main;
 };
 
-
 cl_exe* read_cl_exe(std::string path);
 void write_cl_exe(std::string name, std::string path, function* main, std::vector<std::string> variable_names, std::vector<Value> constants);
 
+/*
+Parses a .cl_exe file and returns a cl_exe struct
+*/
 cl_exe* read_cl_exe(std::string path){
     cl_exe* exe = new cl_exe;
 
@@ -58,7 +63,7 @@ cl_exe* read_cl_exe(std::string path){
             constant = Value(Value_Type::BOOL, value == "true");
         } else if(type == "string"){
             constant = Value(Value_Type::STRING, value);
-        } else if(type == "function"){ // PROBLEM
+        } else if(type == "function"){ 
             value = value.substr(value.find("(") + 1);
             function* func = new function;
             std::vector<std::string> arguments;
@@ -109,6 +114,9 @@ cl_exe* read_cl_exe(std::string path){
     return exe;
 }
 
+/*
+Writes the output of the compiler to a .cl_exe file
+*/
 void write_cl_exe(std::string name, std::string path, function* main, std::vector<std::string> variable_names, std::vector<Value> constants){
     //create a text file with the name of the program
     std::ofstream file;
@@ -138,7 +146,5 @@ void write_cl_exe(std::string name, std::string path, function* main, std::vecto
 
     file.close();
 }
-
-
 
 #endif //CALC_EXE_FILE_HPP

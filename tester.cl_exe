@@ -1,11 +1,12 @@
 ./tester
-2
+3
 x
 main
+y
 5
 function|function () {15, 1, 33, }
 number|1
-function|function () {15, 3, 16, 0, 19, 0, 36, 33, }
+function|function () {15, 3, 16, 2, 19, 0, 36, 33, }
 function|function () {15, 4, 33, }
 number|2
 12
