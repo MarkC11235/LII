@@ -12,7 +12,6 @@
 #include "virtual_machine.hpp"
 #include "cl_exe_file.hpp"
 
-// TODO: MAKE NULL BE ABLE TO BE COMPARABLE (==, !=)
 // TODO: ADD 
 //           exit expr ; // exit the program completely and prints the value of expr
 // TODO: ADD bitwise operators (&, |, ^, ~, <<, >>)
