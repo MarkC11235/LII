@@ -17,6 +17,10 @@
 
 #define RESET_TEXT "\033[0m"
 
+/*
+Prints the correct escape sequence to print colored text
+Throws an error if the color is not recognized
+*/
 int print_colored_text(std::string text, std::string color){
     if(color == "red"){
         std::cout << RED_TEXT; 
@@ -37,23 +41,31 @@ int print_colored_text(std::string text, std::string color){
     return 0;
 }
 
+/*
+Returns a string that is the concatenation of the two strings
+*/
 std::string string_concat(std::string a, std::string b){
     return a + b;
 }
 
-// start is 0-based, 
-// if start + length is greater than the length of the string, it will return the substring from start to the end of the string
+/*
+Returns a substring of the given string
+If start + length is greater than the length of the string, it will return the substring from start to the end of the string
+*/
 std::string string_substr(std::string a, int start, int length){ 
     return a.substr(start, length);
 }
 
-// returns the length of the string
+/*
+Returns the length of the given string
+*/
 int string_len(std::string a){
     return a.length();
 }
 
-// index is 0-based
-// returns the character (right now string because no char type) at the given index
+/*
+returns the character (string, length 1) at the given index
+*/
 std::string char_at(std::string a, int index){ 
     if(index < 0 || (unsigned)index >= a.length()){
         std_lib_error("char_at", "index [" + std::to_string(index) + "] out of bounds");
@@ -62,9 +74,10 @@ std::string char_at(std::string a, int index){
     return std::string(1, a[index]);
 }
 
-// index is 0-based
-// replaces the character (string) at the given index with the given character (string)
-// if a string with more than one character is passed, only the first character will be used
+/*
+Replaces the character (string, length 1) at the given index with the given character (string, length 1) and returns the new string
+If a string with more than one character is passed, only the first character will be used
+*/
 std::string replace_char(std::string a, int index, std::string c){ 
     if(index < 0 || (unsigned)index >= a.length()){
         std_lib_error("replace_char", "index [" + std::to_string(index) + "] out of bounds");
@@ -73,6 +86,9 @@ std::string replace_char(std::string a, int index, std::string c){
     return a;
 }
 
+/*
+Converts a string to a vector of strings, where each string is a character from the original string
+*/
 std::vector<Value> string_to_vector(std::string a){
     std::vector<Value> v;
     for(int i = 0; i < (int)a.length(); i++){
@@ -81,6 +97,9 @@ std::vector<Value> string_to_vector(std::string a){
     return v;
 }
 
+/*
+Splits a string into a vector of strings based on a delimiter
+*/
 std::vector<Value> string_split(std::string a, std::string delimiter){
     std::vector<Value> v;
     size_t pos = 0;
@@ -93,6 +112,5 @@ std::vector<Value> string_split(std::string a, std::string delimiter){
     v.push_back({Value_Type::STRING, a});
     return v;
 }
-
 
 #endif // STRINGS_HPP

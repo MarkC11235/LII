@@ -6,11 +6,12 @@
 #include <iostream>
 #include <fstream>
 
-// file paths must be relative to the lii executable
-// TODO: make the file paths relative to the file that is being executed
+/*
+The directory path of the file that is being executed
+This is so the user can use relative paths in the file that is being executed instead of paths relative to the lii executable
+*/
+std::string directory_path; 
 
-std::string directory_path; // the directory path of the file that is being executed
-                            // this is so the user can use relative paths in the file that is being executed instead of paths relative to the lii executable
 
 /*
 Takes in a file path and writes a string to the file
@@ -44,7 +45,6 @@ int file_write_lines(std::string file_path, std::vector<Value> lines){
 Reads a file and returns the content as a single string
 */
 std::string file_read(std::string file_path){
-    //std::cout << "Reading file: " << directory_path + file_path << std::endl;
     std::ifstream file(directory_path + file_path);
     std::string content(
         (std::istreambuf_iterator<char>(file)), // This creates an input iterator that reads characters from the input stream file.
@@ -70,6 +70,7 @@ std::vector<Value> file_read_lines(std::string file_path){
 
 /*
 Reads a line from stdin
+Waits for the user to press enter
 */
 std::string stdin_read(){
     std::string input;
@@ -132,7 +133,5 @@ int run_python_file(std::string file_path){
 
     return 0;
 }
-
-
 
 #endif // FILES_HPP

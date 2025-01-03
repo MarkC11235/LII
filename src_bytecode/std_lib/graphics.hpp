@@ -85,6 +85,11 @@
         return 0;
     }
 
+    /*
+    Get a list of events that have occurred since the last call.
+    Returns a list of strings representing the events.
+    Clears the event queue after getting the events.
+    */
     std::vector<Value> get_events() {
         std::vector<Value> events;
         std::lock_guard<std::mutex> lock(eventMutex);
@@ -117,6 +122,8 @@
 
     /*
     Update the screen with any changes made since the last update.
+    TODO: maybe make this happen automatically after every draw call? 
+            -Would be inefficient, but more user-friendly becasue less functions the user has to call
     */
     int update_screen() {
         SDL_RenderPresent(ren);

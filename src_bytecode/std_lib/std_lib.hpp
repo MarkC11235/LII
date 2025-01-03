@@ -9,8 +9,8 @@
 #include <any>
 #include <utility> // std::index_sequence, std::make_index_sequence
 
-#include "strings.hpp" // include the string functions
-#include "vectors.hpp" // include the vector functions
+#include "strings.hpp" 
+#include "vectors.hpp" 
 #include "files.hpp" 
 #include "graphics.hpp"
 #include "random.hpp"
@@ -18,18 +18,11 @@
 #include "http_utils.hpp"
 #include "maps.hpp"
 
-
-//Allowed mappings of LII types to C++ types
-// LII -> C++
-// number -> double
-// number -> int
-// bool -> bool
-// string -> std::string
-// vector -> std::vector<Value>
-
 typedef std::function<std::any(std::vector<std::any>, std::vector<std::string>)> STD_LIB_FUNCTION;
 
-// array of the function pointers
+/*
+Contains information about a standard library function as well as the function pointer 
+*/
 struct STD_LIB_FUNCTION_INFO{
     std::string name;
     STD_LIB_FUNCTION function;
@@ -40,7 +33,7 @@ struct STD_LIB_FUNCTION_INFO{
 template<typename Return, typename... Args>
 STD_LIB_FUNCTION make_std_lib_function(Return (*function)(Args...));
 
-// test functions
+// test functions --------------------------------------------------------------------------------------------
 int do_nothing(){
     return 0;
 }
@@ -52,14 +45,12 @@ double test(){
 double inc(double a){
     return a + 1;
 }
+// ------------------------------------------------------------------------------------------------------------
 
-std::map<std::string, Value> map_extend(std::map<std::string, Value> a, std::map<std::string, Value> b){
-    for(auto it = b.begin(); it != b.end(); it++){
-        a[it->first] = it->second;
-    }
-    return a;
-}
-
+/*
+List of standard library functions
+C++ functions need to be define here to be used in CastleLang
+*/
 const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     // test functions
     {"do_nothing", make_std_lib_function(do_nothing), "int", {}}, 
@@ -105,7 +96,6 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"run_python_file", make_std_lib_function(run_python_file), "int", {"std::string"}},
 
     // graphics functions
-    // {"event_thread", make_std_lib_function(event_thread), "void", {}}, // Don't need to expose this function
     {"get_events", make_std_lib_function(get_events), "std::vector<Value>", {}},
     {"init_graphics", make_std_lib_function(init_graphics), "int", {"std::string", "int", "int"}},
     {"close_graphics", make_std_lib_function(close_graphics), "int", {}},
@@ -133,6 +123,9 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"send_request", make_std_lib_function(send_request), "std::map<std::string, Value>", {"std::string", "int", "std::map<std::string, Value>"}},
 };  
 
+/*
+Prints the name of the function and the type of args and return type 
+*/
 void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){
     std::cout << "Function: " << func.name << std::endl;
     std::cout << "Return Type: " << func.return_type << std::endl;
@@ -146,8 +139,10 @@ void print_std_lib_function(const STD_LIB_FUNCTION_INFO &func){
     std::cout << std::endl;
 }
 
-//Takes in a LII Value and a string representing the C++ type
-//Return a bool indicating if the LII type can be mapped to the C++ type
+/*
+Takes in a LII Value and a string representing the C++ type
+Return a bool indicating if the LII type can be mapped to the C++ type
+*/
 bool LII_type_matches_cpp_type(Value value, std::string type){
     switch(value.type){
         case NUMBER:
@@ -189,6 +184,10 @@ bool LII_type_matches_cpp_type(Value value, std::string type){
     return false;
 }
 
+/*
+Takes in a std::any and a string representing the C++ type
+Return a bool indicating if the std::any type can be mapped to the C++ type
+*/
 bool any_type_check(std::any value, std::string type){
     if(type == "double"){
         return value.type() == typeid(double);
@@ -213,6 +212,10 @@ bool any_type_check(std::any value, std::string type){
     }
 }
 
+/*
+Takes in a LII Value and a string representing the C++ type
+Return a std::any of the LII Value casted to the C++ type
+*/
 std::any cast_LII_type_to_cpp_type(Value value, std::string type){
     if(type == "double"){
         return VALUE_AS_NUMBER(value);
@@ -236,6 +239,11 @@ std::any cast_LII_type_to_cpp_type(Value value, std::string type){
     }
 }
 
+/*
+Searches for the function in the list of standard library functions
+If the function is not found, an error is printed and the program exits
+If the function is found it returns true or false depending on if the number of parameters is correct
+*/
 bool is_correct_number_of_parameters(std::string std_lib_name, int num_params){
     for(int i = 0; i < (int)STD_LIB_FUNCTIONS_DEFINITIONS.size(); i++){
         if(STD_LIB_FUNCTIONS_DEFINITIONS[i].name == std_lib_name){
@@ -250,13 +258,20 @@ bool is_correct_number_of_parameters(std::string std_lib_name, int num_params){
     return false; // Should never reach here(std_lib error exits), but to avoid warnings
 }
 
-// Helper to cast std::any to the correct type and call the function
+/*
+Calls the given std_lib function with the given arguments
+Does it by decaing the tuple into its individual elements and casting the arguments with any_cast 
+Can do this safely because all the types are checked before calling this function
+*/
 template<typename Function, typename Tuple, std::size_t... I>
 decltype(auto) callWithCastedArgs(Function func, const std::vector<std::any>& args, Tuple&& tuple, std::index_sequence<I...>) {
     return func(std::any_cast<std::tuple_element_t<I, std::decay_t<Tuple>>>(args[I])...);
 }
 
-// Main function to convert std::vector<std::any> to a tuple of args and call the function
+/*
+Creates a lambda function that is a wrapper for callWithCastedArgs
+All functions in the STD_LIB_FUNCTIONS_DEFINITIONS get passed through this function to get a function pointer
+*/
 template<typename Return, typename... Args>
 STD_LIB_FUNCTION make_std_lib_function(Return (*function)(Args...)) {
     return [function](std::vector<std::any> args, std::vector<std::string> arg_types) -> std::any {
@@ -271,7 +286,7 @@ STD_LIB_FUNCTION make_std_lib_function(Return (*function)(Args...)) {
                 auto result = callWithCastedArgs(function, args, std::tuple<Args...>{}, std::index_sequence_for<Args...>{});
                 return std::any(result);
             }
-            else {
+            else { // TODO: probably make this an error becasue you shouldn't have void return types in the std lib
                 callWithCastedArgs(function, args, std::tuple<Args...>{}, std::index_sequence_for<Args...>{});
                 return std::any();
             }

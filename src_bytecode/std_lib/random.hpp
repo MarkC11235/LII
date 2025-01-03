@@ -5,6 +5,9 @@
 #include <vector>
 #include <string>
 
+/*
+Generates a random integer [min, max] (inclusive)
+*/
 int random_number(int min, int max){
     std::random_device rd;
     std::mt19937 gen(rd());

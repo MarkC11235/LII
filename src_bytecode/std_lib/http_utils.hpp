@@ -23,7 +23,7 @@
 
 #include "../Value.hpp"
 
-// HTTP SERVER
+// HTTP SERVER ----------------------------------------------------------------
 
 std::atomic<bool> server_running(true);
 std::atomic<bool> sever_should_close(false);
@@ -44,13 +44,18 @@ std::map<std::string, Value> pop_request();
 int push_response(int client_fd, std::map<std::string, Value> response);
 int send_response(int client_fd);
 
+/*
+To use as a return value to the user when an error occurs
+*/
 std::map<std::string, Value> make_error_map(const std::string& error) {
     std::map<std::string, Value> error_map;
     error_map["error"] = Value{Value_Type::STRING, error};
     return error_map;
 }
 
-// Function to split a string by a delimiter
+/*
+Splits a string into a vector of strings based on a delimiter
+*/
 std::vector<std::string> split(const std::string& s, const std::string& delimiter) {
     std::vector<std::string> tokens;
     size_t start = 0;
@@ -66,6 +71,10 @@ std::vector<std::string> split(const std::string& s, const std::string& delimite
     return tokens;
 }
 
+/*
+Splits a string into a vector of of two strings based on a delimiter
+Chooses the first instance of the delimiter to split on
+*/
 std::vector<std::string> split_first(const std::string& s, const std::string& delimiter) {
     std::vector<std::string> tokens;
     size_t pos = s.find(delimiter);
@@ -80,6 +89,11 @@ std::vector<std::string> split_first(const std::string& s, const std::string& de
     return tokens;
 }
 
+/*
+Parses an HTTP request
+Returns a map of the request information
+TODO: parse the body
+*/
 std::map<std::string, Value> parse_request(const std::string& request){
     std::map<std::string, Value> parsed_request;
     std::cout << "Parsing request: " << request << std::endl;
@@ -122,15 +136,15 @@ std::map<std::string, Value> parse_request(const std::string& request){
 
     parsed_request["headers"] = Value{Value_Type::MAP, headers};
 
-    // TODO: parse the body
-
-
     return parsed_request;
 }
 
+/*
+Handles a request from a client
+Parses the request, pushes it to the queue, and sends a response back
+*/
 void handle_client(int client_fd) {
     try {
-        //char buffer[256] = {0};
         constexpr int buffer_size = 1024*1024;
         char buffer[buffer_size] = {0};
         ssize_t bytes_received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
@@ -179,6 +193,11 @@ void handle_client(int client_fd) {
     }
 }
 
+/*
+The main server loop that listens for incoming connections
+If there is a connection, it creates a new thread to handle the client
+After a timeout with no connections, it checks if the server should close (CTRL+C)
+*/
 int server_loop(int sockfd) {
     try {
         while (server_running) {
@@ -224,6 +243,9 @@ int server_loop(int sockfd) {
     return 0;
 }
 
+/*
+Checks if (CTRL+C) was pressed and sets the flag saying the server should close
+*/
 void signal_handler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
         std::cerr << "Signal received, stopping server...\n";
@@ -231,6 +253,10 @@ void signal_handler(int signal) {
     }
 }
 
+/*
+Creates a socket, binds it to the port, and starts listening for connections
+Creates a new thread to run the server loop
+*/
 int start_server(int port) {
     try {
         std::signal(SIGINT, signal_handler);
@@ -244,6 +270,7 @@ int start_server(int port) {
 
         // Set the SO_REUSEADDR option
         // fixes issue with trying to start the server soon after it was stopped
+        // There was a problem with binding without this option
         int opt = 1;
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
             std::cerr << "Failed to set SO_REUSEADDR\n";
@@ -279,10 +306,19 @@ int start_server(int port) {
     }
 }
 
+/*
+Returns the flag indicating if the server should close
+*/
 bool server_should_close() {
     return sever_should_close;
 }
 
+/*
+Stops the server by setting the server_running flag to false
+Joins the server thread to wait for it to finish
+Closes the socket
+Clears the requests and responses queues
+*/
 int stop_server() {
     try {
         server_running = false;
@@ -308,6 +344,10 @@ int stop_server() {
     }
 }
 
+/*
+Pops a request from the queue in a thread-safe way
+Adds the client_fd to the request map
+*/
 std::map<std::string, Value> pop_request() {
     std::lock_guard<std::mutex> lock(requests_mutex);
     try {
@@ -330,6 +370,9 @@ std::map<std::string, Value> pop_request() {
     }
 }
 
+/*
+Pushes a response to the queue in a thread-safe way
+*/
 int push_response(int client_fd, std::map<std::string, Value> response) {
     try {
         std::lock_guard<std::mutex> lock(responses_mutex);
@@ -349,6 +392,12 @@ int push_response(int client_fd, std::map<std::string, Value> response) {
     }
 }
 
+/*
+Loops until a response is available for the client_fd
+The loop sleeps for 1 second between checks
+Sends the response and closes the connection
+TODO: maybe an issue if the client sends multiple requests before the response is sent
+*/
 int send_response(int client_fd) {
     try {
         while(true){
@@ -385,9 +434,17 @@ int send_response(int client_fd) {
     return 1;
 }
 
+// --------------------------------------------------------------------------
 
-// HTTP CLIENT
 
+
+// HTTP CLIENT ----------------------------------------------------------------
+
+/*
+A helper function to build an HTTP request string
+Pass in a map with the method, path, headers, and body
+Returns a string that can be sent over a socket
+*/
 std::string build_request(std::map<std::string, Value> request) {
     std::string request_str = VALUE_AS_STRING(request["method"]) + " " + VALUE_AS_STRING(request["path"]) + " HTTP/1.1\r\n";
 
@@ -412,6 +469,10 @@ std::string build_request(std::map<std::string, Value> request) {
     return request_str;
 }
 
+/*
+Creates a socket, connects to the host and port, sends the request
+Receives the response and returns it as a map
+*/
 std::map<std::string, Value> send_request(std::string host, int port, std::map<std::string, Value> request) {
     try {
         int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -476,5 +537,6 @@ std::map<std::string, Value> send_request(std::string host, int port, std::map<s
     }
 }
 
+// ----------------------------------------------------------------------------
 
 #endif // HTTP_UTILS_HPP
