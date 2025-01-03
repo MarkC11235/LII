@@ -1,1 +1,1 @@
-print $vector_slice([1, 2, 3, 4, 5], 1, 3); // [2, 3, 4]
+print $vector_join([1, 2, 3], [4, 5, 6]);

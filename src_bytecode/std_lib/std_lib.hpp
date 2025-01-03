@@ -56,12 +56,11 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"do_nothing", make_std_lib_function(do_nothing), "int", {}}, 
     {"test", make_std_lib_function(test), "double", {}},
     {"inc", make_std_lib_function(inc), "double", {"double"}},
-    {"map_extend", make_std_lib_function(map_extend), "std::map<std::string, Value>", {"std::map<std::string, Value>", "std::map<std::string, Value>"}},
 
     // string functions
-    {"string_concat", make_std_lib_function(string_concat), "std::string", {"std::string", "std::string"}},
-    {"string_substr", make_std_lib_function(string_substr), "std::string", {"std::string", "int", "int"}},
-    {"string_len", make_std_lib_function(string_len), "int", {"std::string"}},
+    {"string_join", make_std_lib_function(string_join), "std::string", {"std::string", "std::string"}},
+    {"string_substring", make_std_lib_function(string_substring), "std::string", {"std::string", "int", "int"}},
+    {"string_length", make_std_lib_function(string_length), "int", {"std::string"}},
     {"char_at", make_std_lib_function(char_at), "std::string", {"std::string", "int"}},
     {"replace_char", make_std_lib_function(replace_char), "std::string", {"std::string", "int", "std::string"}},
     {"print_colored_text", make_std_lib_function(print_colored_text), "int", {"std::string", "std::string"}},
@@ -70,7 +69,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     
     // vector functions
     {"vector_create", make_std_lib_function(vector_create), "std::vector<Value>", {"int", "Value"}},
-    {"vector_len", make_std_lib_function(vector_len), "int", {"std::vector<Value>"}},
+    {"vector_length", make_std_lib_function(vector_length), "int", {"std::vector<Value>"}},
     {"vector_push", make_std_lib_function(vector_push), "std::vector<Value>", {"std::vector<Value>", "Value"}},
     {"vector_pop", make_std_lib_function(vector_pop), "std::vector<Value>", {"std::vector<Value>"}},
     {"vector_insert", make_std_lib_function(vector_insert), "std::vector<Value>", {"std::vector<Value>", "int", "Value"}},
@@ -80,10 +79,11 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"vector_set", make_std_lib_function(vector_set), "std::vector<Value>", {"std::vector<Value>", "int", "Value"}},
     {"vector_slice", make_std_lib_function(vector_slice), "std::vector<Value>", {"std::vector<Value>", "int", "int"}},
     {"vector_reverse", make_std_lib_function(vector_reverse), "std::vector<Value>", {"std::vector<Value>"}},
-    {"vector_concat", make_std_lib_function(vector_concat), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
+    {"vector_join", make_std_lib_function(vector_join), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
     
     // map functions
     {"map_size", make_std_lib_function(map_size), "int", {"std::map<std::string, Value>"}},
+    {"map_join", make_std_lib_function(map_join), "std::map<std::string, Value>", {"std::map<std::string, Value>", "std::map<std::string, Value>"}},
     
     // file functions
     {"file_write", make_std_lib_function(file_write), "int", {"std::string", "std::string"}},
@@ -104,7 +104,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"draw_rect", make_std_lib_function(draw_rect), "int", {"int", "int", "int", "int"}},
 
     // random functions
-    {"random_number", make_std_lib_function(random_number), "int", {"int", "int"}},
+    {"random_int", make_std_lib_function(random_int), "int", {"int", "int"}},
 
     // misc functions
     {"exit_program", make_std_lib_function(exit_program), "int", {"std::string"}},
@@ -117,7 +117,6 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"pop_request", make_std_lib_function(pop_request), "std::map<std::string, Value>", {}},
     {"push_response", make_std_lib_function(push_response), "int", {"int", "std::map<std::string, Value>"}},
     {"server_should_close", make_std_lib_function(server_should_close), "bool", {}},
-
 
     // http client functions
     {"send_request", make_std_lib_function(send_request), "std::map<std::string, Value>", {"std::string", "int", "std::map<std::string, Value>"}},

@@ -44,7 +44,7 @@ int print_colored_text(std::string text, std::string color){
 /*
 Returns a string that is the concatenation of the two strings
 */
-std::string string_concat(std::string a, std::string b){
+std::string string_join(std::string a, std::string b){
     return a + b;
 }
 
@@ -52,14 +52,14 @@ std::string string_concat(std::string a, std::string b){
 Returns a substring of the given string
 If start + length is greater than the length of the string, it will return the substring from start to the end of the string
 */
-std::string string_substr(std::string a, int start, int length){ 
+std::string string_substring(std::string a, int start, int length){ 
     return a.substr(start, length);
 }
 
 /*
 Returns the length of the given string
 */
-int string_len(std::string a){
+int string_length(std::string a){
     return a.length();
 }
 

@@ -18,7 +18,7 @@ int map_size(std::map<std::string, Value> map){
 Combines two maps into one
 If a key is in both maps, the value from the second map is used
 */
-std::map<std::string, Value> map_extend(std::map<std::string, Value> a, std::map<std::string, Value> b){
+std::map<std::string, Value> map_join(std::map<std::string, Value> a, std::map<std::string, Value> b){
     for(auto it = b.begin(); it != b.end(); it++){
         a[it->first] = it->second;
     }

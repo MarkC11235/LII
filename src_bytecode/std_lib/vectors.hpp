@@ -17,7 +17,7 @@ std::vector<Value> vector_create(int size, Value value){
 /*
 Returns the length of the given vector
 */
-int vector_len(std::vector<Value> a){
+int vector_length(std::vector<Value> a){
     return a.size();
 }
 
@@ -112,7 +112,7 @@ std::vector<Value> vector_reverse(std::vector<Value> a){
 /*
 Concatenates two vectors and returns the new vector
 */
-std::vector<Value> vector_concat(std::vector<Value> a, std::vector<Value> b){
+std::vector<Value> vector_join(std::vector<Value> a, std::vector<Value> b){
     a.insert(a.end(), b.begin(), b.end());
     return a;
 }
