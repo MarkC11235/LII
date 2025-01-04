@@ -4,7 +4,7 @@ let mat = [
     [7, 8, 9]
 ];
 
-$csv_write("mat.csv", mat);
+let res = $csv_write("mat.csv", mat);
 
 let mat2 = $csv_read("mat.csv");
 

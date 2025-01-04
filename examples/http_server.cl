@@ -24,7 +24,7 @@ for(;;){
         else{
             body = body + "Hackerman";
         }
-        let response = struct{
+        let response = map{
             let status = "HTTP/1.1 200 OK";
             let content_type = "Content-Type: text/html";
             let content_length = "Content-Length: " + $string_len(body);

@@ -1,4 +1,4 @@
-let http_req = struct{
+let http_req = map{
     let method = "GET";
     let path = "/";
     let version = "HTTP/1.1";

@@ -6,7 +6,7 @@ let lines = [
     "This is only a test."
 ];
 
-$file_write_lines(file_path, lines);
+let res = $file_write_lines(file_path, lines);
 
 let lines = $file_read_lines(file_path);
 
