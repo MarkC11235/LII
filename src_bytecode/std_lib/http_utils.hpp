@@ -96,13 +96,13 @@ TODO: parse the body
 */
 std::map<std::string, Value> parse_request(const std::string& request){
     std::map<std::string, Value> parsed_request;
-    std::cout << "Parsing request: " << request << std::endl;
+    // std::cout << "Parsing request: " << request << std::endl;
 
     // split the request into lines
     std::vector<std::string> lines = split(request, "\r\n");
-    for(int i = 0; i < (int)lines.size(); i++){
-        std::cout << "Line " << i << ": " << lines[i] << std::endl;
-    }
+    // for(int i = 0; i < (int)lines.size(); i++){
+    //     std::cout << "Line " << i << ": " << lines[i] << std::endl;
+    // }
 
     // parse the first line
     std::vector<std::string> first_line = split(lines[0], " ");
@@ -135,6 +135,17 @@ std::map<std::string, Value> parse_request(const std::string& request){
     }
 
     parsed_request["headers"] = Value{Value_Type::MAP, headers};
+
+    // parse the body
+    std::string body = "";
+    for(int i = 1; i < (int)lines.size(); i++){
+        if(lines[i].size() == 0){
+            body = lines[i+1];
+            break;
+        }
+    }
+
+    parsed_request["body"] = Value{Value_Type::STRING, body};
 
     return parsed_request;
 }
@@ -401,11 +412,11 @@ TODO: maybe an issue if the client sends multiple requests before the response i
 int send_response(int client_fd) {
     try {
         while(true){
-            std::cout << "Checking for response in queue\n";
+            // std::cout << "Checking for response in queue\n";
             {
                 std::lock_guard<std::mutex> lock(responses_mutex);
                 if(responses_queue.find(client_fd) != responses_queue.end()){
-                    std::cout << "Sending response\n";
+                    // std::cout << "Sending response\n";
                     std::map<std::string, Value> response = responses_queue[client_fd];
                     responses_queue.erase(client_fd);
 
@@ -458,13 +469,23 @@ std::string build_request(std::map<std::string, Value> request) {
 
     request_str += "\r\n";
 
+    // std::cout << "Body: " << VALUE_AS_STRING(request["body"]) << std::endl;
+
     if(request.find("body") == request.end()){
+        // std::cout << "No body\n";
         request["body"] = Value{Value_Type::STRING, ""};
     }
-    std::map<std::string, Value> body = VALUE_AS_MAP(request["body"]);
-    if (body.size() > 0) {
-        request_str += VALUE_AS_STRING(body["body"]);
-    }
+
+    //TODO: allow body to be a map (JSON) and convert it to a string and allow it to be a raw string (still can do JSON)
+    // std::map<std::string, Value> body = VALUE_AS_MAP(request["body"]);
+    // if (body.size() > 0) {
+    //     std::cout << "Body size: " << body.size() << std::endl; 
+    //     request_str += VALUE_AS_STRING(body["body"]);
+    // }
+
+    request_str += VALUE_AS_STRING(request["body"]);
+
+    // std::cout << "Request: " << request_str << std::endl;
 
     return request_str;
 }
@@ -526,8 +547,13 @@ std::map<std::string, Value> send_request(std::string host, int port, std::map<s
         close(sockfd);
 
         std::map<std::string, Value> response;
-        response["body"] = Value{Value_Type::STRING, std::string(buffer)};
+        std::string response_str(buffer);
+        //TODO: parse the response and create a proper map with the status code, headers, and body
+
+        response["body"] = Value{Value_Type::STRING, response_str};
         return response;
+
+
     } catch (const std::exception& e) {
         std::cerr << "Exception in send_request: " << e.what() << std::endl;
         return make_error_map("Exception in send_request");
