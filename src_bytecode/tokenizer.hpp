@@ -304,7 +304,31 @@ std::vector<Token> analyze(std::string input, int line_number){
                 std::string string = "";
                 i++;
                 while(input[i] != '"' && i < int(input.length())){
-                    string += input[i];
+                    //check for escape characters
+                    if(input[i] == '\\'){
+                        i++;
+                        if(i == int(input.length())){
+                            return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "No closing quotes", line_number)};
+                        }
+                        if(input[i] == 'n'){
+                            string += '\n';
+                        }
+                        else if(input[i] == 't'){
+                            string += '\t';
+                        }
+                        else if(input[i] == '\\'){
+                            string += '\\';
+                        }
+                        else if(input[i] == '"'){
+                            string += '"';
+                        }
+                        else{
+                            return std::vector<Token>{Token(TokenType::ERROR_TOKEN, "Invalid escape character", line_number)};
+                        }
+                    }
+                    else{
+                        string += input[i];
+                    }
                     i++;
                 }
                 if(i == int(input.length())){

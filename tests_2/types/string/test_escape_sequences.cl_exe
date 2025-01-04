@@ -1,4 +1,4 @@
-./tester
+./tests_2/types/string/test_escape_sequences
 0
 4
 string|Hello,\n World!

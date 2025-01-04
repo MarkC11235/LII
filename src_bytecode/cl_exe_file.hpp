@@ -20,6 +20,11 @@ struct cl_exe{
     function* main;
 };
 
+void cl_exe_error(std::string error_message){
+    std::cout << "Error: " << error_message << std::endl;
+    exit(1);
+}
+
 cl_exe* read_cl_exe(std::string path);
 void write_cl_exe(std::string name, std::string path, function* main, std::vector<std::string> variable_names, std::vector<Value> constants);
 
@@ -62,7 +67,33 @@ cl_exe* read_cl_exe(std::string path){
         } else if(type == "bool"){
             constant = Value(Value_Type::BOOL, value == "true");
         } else if(type == "string"){
-            constant = Value(Value_Type::STRING, value);
+            //find all escape sequences and convert them into the actual characters
+            std::string new_value = "";
+            for(int i = 0; i < value.length(); i++){
+                if(value[i] == '\\'){
+                    i++;
+                    if(value[i] == 'n'){
+                        new_value += '\n';
+                    }
+                    else if(value[i] == 't'){
+                        new_value += '\t';
+                    }
+                    else if(value[i] == '\\'){
+                        new_value += '\\';
+                    }
+                    else if(value[i] == '"'){
+                        new_value += '"';
+                    }
+                    else{
+                        cl_exe_error("Invalid escape character");
+                        return nullptr;
+                    }
+                }
+                else{
+                    new_value += value[i];
+                }
+            }
+            constant = Value(Value_Type::STRING, new_value);
         } else if(type == "function"){ 
             value = value.substr(value.find("(") + 1);
             function* func = new function;
@@ -135,7 +166,35 @@ void write_cl_exe(std::string name, std::string path, function* main, std::vecto
     //write the constants vector
     file << constants.size() << std::endl;
     for(Value constant : constants){
-        file << get_value_type_string(constant) << "|" << VALUE_AS_STRING(constant) << std::endl;
+        std::string type = get_value_type_string(constant);
+        std::string value = VALUE_AS_STRING(constant);
+
+        if(type == "string"){ // this is the case, we need to find all escape sequences and covent them into the textual format instead of writing them (Ex: \n instead of an actual newline)
+            std::string new_value = "";
+            for(int i = 0; i < value.length(); i++){
+                if(value[i] == '\n'){
+                    new_value += "\\n";
+                }
+                else if(value[i] == '\t'){
+                    new_value += "\\t";
+                }
+                else if(value[i] == '\\'){
+                    new_value += "\\\\";
+                }
+                else if(value[i] == '"'){
+                    new_value += "\\\"";
+                }
+                else{
+                    new_value += value[i];
+                }
+            }
+            file << type << "|" << new_value << std::endl;    
+        }
+        else{
+            file << type << "|" << value << std::endl;
+        }
+
+        // file << get_value_type_string(constant) << "|" << VALUE_AS_STRING(constant) << std::endl;
     }
 
     //write the main bytecode array
