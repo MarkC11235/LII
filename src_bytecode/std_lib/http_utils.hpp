@@ -541,7 +541,7 @@ std::map<std::string, Value> send_request(std::string host, int port, std::map<s
             close(sockfd);
             return make_error_map("Response too large");
         }
-
+ 
         buffer[bytes_received] = '\0';
 
         close(sockfd);

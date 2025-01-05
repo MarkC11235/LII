@@ -94,6 +94,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"csv_write", make_std_lib_function(csv_write), "int", {"std::string", "std::vector<Value>"}},
     {"csv_read", make_std_lib_function(csv_read), "std::vector<Value>", {"std::string"}}, // Returns a vector of vectors of strings
     {"run_python_file", make_std_lib_function(run_python_file), "int", {"std::string"}},
+    {"map_to_json", make_std_lib_function(map_to_json), "std::string", {"std::map<std::string, Value>"}},
 
     // graphics functions
     {"get_events", make_std_lib_function(get_events), "std::vector<Value>", {}},

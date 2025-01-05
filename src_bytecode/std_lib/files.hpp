@@ -134,4 +134,28 @@ int run_python_file(std::string file_path){
     return 0;
 }
 
+
+std::string map_to_json(std::map<std::string, Value> map){
+    std::string json = "{";
+    for(auto it = map.begin(); it != map.end(); it++){
+        json += "\"" + it->first + "\":";
+        if(get_value_type(it->second) == Value_Type::MAP){
+            json += map_to_json(VALUE_AS_MAP(it->second));
+        }else if(get_value_type(it->second) == Value_Type::STRING || get_value_type(it->second) == Value_Type::FUNCTION){
+            json += "\"" + VALUE_AS_STRING(it->second) + "\"";
+        }
+        else{
+            json += VALUE_AS_STRING(it->second);
+        }
+        if(it != --map.end()){
+            json += ",";
+        }
+    }
+    json += "}";
+    return json;
+}
+
+
+
+
 #endif // FILES_HPP
