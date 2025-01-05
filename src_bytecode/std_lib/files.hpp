@@ -12,6 +12,7 @@ This is so the user can use relative paths in the file that is being executed in
 */
 std::string directory_path;
 
+// Text files --------------------------------------------------------------------------------------------
 /*
 Takes in a file path and writes a string to the file
 */
@@ -72,18 +73,9 @@ std::vector<Value> file_read_lines(std::string file_path)
     }
     return lines;
 }
+// --------------------------------------------------------------------------------------------------------
 
-/*
-Reads a line from stdin
-Waits for the user to press enter
-*/
-std::string stdin_read()
-{
-    std::string input;
-    std::getline(std::cin, input);
-    return input;
-}
-
+// CSV files ---------------------------------------------------------------------------------------------
 /*
 Writes a vector of vectors of strings to a csv file
 */
@@ -139,16 +131,40 @@ std::vector<Value> csv_read(std::string file_path)
     }
     return lines;
 }
+// --------------------------------------------------------------------------------------------------------
 
-/*
-Runs a python file using the python3 command
-*/
-int run_python_file(std::string file_path)
+// JSON files --------------------------------------------------------------------------------------------
+std::string map_to_json(std::map<std::string, Value> map);
+
+std::string value_to_json(Value value)
 {
-    std::string command = "python3 " + file_path;
-    system(command.c_str());
-
-    return 0;
+    if (get_value_type(value) == Value_Type::MAP)
+    {
+        return map_to_json(VALUE_AS_MAP(value));
+    }
+    else if (get_value_type(value) == Value_Type::STRING || get_value_type(value) == Value_Type::FUNCTION)
+    {
+        return "\"" + VALUE_AS_STRING(value) + "\"";
+    }
+    else if (get_value_type(value) == Value_Type::VECTOR)
+    {
+        std::string json = "[";
+        std::vector<Value> vec = VALUE_AS_VECTOR(value);
+        for (int i = 0; i < (int)vec.size(); i++)
+        {
+            json += value_to_json(vec[i]);
+            if (i != (int)vec.size() - 1)
+            {
+                json += ",";
+            }
+        }
+        json += "]";
+        return json;
+    }
+    else
+    {
+        return VALUE_AS_STRING(value);
+    }
 }
 
 std::string map_to_json(std::map<std::string, Value> map)
@@ -157,18 +173,7 @@ std::string map_to_json(std::map<std::string, Value> map)
     for (auto it = map.begin(); it != map.end(); it++)
     {
         json += "\"" + it->first + "\":";
-        if (get_value_type(it->second) == Value_Type::MAP)
-        {
-            json += map_to_json(VALUE_AS_MAP(it->second));
-        }
-        else if (get_value_type(it->second) == Value_Type::STRING || get_value_type(it->second) == Value_Type::FUNCTION)
-        {
-            json += "\"" + VALUE_AS_STRING(it->second) + "\"";
-        }
-        else
-        {
-            json += VALUE_AS_STRING(it->second);
-        }
+        json += value_to_json(it->second);
         if (it != --map.end())
         {
             json += ",";
@@ -181,38 +186,29 @@ std::string map_to_json(std::map<std::string, Value> map)
 std::map<std::string, Value> json_to_map(std::string json);
 Value get_json_value(std::string json, int &i, int json_size);
 
-std::vector<Value> json_to_vector(std::string json, int &i, int json_size)
+std::vector<Value> json_vector(std::string json, int &i, int json_size)
 {
     std::vector<Value> vec;
-
-    while (json[i] != ']')
+    while (i < json_size && json[i] != ']')
     {
-        Value value = get_json_value(json, i, json_size);
-        print_value(value);
-        vec.push_back(value);
-
-        // skip any whitespace
+        std::cout << "i: " << i << std::endl;
+        // remove whitespace
         while (i < json_size && json[i] == ' ')
         {
             i++;
         }
-
-        // check for comma
-        if (json[i] != ',' && json[i] != ']')
-        {
-            std_lib_error("json_to_vector", "invalid json format, expected comma, or closing bracket, got [" + std::string(1, json[i]) + "]");
-            return vec;
-        }
-        i++;
-
-        // skip any whitespace
+        Value value = get_json_value(json, i, json_size);
+        vec.push_back(value);
+        //remove whitespace
         while (i < json_size && json[i] == ' ')
+        {
+            i++;
+        }
+        if (json[i] == ',')
         {
             i++;
         }
     }
-    i++; // skip closing bracket
-
     return vec;
 }
 
@@ -248,7 +244,12 @@ Value get_json_value(std::string json, int &i, int json_size)
         // TODO: handle empty vector
         // TODO: handle vectors
         i++;
-        value = {Value_Type::VECTOR, json_to_vector(json, i, json_size)};
+        value = {Value_Type::VECTOR, json_vector(json, i, json_size)};
+        if (json[i] != ']')
+        {
+            std_lib_error("json_to_map", "invalid json format, expected closing bracket");
+        }
+        i++;
     }
     break;
     case '"': // string (TODO: handle escape characters)
@@ -309,16 +310,19 @@ Value get_json_value(std::string json, int &i, int json_size)
     default: // number
     {
         std::string num;
-        if(json[i] == '-'){
+        if (json[i] == '-')
+        {
             num += json[i];
             i++;
         }
         int num_decimals = 0;
         while (i < json_size && (isdigit(json[i]) || json[i] == '.'))
         {
-            if(json[i] == '.'){
+            if (json[i] == '.')
+            {
                 num_decimals++;
-                if(num_decimals > 1){
+                if (num_decimals > 1)
+                {
                     std_lib_error("json_to_map", "invalid json format, expected number");
                     return value;
                 }
@@ -328,7 +332,7 @@ Value get_json_value(std::string json, int &i, int json_size)
         }
         std::cout << "num: " << num << std::endl;
         value = {Value_Type::NUMBER, std::stod(num)};
-        print_value(value);
+        // print_value(value);
     }
     break;
     }
@@ -424,5 +428,30 @@ std::map<std::string, Value> json_to_map(std::string json)
 
     return map;
 }
+// --------------------------------------------------------------------------------------------------------
+
+// Misc files --------------------------------------------------------------------------------------------
+/*
+Runs a python file using the python3 command
+*/
+int run_python_file(std::string file_path)
+{
+    std::string command = "python3 " + file_path;
+    system(command.c_str());
+
+    return 0;
+}
+
+/*
+Reads a line from stdin
+Waits for the user to press enter
+*/
+std::string stdin_read()
+{
+    std::string input;
+    std::getline(std::cin, input);
+    return input;
+}
+// --------------------------------------------------------------------------------------------------------
 
 #endif // FILES_HPP
