@@ -18,17 +18,13 @@ for(;;){
     else{
         print req;
 
-        let body = "Hello ";
-        if(req["path"] == "/"){
-            body = body + "World";
-        }
-        else{
-            body = body + "Hackerman";
-        }
+        let body = map{
+            let html = "<html><body><h1>Hello, World!</h1></body></html>";
+        };
         let response = map{
             let status = "HTTP/1.1 200 OK";
             let content_type = "Content-Type: text/html";
-            let content_length = "Content-Length: " + $string_length(body);
+            let content_length = "Content-Length: " + $string_length(body["html"]);
             let body = body;
         };
         let res = $push_response(req["client_fd"], response);

@@ -15,7 +15,7 @@ string|curl/7.64.1
 string|Accept
 string|*/*
 string|body
-string|{\"name\":\"Mark\"}
+string|{\"name\":\"Mark\", \"age\":25}
 string|127.0.0.1
 number|8080
 50
@@ -63,7 +63,7 @@ number|8080
 18
 0
 40
-48
+50
 16
 1
 18

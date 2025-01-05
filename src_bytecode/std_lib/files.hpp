@@ -347,7 +347,7 @@ Value get_json_value(std::string json, int &i, int json_size)
 }
 
 /*
-Takes in a json string representation of a map and converts it to a map of strings to Values
+Takes in a json string and converts it to a map
 */
 std::map<std::string, Value> json_to_map(std::string json)
 {

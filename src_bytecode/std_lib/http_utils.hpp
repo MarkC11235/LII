@@ -96,13 +96,9 @@ TODO: parse the body
 */
 std::map<std::string, Value> parse_request(const std::string& request){
     std::map<std::string, Value> parsed_request;
-    // std::cout << "Parsing request: " << request << std::endl;
 
     // split the request into lines
     std::vector<std::string> lines = split(request, "\r\n");
-    // for(int i = 0; i < (int)lines.size(); i++){
-    //     std::cout << "Line " << i << ": " << lines[i] << std::endl;
-    // }
 
     // parse the first line
     std::vector<std::string> first_line = split(lines[0], " ");
@@ -469,23 +465,11 @@ std::string build_request(std::map<std::string, Value> request) {
 
     request_str += "\r\n";
 
-    // std::cout << "Body: " << VALUE_AS_STRING(request["body"]) << std::endl;
-
     if(request.find("body") == request.end()){
-        // std::cout << "No body\n";
         request["body"] = Value{Value_Type::STRING, ""};
     }
 
-    //TODO: allow body to be a map (JSON) and convert it to a string and allow it to be a raw string (still can do JSON)
-    // std::map<std::string, Value> body = VALUE_AS_MAP(request["body"]);
-    // if (body.size() > 0) {
-    //     std::cout << "Body size: " << body.size() << std::endl; 
-    //     request_str += VALUE_AS_STRING(body["body"]);
-    // }
-
     request_str += VALUE_AS_STRING(request["body"]);
-
-    // std::cout << "Request: " << request_str << std::endl;
 
     return request_str;
 }
@@ -548,9 +532,43 @@ std::map<std::string, Value> send_request(std::string host, int port, std::map<s
 
         std::map<std::string, Value> response;
         std::string response_str(buffer);
-        //TODO: parse the response and create a proper map with the status code, headers, and body
 
-        response["body"] = Value{Value_Type::STRING, response_str};
+
+        std::vector<std::string> lines = split(response_str, "\r\n");
+        std::vector<std::string> first_line = split(lines[0], " ");
+        if(first_line.size() != 3){
+            return make_error_map("Invalid response");
+        }
+
+        response["version"] = Value{Value_Type::STRING, first_line[0]};
+        response["status_code"] = Value{Value_Type::NUMBER, std::stod(first_line[1])};
+        response["status_message"] = Value{Value_Type::STRING, first_line[2]};
+
+        std::map<std::string, Value> headers;
+        for(int i = 1; i < (int)lines.size(); i++){
+            std::vector<std::string> header = split_first(lines[i], ": ");
+            if(header.size() == 1){
+                break; // end of headers
+            }
+            else if(header.size() != 2){
+                return make_error_map("Invalid header");
+            }
+
+            headers[header[0]] = Value{Value_Type::STRING, header[1]};
+        }
+        
+        response["headers"] = Value{Value_Type::MAP, headers};
+
+        std::string body = "";
+        for(int i = 1; i < (int)lines.size(); i++){
+            if(lines[i].size() == 0){
+                body = lines[i+1];
+                break;
+            }
+        }
+
+        response["body"] = Value{Value_Type::STRING, body};
+
         return response;
 
 

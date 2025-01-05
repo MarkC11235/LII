@@ -6,7 +6,7 @@ let http_req = map{
         let User_Agent = "curl/7.64.1";
         let Accept = "*/*";
     };
-    let body = "{\"name\":\"Mark\"}";
+    let body = "{\"name\":\"Mark\", \"age\":25}";
 }; 
 let res = $send_request("127.0.0.1", 8080, http_req);
 print res;
