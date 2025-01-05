@@ -1,4 +1,4 @@
-./tester
+./tests_2/std_lib/files/test_json2
 3
 obj
 json_string

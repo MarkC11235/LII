@@ -135,7 +135,12 @@ std::vector<Value> csv_read(std::string file_path)
 
 // JSON files --------------------------------------------------------------------------------------------
 std::string map_to_json(std::map<std::string, Value> map);
+std::map<std::string, Value> json_to_map(std::string json);
+Value get_json_value(std::string json, int &i, int json_size);
 
+/*
+Takes in a Value and converts it to a string for json
+*/
 std::string value_to_json(Value value)
 {
     if (get_value_type(value) == Value_Type::MAP)
@@ -167,6 +172,9 @@ std::string value_to_json(Value value)
     }
 }
 
+/*
+Takes in a map and converts it to a json string
+*/
 std::string map_to_json(std::map<std::string, Value> map)
 {
     std::string json = "{";
@@ -183,15 +191,14 @@ std::string map_to_json(std::map<std::string, Value> map)
     return json;
 }
 
-std::map<std::string, Value> json_to_map(std::string json);
-Value get_json_value(std::string json, int &i, int json_size);
-
+/*
+Takes in a json string representation of a vector and converts it to a vector of Values
+*/
 std::vector<Value> json_vector(std::string json, int &i, int json_size)
 {
     std::vector<Value> vec;
     while (i < json_size && json[i] != ']')
     {
-        std::cout << "i: " << i << std::endl;
         // remove whitespace
         while (i < json_size && json[i] == ' ')
         {
@@ -212,6 +219,9 @@ std::vector<Value> json_vector(std::string json, int &i, int json_size)
     return vec;
 }
 
+/*
+Gets a Value from a json string representation of the value
+*/
 Value get_json_value(std::string json, int &i, int json_size)
 {
     Value value;
@@ -241,8 +251,6 @@ Value get_json_value(std::string json, int &i, int json_size)
     break;
     case '[': // vector
     {
-        // TODO: handle empty vector
-        // TODO: handle vectors
         i++;
         value = {Value_Type::VECTOR, json_vector(json, i, json_size)};
         if (json[i] != ']')
@@ -330,9 +338,7 @@ Value get_json_value(std::string json, int &i, int json_size)
             num += json[i];
             i++;
         }
-        std::cout << "num: " << num << std::endl;
         value = {Value_Type::NUMBER, std::stod(num)};
-        // print_value(value);
     }
     break;
     }
@@ -340,11 +346,12 @@ Value get_json_value(std::string json, int &i, int json_size)
     return value;
 }
 
+/*
+Takes in a json string representation of a map and converts it to a map of strings to Values
+*/
 std::map<std::string, Value> json_to_map(std::string json)
 {
     std::map<std::string, Value> map;
-
-    // std::cout << "json: " << json << std::endl;
 
     // check for opening bracket
     if (json[0] != '{')
@@ -357,8 +364,6 @@ std::map<std::string, Value> json_to_map(std::string json)
     int json_size = (int)json.size();
     for (int i = 1; i < json_size - 1; i++)
     {
-        // std::cout << i << ": " << json[i] << std::endl;
-
         std::string key;
         Value value;
 
@@ -398,8 +403,6 @@ std::map<std::string, Value> json_to_map(std::string json)
         // get value
         value = get_json_value(json, i, json_size);
 
-        // std::cout << "key: " << key << std::endl;
-        // std::cout << "value: " << VALUE_AS_STRING(value) << std::endl;
         map[key] = value;
 
         // check for comma
@@ -413,7 +416,6 @@ std::map<std::string, Value> json_to_map(std::string json)
         // skip any whitespace
         while (i < json_size && json[i] == ' ')
         {
-            // std::cout << "Skip Whitespace " << i << ": " << json[i] << std::endl;
             i++;
         }
         i--; // decrement to account for the increment at the end of the loop
