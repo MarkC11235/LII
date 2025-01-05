@@ -67,6 +67,7 @@
         "any": "cpp",
         "codecvt": "cpp",
         "cinttypes": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "csignal": "cpp"
     }
 }
