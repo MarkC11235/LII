@@ -196,3 +196,18 @@ Cannot print functions inside of a JITed function.
 
 No checking for the proper number of arguments when calling a function.  
 
+When defining a map normally, the keys must be strings with a valid variable name.  
+Ex:
+map = {
+    let key = "value"; // Valid
+    let key-2 = "value"; // Invalid
+};
+However, when adding to a map, the key can be any value.
+Ex: 
+map["key-2"] = "value"; // Valid
+Want to change this so that the key can be any value when defining a map normally.
+Ex:
+map = {
+    "key-2" : "value", // Valid
+    "key-3" : "value" // Valid
+};
