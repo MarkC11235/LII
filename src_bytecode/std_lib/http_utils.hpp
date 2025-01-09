@@ -20,7 +20,7 @@
 #include <csignal>
 #include <netdb.h>
 
-
+#include "./files.hpp"
 #include "../Value.hpp"
 
 // HTTP SERVER ----------------------------------------------------------------
@@ -399,6 +399,28 @@ int push_response(int client_fd, std::map<std::string, Value> response) {
     }
 }
 
+std::string build_response(std::map<std::string, Value> response) {
+    std::string response_str = VALUE_AS_STRING(response["version"]) + " " + std::to_string((int)VALUE_AS_NUMBER(response["status_code"])) + " " + VALUE_AS_STRING(response["status_message"]) + "\r\n";
+
+    if(response.find("headers") == response.end()){
+        response["headers"] = Value{Value_Type::MAP, std::map<std::string, Value>()};
+    }
+    std::map<std::string, Value> headers = VALUE_AS_MAP(response["headers"]);
+    for (const auto& [key, value] : headers) {
+        response_str += VALUE_AS_STRING(value) + "\r\n";
+    }
+
+    response_str += "\r\n";
+
+    if(response.find("body") == response.end()){
+        response["body"] = Value{Value_Type::STRING, ""};
+    }
+
+    response_str += VALUE_AS_STRING(response["body"]);
+
+    return response_str;
+}
+
 /*
 Loops until a response is available for the client_fd
 The loop sleeps for 1 second between checks
@@ -416,11 +438,7 @@ int send_response(int client_fd) {
                     std::map<std::string, Value> response = responses_queue[client_fd];
                     responses_queue.erase(client_fd);
 
-                    std::string response_str = "HTTP/1.1 200 OK\r\n";
-                    response_str += "Content-Type: text/html\r\n";
-                    response_str += "Content-Length: " + std::to_string(VALUE_AS_STRING(response["body"]).size()) + "\r\n";
-                    response_str += "\r\n";
-                    response_str += VALUE_AS_STRING(response["body"]);
+                    std::string response_str = build_response(response);
 
                     send(client_fd, response_str.c_str(), response_str.size(), 0);
                     close(client_fd);
@@ -453,14 +471,14 @@ Pass in a map with the method, path, headers, and body
 Returns a string that can be sent over a socket
 */
 std::string build_request(std::map<std::string, Value> request) {
-    std::string request_str = VALUE_AS_STRING(request["method"]) + " " + VALUE_AS_STRING(request["path"]) + " HTTP/1.1\r\n";
+    std::string request_str = VALUE_AS_STRING(request["method"]) + " " + VALUE_AS_STRING(request["path"]) + " " + VALUE_AS_STRING(request["version"]) + "\r\n";
 
     if(request.find("headers") == request.end()){
         request["headers"] = Value{Value_Type::MAP, std::map<std::string, Value>()};
     }
     std::map<std::string, Value> headers = VALUE_AS_MAP(request["headers"]);
     for (const auto& [key, value] : headers) {
-        request_str += key + ": " + VALUE_AS_STRING(value) + "\r\n";
+        request_str += VALUE_AS_STRING(value) + "\r\n";
     }
 
     request_str += "\r\n";
