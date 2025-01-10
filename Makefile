@@ -81,20 +81,14 @@ debug:
 	@$(EXE) $(INPUT_FILE) -d -vV
 
 test : build_bytecode
-	@for i in $$(find tests_2 -type f -name '*.cl'); do \
-		echo "Running test $$i"; \
-		$(EXE) $$i > $${i}.temp; \
-		diff -b -w $${i}.temp $${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; \
-		echo "-----------------------------------"; \
-	done
+	@echo "Running tests"
+	./Makefile_helpers/test.sh $(EXE) tests_2
 
 test_jit : build_bytecode
-	@for i in $$(find tests_2 -type f -name '*.cl'); do \
-		echo "Running test $$i"; \
-		$(EXE) $$i -jit > $${i}.temp; \
-		diff -b -w $${i}.temp $${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; \
-		echo "-----------------------------------"; \
-	done
+	@echo "Running tests with JIT enabled"
+	./Makefile_helpers/test.sh $(EXE) tests_2 -jit
+
+test_all : build_bytecode test test_jit
 
 leak_test : build_bytecode
 	@for i in $$(find tests_2 -type f -name '*.cl'); do \

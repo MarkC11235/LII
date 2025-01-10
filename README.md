@@ -53,11 +53,11 @@ let vec = [1, 2, 3, 4, 5];
 print vec[2]; // Output: 3
 ```
 
-### Structs
+### Maps
 ```
 let Person = {
-    let name = "Bob";
-    let age = 25;
+    "name" : "Bob",
+    "age" : 25
 };
 
 print Person["name"]; // Output: Bob
@@ -193,21 +193,10 @@ Can run the bytecode in debug mode using the -d flag. This allows you to step th
 ## **Known Issues**
 
 Cannot print functions inside of a JITed function.  
+Error when running the test:
+symbol lookup error: ./jit_functions/jit_0.so: undefined symbol: _Z16display_bytecodeP8function
+Test tests_2/types/test_all_types_as_passable.cl Failed  
 
 No checking for the proper number of arguments when calling a function.  
 
-When defining a map normally, the keys must be strings with a valid variable name.  
-Ex:
-map = {
-    let key = "value"; // Valid
-    let key-2 = "value"; // Invalid
-};
-However, when adding to a map, the key can be any value.
-Ex: 
-map["key-2"] = "value"; // Valid
-Want to change this so that the key can be any value when defining a map normally.
-Ex:
-map = {
-    "key-2" : "value", // Valid
-    "key-3" : "value" // Valid
-};
+
