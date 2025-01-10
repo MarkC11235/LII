@@ -199,4 +199,8 @@ Test tests_2/types/test_all_types_as_passable.cl Failed
 
 No checking for the proper number of arguments when calling a function.  
 
+## **Future Plans**
 
+1. Expand the standard library  
+2. Improve the jit compiler  
+    - make the jit compiler look ahead in the bytecode and identify chunks of the code that would be good to compile together. Do this on another thread so that the main thread can continue to run the VM.

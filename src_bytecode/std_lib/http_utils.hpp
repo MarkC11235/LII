@@ -407,7 +407,7 @@ std::string build_response(std::map<std::string, Value> response) {
     }
     std::map<std::string, Value> headers = VALUE_AS_MAP(response["headers"]);
     for (const auto& [key, value] : headers) {
-        response_str += VALUE_AS_STRING(value) + "\r\n";
+        response_str += key + ": " + VALUE_AS_STRING(value) + "\r\n";
     }
 
     response_str += "\r\n";
@@ -478,7 +478,7 @@ std::string build_request(std::map<std::string, Value> request) {
     }
     std::map<std::string, Value> headers = VALUE_AS_MAP(request["headers"]);
     for (const auto& [key, value] : headers) {
-        request_str += VALUE_AS_STRING(value) + "\r\n";
+        request_str += key + ": " + VALUE_AS_STRING(value) + "\r\n";
     }
 
     request_str += "\r\n";
@@ -563,12 +563,26 @@ std::map<std::string, Value> send_request(std::string host, int port, std::map<s
         response["status_message"] = Value{Value_Type::STRING, first_line[2]};
 
         std::map<std::string, Value> headers;
+        // for(int i = 1; i < (int)lines.size(); i++){
+        //     std::vector<std::string> header = split_first(lines[i], ": ");
+        //     if(header.size() == 1){
+        //         break; // end of headers
+        //     }
+        //     else if(header.size() != 2){
+        //         return make_error_map("Invalid header");
+        //     }
+
+        //     headers[header[0]] = Value{Value_Type::STRING, header[1]};
+        // }
+
         for(int i = 1; i < (int)lines.size(); i++){
             std::vector<std::string> header = split_first(lines[i], ": ");
             if(header.size() == 1){
                 break; // end of headers
             }
             else if(header.size() != 2){
+                std::cout << "Header size: " << header.size() << std::endl;
+                std::cout << "Invalid header " << i << ": " << lines[i] << std::endl;
                 return make_error_map("Invalid header");
             }
 

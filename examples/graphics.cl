@@ -1,5 +1,5 @@
 let handle_events = func(events) {
-    for (let i = 0; i < $vector_len(events); i = i + 1) {
+    for (let i = 0; i < $vector_length(events); i = i + 1) {
         let event = events[i];
         if (event == "quit") {
             let res = $close_graphics();
@@ -13,11 +13,11 @@ let handle_events = func(events) {
     return 0;
 };
 
-let rect = struct{
-    let x = 100;
-    let y = 100;
-    let w = 200;
-    let h = 200;
+let rect = map{
+    "x" : 0,
+    "y" : 0,
+    "w" : 200,
+    "h" : 200
 };
 
 let res = $init_graphics("Test", 800, 600);
@@ -30,11 +30,11 @@ for(;;) {
     let res = handle_events(events);
 
     if (res == 1) {
-        rect = struct{
-            let x = $random_number(0, 800);
-            let y = $random_number(0, 600);
-            let w = 200;
-            let h = 200;
+        rect = map{
+            "x" : rect["x"] + 10,
+            "y" : rect["y"] + 10,
+            "w" : rect["w"],
+            "h" : rect["h"]
         };
     }
 

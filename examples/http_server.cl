@@ -20,20 +20,21 @@ for(;;){
         let req_body = $json_to_map(req["body"]);
 
         let body = $map_to_json(map{
-            let head = "<head><title>Hello, " + req_body["name"] + "!</title></head>";
-            let body = "<body><h1>Hello, " + req_body["name"] + "!</h1></body>";
+            "name" : req_body["name"],
+            "age" : req_body["age"]
         });
 
         let response = map{
-            let version = "HTTP/1.1";
-            let status_code = 200;
-            let status_message = "OK";
-            let headers = map{
-                let content_type = "Content-Type: application/json";
-                let content_length = "Content-Length: " + $string_length(body);
-            };
-            let body = body;
+            "version" : "HTTP/1.1",
+            "status_code" : 200,
+            "status_message" : "OK",
+            "headers" : map{
+                "Content-Type" : "application/json",
+                "Content-Length" : $string_length(body)
+            },
+            "body" : body
         };
+
         let res = $push_response(req["client_fd"], response);
     }
     let res = $wait(1);

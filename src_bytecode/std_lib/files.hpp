@@ -438,7 +438,7 @@ Runs a python file using the python3 command
 */
 int run_python_file(std::string file_path)
 {
-    std::string command = "python3 " + file_path;
+    std::string command = "python3 " + directory_path + file_path;
     system(command.c_str());
 
     return 0;

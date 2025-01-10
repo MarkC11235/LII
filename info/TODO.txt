@@ -1,9 +1,0 @@
-make map syntax:
-
-map {
-    "key1" : "value1",
-    "key2" : "value2"
-};
-
-
-both left and right side of the colon can be of anytype, but the key will be coerced to string

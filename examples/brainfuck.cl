@@ -9,7 +9,7 @@ let saved_input_positions = [];
 print "Created Tape";
 
 let input = $file_read("./test.bf");          
-let input_length = $string_len(input);
+let input_length = $string_length(input);
 
 print "Starting BrainFuck Program | Length = " + input_length;
 
@@ -51,8 +51,8 @@ for(let i = 0; i < input_length; i = i + 1){
 
     if(char == "]"){
         if(tape[pointer] != 0){
-            pointer = saved_pointers[$vector_len(saved_pointers) - 1];
-            i = saved_input_positions[$vector_len(saved_input_positions) - 1];
+            pointer = saved_pointers[$vector_length(saved_pointers) - 1];
+            i = saved_input_positions[$vector_length(saved_input_positions) - 1];
         }
         else{
             saved_pointers = $vector_pop(saved_pointers);

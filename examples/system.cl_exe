@@ -1,0 +1,19 @@
+././examples/system
+1
+res
+2
+string|echo 'Hello, world!'
+string|ls
+12
+15
+0
+40
+44
+16
+0
+15
+1
+40
+44
+16
+0
