@@ -1,6 +1,6 @@
 let Node = map {
-    let value = 0;
-    let next = -1;
+    "value" : 0,
+    "next" : -1
 };
 
 let head = Node;

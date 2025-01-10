@@ -1,9 +1,9 @@
 let Person = map{
-    let name = "Bob";
-    let f = func(){return 1;};
-    let l = [1, 2, 3];
-    let n = null;
-    let s = map{let inner = "hello";};
+    "name" : "Bob",
+    "f" : func(){return 1;},
+    "l" : [1, 2, 3],
+    "n" : null,
+    "s" : map{"inner" : "hello"}
 };
 
 print Person;

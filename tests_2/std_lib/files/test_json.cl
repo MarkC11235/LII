@@ -1,12 +1,12 @@
 let obj = map{
-    let string = "string";
-    let number = 1;
-    let boolean = true;
-    let array = [1, 2, 3];
-    let object = map{
-        let key = "value";
-    };
-    let nil = null;
+    "string" : "string",
+    "number" : 1,
+    "boolean" : true,
+    "array" : [1, 2, 3],
+    "object" : map{
+        "key" : "value"
+    },
+    "nil" : null
 };
 
 let json_string = $map_to_json(obj);

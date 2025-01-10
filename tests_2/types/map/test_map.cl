@@ -1,6 +1,6 @@
 let Person = map {
-    let name = "";
-    let age = -1;
+    "name" : "",
+    "age" : -1 
 };
 
 print Person; // {age = -1, name = }

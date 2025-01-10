@@ -1,23 +1,23 @@
 let obj = map{
-    let vec = [
+    "vec" : [
         1,
         "string",
         true,
         null,
         map{
-            let key = "value";
+            "key" : "value"
         }
-    ];
-    let m = map{
-        let number = 1;
-        let string = "string";
-        let boolean = true;
-        let array = [1, 2, 3];
-        let object = map{
-            let key = "value";
-        };
-        let nil = null;
-    };
+    ],
+    "m" : map{
+        "number" : 1,
+        "string" : "string",
+        "boolean" : true,
+        "array" : [1, 2, 3],
+        "object" : map{
+            "key" : "value"
+        },
+        "nil" : null
+    }
 };
 
 let json_string = $map_to_json(obj);

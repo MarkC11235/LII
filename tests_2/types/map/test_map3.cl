@@ -1,5 +1,5 @@
 let Person = map{
-    let name = "Bob";
+    "name" : "Bob"
 };
 
 print Person;

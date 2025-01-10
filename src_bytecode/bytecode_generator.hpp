@@ -491,10 +491,13 @@ void evaluate(Node *value, function *func)
                 interpretation_error("Invalid number of children for ASSIGN Node", assign, func);
             }
 
-            std::string assign_var_name = assign_children[0]->get_value();
-            WRITE_BYTE(OpCode::OP_LOAD, func);
-            WRITE_BYTE(constants.size(), func);
-            WRITE_VALUE({Value_Type::STRING, assign_var_name});
+            // std::string assign_var_name = assign_children[0]->get_value();
+            // WRITE_BYTE(OpCode::OP_LOAD, func);
+            // WRITE_BYTE(constants.size(), func);
+            // WRITE_VALUE({Value_Type::STRING, assign_var_name});
+
+            // interpret the key which can be any value, so evaluate it and leave it on the stack
+            evaluate(assign_children[0], func);
 
             Node* assign_value = assign_children[1];
             interpret_map_assign(assign_value, func);   

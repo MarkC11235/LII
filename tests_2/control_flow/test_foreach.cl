@@ -1,7 +1,7 @@
 let alphabet = map{
-    let a = 1;
-    let b = 2;
-    let c = 3;
+    "a": 1,
+    "b": 2,
+    "c": 3
 };
 foreach(let key:value in alphabet) {
     print key + " : " + value;

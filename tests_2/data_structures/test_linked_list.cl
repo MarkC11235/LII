@@ -1,6 +1,6 @@
 let Node = map{
-    let value = -1;
-    let next = null;
+    "value" : -1,
+    "next" : null
 };
 
 let add_back_LL = func(Node, head, value){

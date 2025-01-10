@@ -726,16 +726,47 @@ void parse_map(std::vector<Token>& tokens, Node* current){
     token = peek(tokens);
     if(token.get_type() != TokenType::CLOSEBRACKET_TOKEN){ // Check if there are fields
         for(;;){ // Can have 0 or more let statments 
-            token = pop(tokens);
-            if(token.get_type() == TokenType::LET_TOKEN){ // Let statement
-                parse_assignment(tokens, list);
-            } else {
-                parsing_error("Syntax error: expected 'let'", token);
+            // if the tokenb is a close bracket, then we are done with the map (but there was an extra comma)
+            token = peek(tokens);
+            if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){
+                parsing_error("Syntax error: expected another key-value pair", token);
+                break;
             }
+
+            // token = pop(tokens);
+            // if(token.get_type() == TokenType::LET_TOKEN){ // Let statement
+            //     parse_assignment(tokens, list);
+            // } else {
+            //     parsing_error("Syntax error: expected 'let'", token);
+            // }
+
+            // token = peek(tokens);
+            // if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){ // End of fields
+            //     break;
+            // }
+
+            // Create an assignment node (Will be of a different format than a normal assignment)
+            Node* assignment = new Node(NodeType::ASSIGN_NODE, "inner_map");
+            list->add_child(assignment);
+
+            // Parse the key
+            parse_value(tokens, assignment);
+
+            token = pop(tokens);
+            if(token.get_type() != TokenType::COLON_TOKEN){
+                parsing_error("Syntax error: expected ':'", token);
+            }
+
+            // Parse the value
+            parse_value(tokens, assignment);
 
             token = peek(tokens);
             if(token.get_type() == TokenType::CLOSEBRACKET_TOKEN){ // End of fields
                 break;
+            } else if(token.get_type() == TokenType::COMMA_TOKEN){ // More fields
+                pop(tokens);
+            } else {
+                parsing_error("Syntax error: expected ',' or '}'", token);
             }
         }
     }

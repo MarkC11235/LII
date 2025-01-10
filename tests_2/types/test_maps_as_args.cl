@@ -3,4 +3,4 @@ let pprint = func(m){
     return 0;
 };
 
-let res = pprint(map{let x = 1; let y = 2;});
+let res = pprint(map{"x" : 1, "y" : 2});
