@@ -157,7 +157,15 @@ std::string value_to_json(Value value)
         std::vector<Value> vec = VALUE_AS_VECTOR(value);
         for (int i = 0; i < (int)vec.size(); i++)
         {
-            json += value_to_json(vec[i]);
+            // json += value_to_json(vec[i]);
+            if (get_value_type(vec[i]) == Value_Type::STRING || get_value_type(vec[i]) == Value_Type::FUNCTION)
+            {
+                json += "\"" + VALUE_AS_STRING(vec[i]) + "\"";
+            }
+            else
+            {
+                json += VALUE_AS_STRING(vec[i]);
+            }
             if (i != (int)vec.size() - 1)
             {
                 json += ",";

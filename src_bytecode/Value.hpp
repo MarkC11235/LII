@@ -7,7 +7,6 @@
 #include <iostream>
 #include "Function.hpp"
 
-
 void display_bytecode(function* func);
 
 /*
@@ -112,6 +111,13 @@ std::string get_value_type_string(Value value){
     }
 }
 
+bool VALUE_AS_BOOL(Value value);
+double VALUE_AS_NUMBER(Value value);
+std::string VALUE_AS_STRING(Value value);
+std::vector<Value> VALUE_AS_VECTOR(Value value);
+function* VALUE_AS_FUNCTION(Value value);
+std::map<std::string, Value> VALUE_AS_MAP(Value value);
+
 /*
 Pass in a Value and coerse the value to a bool
 */
@@ -207,20 +213,67 @@ std::string VALUE_AS_STRING(Value value){
             return "null";
         case MAP:
         {
-            std::string str = "{";
+            // std::string str = "{";
 
+            // std::map<std::string, Value> map = std::get<std::map<std::string, Value>>(value.data);
+            // // prints the keys in alphabetical order
+            // // ig thats how c++ stores the keys internally
+            // for(auto it = map.begin(); it != map.end(); it++){
+            //     str += it->first + " = " + VALUE_AS_STRING(it->second);
+            //     if(it != --map.end()){
+            //         str += ", ";
+            //     }
+            // }
+
+            // str += "}";
+            // return str;
+
+            // Prints as a json object
+            // This code is from the std_lib/files.hpp file
+            // I just copied it here to avoid including the file (circular dependency)
             std::map<std::string, Value> map = std::get<std::map<std::string, Value>>(value.data);
-            // prints the keys in alphabetical order
-            // ig thats how c++ stores the keys internally
-            for(auto it = map.begin(); it != map.end(); it++){
-                str += it->first + " = " + VALUE_AS_STRING(it->second);
-                if(it != --map.end()){
-                    str += ", ";
+            std::string json = "{";
+            for (auto it = map.begin(); it != map.end(); it++)
+            {
+                json += "\"" + it->first + "\":";
+                // json += value_to_json(it->second);
+
+                Value value = it->second;
+                if (get_value_type(value) == Value_Type::STRING || get_value_type(value) == Value_Type::FUNCTION)
+                {
+                    json += "\"" + VALUE_AS_STRING(value) + "\"";
+                }
+                else if (get_value_type(value) == Value_Type::VECTOR)
+                {
+                    json += "[";
+                    std::vector<Value> vec = VALUE_AS_VECTOR(value);
+                    for (int i = 0; i < (int)vec.size(); i++)
+                    {
+                        if(get_value_type(vec[i]) == Value_Type::STRING || get_value_type(vec[i]) == Value_Type::FUNCTION){
+                            json += "\"" + VALUE_AS_STRING(vec[i]) + "\"";
+                        } else {
+                            json += VALUE_AS_STRING(vec[i]);
+                        }
+                        if (i != (int)vec.size() - 1)
+                        {
+                            json += ",";
+                        }
+                    }
+                    json += "]";
+
+                }
+                else
+                {
+                    json += VALUE_AS_STRING(value);
+                }
+
+                if (it != --map.end())
+                {
+                    json += ",";
                 }
             }
-
-            str += "}";
-            return str;
+            json += "}";
+            return json;
         }
         default:
             return "UNKNOWN"; // Should never reach here, but to avoid warnings

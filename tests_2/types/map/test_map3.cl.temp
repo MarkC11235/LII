@@ -1,2 +1,2 @@
-{name = Bob}
-{children = [Bill, Jill], name = Bob}
+{"name":"Bob"}
+{"children":["Bill","Jill"],"name":"Bob"}
