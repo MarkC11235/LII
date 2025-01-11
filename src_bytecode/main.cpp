@@ -19,7 +19,7 @@
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
     if(argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file.cl> -d -v [-vT -vP -vB -vV] -jit" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file.cl> -d -v [-vT -vP -vB -vV] -jit [num] -cs [num]" << std::endl;
         return 1;
     }
     std::string input_file = argv[1];
@@ -39,6 +39,9 @@ int main(int argc, char *argv[]) {
     bool time = false;
 
     bool jit = false;
+    int calls_to_jit = 10;
+
+    int stack_capacity = 256;
 
     // Check for flags
     for(int i = 2; i < argc; i++) {
@@ -61,6 +64,23 @@ int main(int argc, char *argv[]) {
             time = true;
         } else if(std::string(argv[i]) == "-jit"){
             jit = true;
+            if(i + 1 < argc){
+                try{
+                    calls_to_jit = std::stoi(argv[i + 1]);
+                } catch(std::invalid_argument e){
+                    std::cout << "Invalid argument for -jit flag" << std::endl;
+                    return 1;
+                }
+            }
+        }else if(std::string(argv[i]) == "-cs"){
+            if(i + 1 < argc){
+                try{
+                    stack_capacity = std::stoi(argv[i + 1]);
+                } catch(std::invalid_argument e){
+                    std::cout << "Invalid argument for -cs flag" << std::endl;
+                    return 1;
+                }
+            }
         }
     }
 
@@ -124,7 +144,7 @@ int main(int argc, char *argv[]) {
     // Interpret the bytecode
     start = std::chrono::high_resolution_clock::now();
     input_file = input_file.substr(0, input_file.find_last_of(".")) + ".cl_exe";
-    interpret_bytecode("./" + input_file, verboseV, debug, jit);
+    interpret_bytecode("./" + input_file, verboseV, debug, jit, calls_to_jit, stack_capacity);
     end = std::chrono::high_resolution_clock::now();
     if (verboseV || time) {
         std::cout << "Interpretation took "

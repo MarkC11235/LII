@@ -14,7 +14,7 @@
 /*
 VM constructor from a cl_exe object
 */
-void init_vm(cl_exe* exe, bool jit, int stack_capacity = 256)
+void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 256)
 {
     vm.stack = new Value[stack_capacity];
     vm.stack_count = 0;
@@ -27,6 +27,7 @@ void init_vm(cl_exe* exe, bool jit, int stack_capacity = 256)
     vm.variable_names = exe->variable_names;
 
     vm.jit = jit;
+    vm.calls_to_jit = calls_to_jit;
 }
 
 // -------------------------------------------------------------------
@@ -612,7 +613,7 @@ void vm_loop(bool verbose)
 
         func->times_called++; // for jit compilation
 
-        if(vm.jit && func->times_called == CALLS_TO_JIT){
+        if(vm.jit && func->times_called == vm.calls_to_jit){
             if(verbose){
                 std::cout << "JIT compiling function: " << func->name << std::endl;
             }        
@@ -842,10 +843,10 @@ void debug_vm(bool verbose = false)
 /*
 Entry point for the virtual machine
 */
-void interpret_bytecode(std::string path, bool verbose = false, bool debug = false, bool jit = false)
+void interpret_bytecode(std::string path, bool verbose = false, bool debug = false, bool jit = false, int calls_to_jit = 10, int stack_capacity = 256)
 {
     cl_exe* exe = read_cl_exe(path);
-    init_vm(exe, jit);
+    init_vm(exe, jit, calls_to_jit, stack_capacity);
     if(debug){debug_vm(verbose);}
     else {run_vm(verbose);}
 

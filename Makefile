@@ -71,7 +71,7 @@ time:
 
 time_jit:
 	@echo "Timing $(INPUT_FILE) with jit enabled\n"
-	@$(EXE) $(INPUT_FILE) -jit -t
+	@$(EXE) $(INPUT_FILE) -jit 1 -t
 
 compile_latex:
 	@pdflatex paper.tex
@@ -86,7 +86,7 @@ test : build_bytecode
 
 test_jit : build_bytecode
 	@echo "Running tests with JIT enabled"
-	./Makefile_helpers/test.sh $(EXE) tests_2 -jit
+	./Makefile_helpers/test.sh $(EXE) tests_2 -jit 1
 
 test_all : build_bytecode test test_jit
 

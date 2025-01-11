@@ -45,7 +45,7 @@ show_progress() {
 }
 
 for i in $test_files; do 
-    $1 $i $3 > ${i}.temp; 
+    $1 $i $3 $4 > ${i}.temp; 
     if diff -b -w ${i}.temp ${i}.out > /dev/null; then
         success_count=$((success_count + 1))
     else

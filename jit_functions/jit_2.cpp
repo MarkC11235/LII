@@ -252,7 +252,7 @@ label_30:
 
             function* func = VALUE_AS_FUNCTION(pop(vm));
             func->times_called++;
-            if(vm->jit && func->times_called == CALLS_TO_JIT){ 
+            if(vm->jit && func->times_called == vm->calls_to_jit){ 
                 jit_compile_function(vm, func);
             }
 

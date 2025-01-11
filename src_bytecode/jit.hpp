@@ -644,7 +644,7 @@ void jit_compile_function(VM* vm, function* func)
             program += R"(
             func->times_called++;)";
             program += R"(
-            if(vm->jit && func->times_called == CALLS_TO_JIT){ 
+            if(vm->jit && func->times_called == vm->calls_to_jit){ 
                 jit_compile_function(vm, func);
             }
 

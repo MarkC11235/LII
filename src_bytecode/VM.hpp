@@ -26,8 +26,8 @@ struct VM; // Forward declaration
 
 typedef void (*JIT_FUNCTION)(VM* vm);
 
-#define CALLS_TO_JIT 1
-#define JIT_OPTIMIZATION_LEVEL "-O3"
+// #define CALLS_TO_JIT 1
+#define JIT_OPTIMIZATION_LEVEL "-O2"
 
 /*
 Created when starting the program
@@ -45,6 +45,7 @@ struct VM
     std::vector<function_frame *> function_frames;
 
     bool jit;
+    int calls_to_jit;
     std::vector<JIT_FUNCTION> jit_functions;
 };
 
