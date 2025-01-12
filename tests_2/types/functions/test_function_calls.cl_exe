@@ -1,13 +1,15 @@
 ./tests_2/types/functions/test_function_calls
-5
+7
+argc
+argv
 add
 x
 y
 sub
 result
 7
-function|function (x, y) {16, 2, 16, 1, 18, 2, 18, 1, 0, 33, }
-function|function (x, y) {16, 2, 16, 1, 18, 2, 18, 1, 1, 33, }
+function|function (x, y) {16, 4, 16, 3, 18, 4, 18, 3, 0, 33, }
+function|function (x, y) {16, 4, 16, 3, 18, 4, 18, 3, 1, 33, }
 number|2
 number|3
 number|2
@@ -17,34 +19,34 @@ number|0
 15
 0
 16
-0
+2
 15
 1
 16
-3
+5
 15
 2
 15
 3
 19
-0
+2
 36
 16
-4
+6
 18
-4
+6
 39
 15
 4
 15
 5
 19
-3
+5
 36
 16
-4
+6
 18
-4
+6
 39
 15
 6

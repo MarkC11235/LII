@@ -1,5 +1,7 @@
 ./tests_2/std_lib/strings/test_std_lib_strings
-0
+2
+argc
+argv
 14
 string|Hello, World!
 string|Hello, 

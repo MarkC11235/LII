@@ -249,6 +249,16 @@ let str = "Hello World!";
 print $string_len(str); // Output: 12
 ```
 
+### Command Line Arguments
+```
+./lii test.cl arg1 arg2 arg3
+```
+
+```
+print argc; // Output: 3
+print argv; // Output: ["arg1", "arg2", "arg3"]
+```
+
 ## **Standard Library** 
 
 CastleLang has a built in standard library implemented in C++. These functions are able to be called from .cl file by prefixing a function call with '$'. An example of this is -> 

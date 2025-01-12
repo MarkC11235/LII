@@ -1323,6 +1323,9 @@ function *generate_bytecode(Node *ast, std::string name)
 {
     function *func = create_function(1000);
 
+    WRITE_VAR_NAME_IF_NOT_EXISTS("argc");
+    WRITE_VAR_NAME_IF_NOT_EXISTS("argv");
+
     interpret(ast, func);
 
     write_cl_exe(name, "./", func, variable_names, constants);

@@ -1,20 +1,22 @@
 ./tests_2/std_lib/misc/test_std_lib_misc_functions
-2
+4
+argc
+argv
 string_len
 x
 3
-function|function (x) {16, 1, 18, 1, 33, }
+function|function (x) {16, 3, 18, 3, 33, }
 string|tester.calc
 number|1
 21
 15
 0
 16
-0
+2
 15
 1
 19
-0
+2
 36
 39
 40

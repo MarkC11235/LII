@@ -14,7 +14,7 @@
 /*
 VM constructor from a cl_exe object
 */
-void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 256)
+void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 256, int args_count = 0, std::vector<std::string> args = std::vector<std::string>())
 {
     vm.stack = new Value[stack_capacity];
     vm.stack_count = 0;
@@ -28,8 +28,16 @@ void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 
 
     vm.jit = jit;
     vm.calls_to_jit = calls_to_jit;
-}
 
+    // Add argc and argv to the main function as variables
+    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count});
+    std::vector<Value> argv;
+    for (std::string arg : args)
+    {
+        argv.push_back({Value_Type::STRING, arg});
+    }
+    set_variable(&vm, "argv", {Value_Type::VECTOR, argv});
+}
 // -------------------------------------------------------------------
 
 // Runs the virtual machine ------------------------------------------
@@ -843,10 +851,10 @@ void debug_vm(bool verbose = false)
 /*
 Entry point for the virtual machine
 */
-void interpret_bytecode(std::string path, bool verbose = false, bool debug = false, bool jit = false, int calls_to_jit = 10, int stack_capacity = 256)
+void interpret_bytecode(std::string path, bool verbose = false, bool debug = false, bool jit = false, int calls_to_jit = 10, int stack_capacity = 256, int args_count = 0, std::vector<std::string> args = std::vector<std::string>{})
 {
     cl_exe* exe = read_cl_exe(path);
-    init_vm(exe, jit, calls_to_jit, stack_capacity);
+    init_vm(exe, jit, calls_to_jit, stack_capacity, args_count, args);
     if(debug){debug_vm(verbose);}
     else {run_vm(verbose);}
 

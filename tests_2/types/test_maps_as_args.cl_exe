@@ -1,10 +1,12 @@
 ./tests_2/types/test_maps_as_args
-3
+5
+argc
+argv
 pprint
 m
 res
 10
-function|function (m) {16, 1, 18, 1, 15, 1, 27, 15, 2, 18, 1, 15, 3, 27, 15, 4, 0, 0, 0, 39, 15, 5, 33, }
+function|function (m) {16, 3, 18, 3, 15, 1, 27, 15, 2, 18, 3, 15, 3, 27, 15, 4, 0, 0, 0, 39, 15, 5, 33, }
 string|y
 string|, y: 
 string|x
@@ -18,7 +20,7 @@ number|2
 15
 0
 16
-0
+2
 24
 15
 6
@@ -31,7 +33,7 @@ number|2
 9
 29
 19
-0
+2
 36
 16
-2
+4

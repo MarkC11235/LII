@@ -1,5 +1,7 @@
 ./tests_2/control_flow/test_if_2
-0
+2
+argc
+argv
 3
 number|0
 number|45

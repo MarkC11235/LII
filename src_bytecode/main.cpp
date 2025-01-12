@@ -18,8 +18,10 @@
 
 int main(int argc, char *argv[]) {
     // Check if the user has provided the input file and verbosity flag
+    // Args are strings and should appear after the input file
+    // All strings after the input file until the first flag (starts with -) are considered arguments
     if(argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file.cl> -d -v [-vT -vP -vB -vV] -jit [num] -cs [num]" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file.cl> [arg0 arg1 ...] -d -v [-vT -vP -vB -vV] -jit [num] -cs [num]" << std::endl;
         return 1;
     }
     std::string input_file = argv[1];
@@ -43,8 +45,22 @@ int main(int argc, char *argv[]) {
 
     int stack_capacity = 256;
 
-    // Check for flags
+    int args_count = 0;
+    std::vector<std::string> args;
+
+    int arg_start = 2;
+    // Check for arguments
     for(int i = 2; i < argc; i++) {
+        if(std::string(argv[i]).find("-") == 0) {
+            arg_start = i;
+            break;
+        }
+        args.push_back(argv[i]);
+        args_count++;
+    }
+
+    // Check for flags
+    for(int i = arg_start + args_count; i < argc; i++) {
         if(std::string(argv[i]) == "-v") {
             verboseT = true;
             verboseP = true;
@@ -144,7 +160,7 @@ int main(int argc, char *argv[]) {
     // Interpret the bytecode
     start = std::chrono::high_resolution_clock::now();
     input_file = input_file.substr(0, input_file.find_last_of(".")) + ".cl_exe";
-    interpret_bytecode("./" + input_file, verboseV, debug, jit, calls_to_jit, stack_capacity);
+    interpret_bytecode("./" + input_file, verboseV, debug, jit, calls_to_jit, stack_capacity, args_count, args);
     end = std::chrono::high_resolution_clock::now();
     if (verboseV || time) {
         std::cout << "Interpretation took "

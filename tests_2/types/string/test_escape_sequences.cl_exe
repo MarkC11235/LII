@@ -1,5 +1,7 @@
 ./tests_2/types/string/test_escape_sequences
-0
+2
+argc
+argv
 4
 string|Hello,\n World!
 string|Hello,\t World!

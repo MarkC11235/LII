@@ -1,5 +1,7 @@
 ./tests_2/expressions/test_expr_2
-0
+2
+argc
+argv
 9
 number|4
 number|3
