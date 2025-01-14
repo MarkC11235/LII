@@ -91,6 +91,7 @@ let vec = [1, 2, 3, 4, 5];
 print vec[2]; // Output: 3
 ```
 
+Vectors can store a mix of any type of value.
 ```
 let vec = [1, "Bob", null, true,
            [1, 2, 3],
@@ -101,8 +102,9 @@ let vec = [1, "Bob", null, true,
 
 
 ### Maps
+Map keys must be unique strings.
 ```
-let Person = {
+let Person = map{
     "name" : "Bob",
     "age" : 25
 };
@@ -111,6 +113,7 @@ print Person["name"]; // Output: Bob
 print Person["age"]; // Output: 25
 ```
 
+Maps can store a mix of any type of value.
 ```
 let m = map{
     "string" : "Hello",
@@ -123,6 +126,7 @@ let m = map{
 };
 ```
 
+Can use any type of value as a key, the value will be coerced to a string.
 ```
 let m = map{
     5 : "Bob",
@@ -136,6 +140,7 @@ let m = map{
 
 
 ### Functions
+Functions must contain a return statement, so this means that you must use that return value in an expression or assign it to a variable.  
 ```
 let factorial = func(n){
     if(n == 0){
@@ -148,7 +153,8 @@ print factorial(5); // Output: 120
 ```
 
 ### Control flow
-#### For and if
+#### for loop
+For loops expect an assignment, a condition(expr), and a variable update, in that order.
 ```
 for(let i = 1; i <= 10; i = i + 1){
     print i;
@@ -171,7 +177,8 @@ for(let i = 1; i <= 10; i = i + 1){
 // 10
 ```
 
-### Foreach loop
+### foreach loop
+Can iterate over a map or vector. The key and value are assigned to the variables in the foreach loop. The key is a string for maps and a number for vectors. The value is the value at the key in the map or vector.
 ```
 let alphabet = map{
     "a": 1,
@@ -200,7 +207,9 @@ foreach(let index:element in vec) {
 // 2 : 6
 ```
 
-#### Break and continue
+#### break and continue
+Break will exit the loop and go to the next line of code.
+Continue will skip the rest of the loop iteration and go to the next iteration.
 ```
 for(let i = 1; i <= 6; i = i + 1){
     if(i == 3){
@@ -217,14 +226,11 @@ for(let i = 1; i <= 6; i = i + 1){
 // 2
 // 4
 ```
-#### If and Else
+#### if, else if, and else
 ```
 let x = 5;
 if(x == 5){
     print "x is 5";
-}
-else{
-    print "x is not 5";
 }
 
 // Output: x is 5
@@ -242,14 +248,30 @@ else{
 // Output: x is not 5
 ```
 
+```
+let x = 6;
+if(x == 5){
+    print "x is 5";
+}
+else if(x == 6){
+    print "x is 6";
+}
+else{
+    print "x is not 5 or 6";
+}
+// Output: x is 6
+```
+
 
 ### Standard Library Call
+Standard library functions can be called by prefixing the function call with '$'.
 ```
 let str = "Hello World!";
 print $string_len(str); // Output: 12
 ```
 
 ### Command Line Arguments
+Command line arguments can be accessed in the .cl file by using the argc and argv variables. These variables are automatically created when the .cl file is run from the command line.
 ```
 ./lii test.cl arg1 arg2 arg3
 ```
@@ -291,7 +313,7 @@ To add more functions, add another entry to the STD_LIB_FUNCTIONS_DEFINITIONS ve
 
 There are four steps to compile and run CastleLang. 
 1. Tokenization  
-The Tokenizer takes in a file with the .cl file extension and will go through the file line by line creating tokens that represent different parts of the language. Tokens can be keywords, different symbols like semicolons, identifiers, numbers, etc..
+The Tokenizer takes in a file with the .cl file extension and will go through the file line by line creating tokens that represent different parts of the language. Tokens can be keywords, different symbols like semicolons, identifiers, numbers, etc.. In this step, include files are also processed and the tokens are added to the list of tokens, where the include statement was. Also, escape characters that appear in strings are processed in this step.
     
 2. Parsing  
 The Parser takes in a list of tokens and creates an abstract syntax tree using recursive decent parsing.
