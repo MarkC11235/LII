@@ -231,7 +231,7 @@ std::vector<Token> analyze(std::string input, int line_number){
                 }
                 break;
             case '(':
-                tokens.push_back(Token(TokenType::OPENPAR_TOKEN, "(", line_number));
+                tokens.push_back(Token(TokenType::OPERATOR_TOKEN, "(", line_number));
                 break;
             case ')':
                 tokens.push_back(Token(TokenType::CLOSEPAR_TOKEN, ")", line_number));

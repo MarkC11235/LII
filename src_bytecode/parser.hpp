@@ -146,6 +146,7 @@ void place_token_back(std::vector<Token>& tokens, Token token){
 maps operators to their precedence and type
 */
 std::map<std::string, std::tuple<int, std::string>> operators = {
+    {"(", {20, "call"}}, // function call
     {"[", {20, "access"}}, // access map or vector
     {"u-", {11, "unary"}}, // Unary minus 
     {"*", {10, "binary"}},
@@ -200,6 +201,15 @@ bool is_access_operator(std::string op){
     }
 
     return std::get<1>(operators[op]) == "access";
+}
+
+bool is_call_operator(std::string op){
+    if(operators.find(op) == operators.end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(operators[op]) == "call";
 }
 
 std::vector<std::string> splitStringByComma(const std::string& str) {
@@ -306,206 +316,543 @@ void parse_print(std::vector<Token>& tokens, Node* current);
 /*
 Uses a stack based algorithm to parse expressions
 */
-void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
-    std::stack<Node*> ops;
-    std::stack<Node*> values;
+// void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
+//     std::stack<Node*> ops;
+//     std::stack<Node*> values;
 
-    bool loop = true;
+//     bool loop = true;
 
-    TokenType previos_token_type = TokenType::OPERATOR_TOKEN;
-    std::string previos_token_value = "";
+//     TokenType previos_token_type = TokenType::OPERATOR_TOKEN;
+//     std::string previos_token_value = "";
 
-    while(loop){
-        Token token = pop(tokens);
-        if(token.get_type() == TokenType::CLOSEPAR_TOKEN && nested){ // End of nested expression
-            break;
-        }
+//     while(loop){
+//         Token token = pop(tokens);
+//         if(token.get_type() == TokenType::CLOSEPAR_TOKEN && nested){ // End of nested expression
+//             break;
+//         }
 
-        TokenType type = token.get_type();
-        std::string value = token.get_value();
+//         TokenType type = token.get_type();
+//         std::string value = token.get_value();
 
-        switch(type){
-            case TokenType::NUMBER_TOKEN: {
-                Node* num = new Node(NodeType::NUM_NODE, value);
-                values.push(num);
-                break;
-            }
-            case TokenType::BOOL_TOKEN: {
-                Node* bool_node = new Node(NodeType::BOOL_NODE, value);
-                values.push(bool_node);
-                break;
-            }
-            case TokenType::NULL_TOKEN: {
-                Node* null_node = new Node(NodeType::NULL_NODE, "null");
-                values.push(null_node);
-                break;
-            }
-            case TokenType::STD_LIB_TOKEN: {
-                Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, value);
-                parse_std_lib_call(tokens, std_lib);
-                values.push(std_lib);
-                break;
-            }
-            case TokenType::IDENTIFIER_TOKEN: {
-                if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){ // Function call
-                    place_token_back(tokens, token);
-                    Node* function_call = new Node(NodeType::FUNCTION_CALL_NODE, "");
-                    parse_function_call(tokens, function_call);
-                    values.push(function_call);
-                }
-                else { // Variable
-                    Node* var = new Node(NodeType::VAR_NODE, value);
-                    values.push(var);
-                }
-                break;
-            }
-            case TokenType::OPERATOR_TOKEN: {
-                Node* op = new Node(NodeType::OP_NODE, value);
+//         switch(type){
+//             case TokenType::NUMBER_TOKEN: {
+//                 Node* num = new Node(NodeType::NUM_NODE, value);
+//                 values.push(num);
+//                 break;
+//             }
+//             case TokenType::BOOL_TOKEN: {
+//                 Node* bool_node = new Node(NodeType::BOOL_NODE, value);
+//                 values.push(bool_node);
+//                 break;
+//             }
+//             case TokenType::NULL_TOKEN: {
+//                 Node* null_node = new Node(NodeType::NULL_NODE, "null");
+//                 values.push(null_node);
+//                 break;
+//             }
+//             case TokenType::STD_LIB_TOKEN: {
+//                 Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, value);
+//                 parse_std_lib_call(tokens, std_lib);
+//                 values.push(std_lib);
+//                 break;
+//             }
+//             case TokenType::MAP_TOKEN: {
+//                 Node* map = new Node(NodeType::MAP_NODE, "");
+//                 parse_map(tokens, map);
+//                 values.push(map);
+//                 break;
+//             }
+//             case TokenType::FUNC_TOKEN: {
+//                 Node* function = new Node(NodeType::FUNCTION_NODE, "");
+//                 parse_function(tokens, function);
+//                 values.push(function);
+//                 break;
+//             }
+//             case TokenType::IDENTIFIER_TOKEN: {
+//                 // if(peek(tokens).get_type() == TokenType::OPENPAR_TOKEN){ // Function call
+//                 //     place_token_back(tokens, token);
+//                 //     Node* function_call = new Node(NodeType::FUNCTION_CALL_NODE, "");
+//                 //     parse_function_call(tokens, function_call);
+//                 //     values.push(function_call);
+//                 // }
+//                 // else { // Variable
+//                 //     Node* var = new Node(NodeType::VAR_NODE, value);
+//                 //     values.push(var);
+//                 // }
+//                 Node* var = new Node(NodeType::VAR_NODE, value);
+//                 values.push(var);
+//                 break;
+//             }
+//             case TokenType::OPERATOR_TOKEN: {
+//                 std::cout << "Operator: " << value << std::endl;
+//                 Node* op = new Node(NodeType::OP_NODE, value);
 
-                if(previos_token_type == TokenType::OPERATOR_TOKEN && previos_token_value != "["){ // Unary operator
-                    if(value == "-"){ // Unary minus
-                        op->change_value("u-", 0);
-                    }
-                    else if(value == "!"){ // not
-                        op->change_value("!", 0); // keeps it the same, just here so it does not go to the else
-                    }
-                    else if(value == "["){ // Array access
-                        op->change_value("[", 0); // keeps it the same, just here so it does not go to the else
-                    }
-                    else {
-                        parsing_error("Syntax error: expected number or identifier", token);
-                    }
-                }
+//                 if(previos_token_type == TokenType::OPERATOR_TOKEN && previos_token_value != "[" && previos_token_value != "("){ // Unary operator
+//                     if(value == "-"){ // Unary minus
+//                         op->change_value("u-", 0);
+//                     }
+//                     else if(value == "!"){ // not
+//                         op->change_value("!", 0); // keeps it the same, just here so it does not go to the else
+//                     }
+//                     else if(value == "["){ // Array access
+//                         op->change_value("[", 0); // keeps it the same, just here so it does not go to the else
+//                     }
+//                     else if(value == "("){ // Function call
+//                         op->change_value("(", 0); // keeps it the same, just here so it does not go to the else
+//                     }
+//                     else {
+//                         parsing_error("Syntax error: expected number or identifier", token);
+//                     }
+//                 }
 
-                while(ops.size() > 0 && (precedence(ops.top()->get_value(), token) >= precedence(op->get_value(), token)) ){
-                    Node* top = ops.top();
-                    ops.pop();
-                    if(is_binary_operator(top->get_value())){
-                        top->add_child(values.top());
-                        values.pop();
-                        top->add_child(values.top());
-                        values.pop();
-                    }
-                    else if(is_unary_operator(top->get_value())){
-                        top->add_child(values.top());
-                        values.pop();
-                    }
-                    else if(is_access_operator(top->get_value())){ // Array access
-                        Node* index = values.top();
-                        values.pop();
+//                 while(ops.size() > 0 && (precedence(ops.top()->get_value(), token) >= precedence(op->get_value(), token)) ){
+//                     Node* top = ops.top();
+//                     ops.pop();
+//                     if(is_binary_operator(top->get_value())){
+//                         top->add_child(values.top());
+//                         values.pop();
+//                         top->add_child(values.top());
+//                         values.pop();
+//                     }
+//                     else if(is_unary_operator(top->get_value())){
+//                         top->add_child(values.top());
+//                         values.pop();
+//                     }
+//                     else if(is_access_operator(top->get_value())){ // Array access
+//                         Node* index = values.top();
+//                         values.pop();
                         
-                        Node* array = values.top();
-                        values.pop();
+//                         Node* array = values.top();
+//                         values.pop();
 
-                        top->add_child(array);
-                        top->add_child(index);
+//                         top->add_child(array);
+//                         top->add_child(index);
 
-                    }
-                    else {
-                        parsing_error("Syntax error: unknown operator", token);
-                    }
-                    values.push(top);
-                }
+//                     }
+//                     else if(is_call_operator(top->get_value())){ // Function call
+//                         Node* list = values.top();
+//                         values.pop();
+//                         top->add_child(list);
 
-                if(is_access_operator(value)){ // Array access
-                    Node* expr = new Node(NodeType::EXPR_NODE, "");
-                    parse_expr(tokens, expr);
-                    values.push(expr);
+//                         //get the function to call
+//                         Node* function = values.top();
+//                         values.pop();
+//                         top->add_child(function);
+//                     }
+//                     else {
+//                         parsing_error("Syntax error: unknown operator", token);
+//                     }
+//                     values.push(top);
+//                 }
 
-                    // check for closing bracket
-                    Token token = pop(tokens);
-                    if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
-                        parsing_error("Syntax error: expected ']'", token);
-                    }
-                }
+//                 if(is_access_operator(value)){ // Array access
+//                     Node* expr = new Node(NodeType::EXPR_NODE, "");
+//                     parse_expr(tokens, expr);
+//                     values.push(expr);
 
-                ops.push(op);
-                break;
-            }
-            case TokenType::OPENPAR_TOKEN: {
-                Node* expr = new Node(NodeType::EXPR_NODE, "");
-                parse_expr(tokens, expr, true); // Nested expression
-                values.push(expr);
-                break;
-            }
-            case TokenType::STRING_TOKEN: {
-                Node* str = new Node(NodeType::STRING_NODE, value);
-                values.push(str);
-                break;
-            }
-            default: {
-                place_token_back(tokens, token);
-                loop = false;
-                break;
-            }
-        }
+//                     // check for closing bracket
+//                     Token token = pop(tokens);
+//                     if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
+//                         parsing_error("Syntax error: expected ']'", token);
+//                     }
+//                 }
 
-        previos_token_type = type;
-        previos_token_value = value;
+//                 if(is_call_operator(value)){ // Function call
+//                 std::cout << "Function call" << std::endl;
+//                     Node* list = new Node(NodeType::LIST_NODE, "");
+//                     values.push(list);
+//                     token = peek(tokens);
+//                     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
+//                         for(;;){ // Can have 0 or more parameters
+//                             parse_expr(tokens, list);
+
+//                             token = peek(tokens);
+//                             if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
+//                                 break;
+//                             } else if(token.get_type() == TokenType::COMMA_TOKEN){
+//                                 pop(tokens);
+//                             } else {
+//                                 parsing_error("Syntax error: expected ',' or ')'", token);
+//                             }
+//                         }
+//                     }
+
+//                     token = pop(tokens);
+//                     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+//                         parsing_error("Syntax error: expected ')'", token);
+//                     }
+//                 }
+
+//                 ops.push(op);
+//                 break;
+//             }
+//             case TokenType::OPENPAR_TOKEN: {
+//                 Node* expr = new Node(NodeType::EXPR_NODE, "");
+//                 parse_expr(tokens, expr, true); // Nested expression
+//                 values.push(expr);
+//                 break;
+//             }
+//             case TokenType::STRING_TOKEN: {
+//                 Node* str = new Node(NodeType::STRING_NODE, value);
+//                 values.push(str);
+//                 break;
+//             }
+//             default: {
+//                 place_token_back(tokens, token);
+//                 loop = false;
+//                 break;
+//             }
+//         }
+
+//         previos_token_type = type;
+//         previos_token_value = value;
+//     }
+
+//     while(ops.size() > 0){
+//         Node* top = ops.top();
+//         top->print();
+//         ops.pop();
+//         if(is_binary_operator(top->get_value())){
+//             top->add_child(values.top());
+//             values.pop();
+//             top->add_child(values.top());
+//             values.pop();
+//             values.push(top);
+//         }
+//         else if(is_unary_operator(top->get_value())){
+//             top->add_child(values.top());
+//             values.pop();
+//             values.push(top);
+//         }
+//         else if(is_access_operator(top->get_value())){ // Array access
+//             Node* index = values.top();
+//             values.pop();
+            
+//             Node* array = values.top();
+//             values.pop();
+
+//             top->add_child(array);
+//             top->add_child(index);
+//             values.push(top);
+//         }
+//         else if(is_call_operator(top->get_value())){ // Function call
+//             Node* list = values.top();
+//             values.pop();
+//             top->add_child(list);
+
+//             //get the function to call
+//             Node* function = values.top();
+//             values.pop();
+//             top->add_child(function);
+
+//             values.push(top);
+//         }
+//         else {
+//             parsing_error("Syntax error: unknown operator", Token(TokenType::EOF_TOKEN, "EOF", -1));
+//         }
+//     }
+
+//     if(values.size() != 1){
+//         parsing_error("Syntax error: invalid expression", Token(TokenType::EOF_TOKEN, "EOF", -1));
+//     }
+//     current->add_child(values.top());
+// }
+
+// EXPR GRAMMAR
+/*
+
+expression             → logical_or_expression
+logical_or_expression  → logical_and_expression ( 'or' logical_and_expression )*
+logical_and_expression → comparison_expression ( 'and' comparison_expression )*
+comparison_expression  → additive_expression ( ( '==' | '!=' | '<' | '>' | '<=' | '>=' ) additive_expression )*
+additive_expression    → multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )*
+multiplicative_expression → prefix_expression ( ( '*' | '/' | '%' ) prefix_expression )*  
+prefix_expression      → ( '!' | '-' ) prefix_expression | exponentiation_expression
+exponentiation_expression → postfix_expression ( '^' exponentiation_expression )*  
+postfix_expression     → primary ( '[' expression ']' | '(' arguments? ')' )*
+primary                → identifier | literal | '(' expression ')'
+literal                → NUMBER | STRING | 'null' | 'true' | 'false' | map | function | vector
+arguments              → expression ( ',' expression )*
+
+*/
+
+
+void parse_expr(std::vector<Token>& tokens, Node* current, bool nested);
+void parse_logical_or_expr(std::vector<Token>& tokens, Node* current);
+void parse_logical_and_expr(std::vector<Token>& tokens, Node* current);
+void parse_comparison_expr(std::vector<Token>& tokens, Node* current);
+void parse_additive_expr(std::vector<Token>& tokens, Node* current);
+void parse_multiplicative_expr(std::vector<Token>& tokens, Node* current);
+void parse_prefix_expr(std::vector<Token>& tokens, Node* current);
+void parse_exponentiation_expr(std::vector<Token>& tokens, Node* current);
+void parse_postfix_expr(std::vector<Token>& tokens, Node* current);
+void parse_primary(std::vector<Token>& tokens, Node* current);
+void parse_literal(std::vector<Token>& tokens, Node* current);
+void parse_arguments(std::vector<Token>& tokens, Node* current);
+
+std::map<std::string, std::string> op_types = {
+    {"||", {"logical_or"}},
+    {"&&", {"logical_and"}},
+    {"==", {"comparison"}},
+    {"!=", {"comparison"}},
+    {"<", {"comparison"}},
+    {">", {"comparison"}},
+    {"<=", {"comparison"}},
+    {">=", {"comparison"}},
+    {"+", {"additive"}},
+    {"-", {"additive"}},
+    {"*", {"multiplicative"}},
+    {"/", {"multiplicative"}},
+    {"%", {"multiplicative"}},
+    {"^", {"exponentiation"}},
+    {"!", {"prefix"}},
+    {"u-", {"prefix"}},
+    {"[", {"postfix"}},
+    {"(", {"postfix"}}
+};
+
+bool is_operator(std::string op){
+    return op_types.find(op) != op_types.end();
+}
+
+bool is_op_type(std::string op, std::string type){
+    if(op_types.find(op) == op_types.end()){
+        // parsing_error("Unknown operator: " + op + "; expected: " + type, Token(TokenType::EOF_TOKEN, "EOF", -1));
+        return false;
     }
 
-    while(ops.size() > 0){
-        Node* top = ops.top();
-        ops.pop();
-        if(is_binary_operator(top->get_value())){
-            top->add_child(values.top());
-            values.pop();
-            top->add_child(values.top());
-            values.pop();
-            values.push(top);
-        }
-        else if(is_unary_operator(top->get_value())){
-            top->add_child(values.top());
-            values.pop();
-            values.push(top);
-        }
-        else if(is_access_operator(top->get_value())){ // Array access
-            Node* index = values.top();
-            values.pop();
-            
-            Node* array = values.top();
-            values.pop();
+    return op_types[op] == type;
+}
 
-            top->add_child(array);
-            top->add_child(index);
-            values.push(top);
+void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
+    parse_logical_or_expr(tokens, current);
+}
+
+void parse_logical_or_expr(std::vector<Token>& tokens, Node* current){
+    parse_logical_and_expr(tokens, current);
+
+    while(is_op_type(peek(tokens).get_value(), "logical_or")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        op->add_child(current->get_child(current->get_children().size() - 1));
+        parse_logical_and_expr(tokens, op);
+        current->add_child(op);
+    }
+}
+
+void parse_logical_and_expr(std::vector<Token>& tokens, Node* current){
+    parse_comparison_expr(tokens, current);
+
+    while(is_op_type(peek(tokens).get_value(), "logical_and")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        op->add_child(current->get_child(current->get_children().size() - 1));
+        parse_comparison_expr(tokens, op);
+        current->add_child(op);
+    }
+}   
+
+void parse_comparison_expr(std::vector<Token>& tokens, Node* current){
+    parse_additive_expr(tokens, current);
+
+    while(is_op_type(peek(tokens).get_value(), "comparison")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        op->add_child(current->get_child(current->get_children().size() - 1));
+        parse_additive_expr(tokens, op);
+        current->add_child(op);
+    }
+}
+
+void parse_additive_expr(std::vector<Token>& tokens, Node* current){
+    parse_multiplicative_expr(tokens, current);
+
+    while(is_op_type(peek(tokens).get_value(), "additive")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        op->add_child(current->get_child(current->get_children().size() - 1));
+        parse_multiplicative_expr(tokens, op);
+        current->add_child(op);
+    }
+}
+
+void parse_multiplicative_expr(std::vector<Token>& tokens, Node* current){
+    parse_prefix_expr(tokens, current);
+
+    while(is_op_type(peek(tokens).get_value(), "multiplicative")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        op->add_child(current->get_child(current->get_children().size() - 1));
+        parse_prefix_expr(tokens, op);
+        current->add_child(op);
+    }
+}
+
+void parse_prefix_expr(std::vector<Token>& tokens, Node* current){
+    if(is_op_type(peek(tokens).get_value(), "prefix")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        parse_prefix_expr(tokens, op);
+        current->add_child(op);
+    } else {
+        parse_exponentiation_expr(tokens, current);
+    }
+}
+
+void parse_exponentiation_expr(std::vector<Token>& tokens, Node* current){
+    parse_postfix_expr(tokens, current);
+
+    while(is_op_type(peek(tokens).get_value(), "exponentiation")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        op->add_child(current->get_child(current->get_children().size() - 1));
+        parse_postfix_expr(tokens, op);
+        current->add_child(op);
+    }
+}
+
+void parse_postfix_expr(std::vector<Token>& tokens, Node* current){
+    parse_primary(tokens, current);
+
+    while(is_op_type(peek(tokens).get_value(), "postfix")){
+        Token token = pop(tokens);
+        Node* op = new Node(NodeType::OP_NODE, token.get_value());
+        op->add_child(current->get_child(current->get_children().size() - 1));
+
+        if(token.get_value() == "["){ // Array access
+            Node* expr = new Node(NodeType::EXPR_NODE, "");
+            parse_expr(tokens, expr);
+            op->add_child(expr);
+
+            // check for closing bracket
+            Token token = pop(tokens);
+            if(token.get_type() != TokenType::CLOSESQUAREBRACKET_TOKEN){
+                parsing_error("Syntax error: expected ']'", token);
+            }
+        }
+        else if(token.get_value() == "("){ // Function call
+            Node* list = new Node(NodeType::LIST_NODE, "");
+            op->add_child(list);
+            token = peek(tokens);
+            if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
+                for(;;){ // Can have 0 or more parameters
+                    parse_expr(tokens, list);
+
+                    token = peek(tokens);
+                    if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
+                        break;
+                    } else if(token.get_type() == TokenType::COMMA_TOKEN){
+                        pop(tokens);
+                    } else {
+                        parsing_error("Syntax error: expected ',' or ')'", token);
+                    }
+                }
+            }
+
+            token = pop(tokens);
+            if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+                parsing_error("Syntax error: expected ')'", token);
+            }
         }
         else {
-            parsing_error("Syntax error: unknown operator", Token(TokenType::EOF_TOKEN, "EOF", -1));
+            parsing_error("Syntax error: unknown postfix operator", token);
+        }
+
+        current->add_child(op);
+    }
+}
+
+void parse_primary(std::vector<Token>& tokens, Node* current){
+    Token token = pop(tokens);
+    if(token.get_type() == TokenType::NUMBER_TOKEN){
+        Node* num = new Node(NodeType::NUM_NODE, token.get_value());
+        current->add_child(num);
+    }
+    else if(token.get_type() == TokenType::BOOL_TOKEN){
+        Node* bool_node = new Node(NodeType::BOOL_NODE, token.get_value());
+        current->add_child(bool_node);
+    }
+    else if(token.get_type() == TokenType::NULL_TOKEN){
+        Node* null_node = new Node(NodeType::NULL_NODE, "null");
+        current->add_child(null_node);
+    }
+    else if(token.get_type() == TokenType::STD_LIB_TOKEN){
+        Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, token.get_value());
+        parse_std_lib_call(tokens, std_lib);
+        current->add_child(std_lib);
+    }
+    else if(token.get_type() == TokenType::MAP_TOKEN){
+        Node* map = new Node(NodeType::MAP_NODE, "");
+        parse_map(tokens, map);
+        current->add_child(map);
+    }
+    else if(token.get_type() == TokenType::FUNC_TOKEN){
+        Node* function = new Node(NodeType::FUNCTION_NODE, "");
+        parse_function(tokens, function);
+        current->add_child(function);
+    }
+    else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
+        Node* var = new Node(NodeType::VAR_NODE, token.get_value());
+        current->add_child(var);
+    }
+    else if(token.get_type() == TokenType::STRING_TOKEN){
+        Node* str = new Node(NodeType::STRING_NODE, token.get_value());
+        current->add_child(str);
+    }
+    else if(token.get_type() == TokenType::OPENPAR_TOKEN){
+        Node* expr = new Node(NodeType::EXPR_NODE, "");
+        parse_expr(tokens, expr, true); // Nested expression
+        current->add_child(expr);
+
+        token = pop(tokens);
+        if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+            parsing_error("Syntax error: expected ')'", token);
         }
     }
-
-    if(values.size() != 1){
-        parsing_error("Syntax error: invalid expression", Token(TokenType::EOF_TOKEN, "EOF", -1));
+    else {
+        parsing_error("Syntax error: expected number or identifier", token);
     }
-    current->add_child(values.top());
 }
+
+// void parse_arguments(std::vector<Token>& tokens, Node* current){
+//     parse_expr(tokens, current);
+
+//     while(peek(tokens).get_type() == TokenType::COMMA_TOKEN){
+//         pop(tokens);
+//         parse_expr(tokens, current);
+//     }
+// }
+
 
 /*
 Finds type of value and calls the appropriate function to parse it
 Types: expression, list, map, function, null
 */
 void parse_value(std::vector<Token>& tokens, Node* current){
-    // Find type of value
-    if(peek(tokens).get_value() == "["){ // Array, check value because [ is an operator
-        parse_list(tokens, current, 0);
-    }
-    else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function
-        parse_function(tokens, current);
-    }
-    else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null
-        pop(tokens);
-        Node* null_node = new Node(NodeType::NULL_NODE, "null");
-        current->add_child(null_node);
-    }
-    else if (peek(tokens).get_type() == TokenType::MAP_TOKEN){ // map
-        parse_map(tokens, current);
-    }
-    else{ // Expression
-        Node* expr = new Node(NodeType::EXPR_NODE, "");
-        current->add_child(expr);
-        parse_expr(tokens, expr);
-    }
+    // // Find type of value
+    // if(peek(tokens).get_value() == "["){ // Array, check value because [ is an operator
+    //     parse_list(tokens, current, 0);
+    // }
+    // else if(peek(tokens).get_type() == TokenType::FUNC_TOKEN){ // Function
+    //     parse_function(tokens, current);
+    // }
+    // else if(peek(tokens).get_type() == TokenType::NULL_TOKEN){ // Null
+    //     pop(tokens);
+    //     Node* null_node = new Node(NodeType::NULL_NODE, "null");
+    //     current->add_child(null_node);
+    // }
+    // else if (peek(tokens).get_type() == TokenType::MAP_TOKEN){ // map
+    //     parse_map(tokens, current);
+    // }
+    // else{ // Expression
+    //     Node* expr = new Node(NodeType::EXPR_NODE, "");
+    //     current->add_child(expr);
+    //     parse_expr(tokens, expr);
+    // }
+
+    Node* expr = new Node(NodeType::EXPR_NODE, "");
+    current->add_child(expr);
+    parse_expr(tokens, expr);
 }
 
 /*
@@ -602,14 +949,19 @@ void parse_std_lib_call(std::vector<Token>& tokens, Node* current){
 /*
 Parses a function definition; Ex: let f = func factorial(n) { stmt_list };
 */
-void parse_function(std::vector<Token>& tokens, Node* current){
-    pop(tokens); // Skip the 'func' keyword
-    Node* function = new Node(NodeType::FUNCTION_NODE, "");
-    current->add_child(function);
+void parse_function(std::vector<Token>& tokens, Node* function){
+    // pop(tokens); // Skip the 'func' keyword
+    // Node* function = new Node(NodeType::FUNCTION_NODE, "");
+    // current->add_child(function);
 
     // check for opening parenthesis
     Token token = pop(tokens);
-    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    // if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    //     parsing_error("Syntax error: expected '('", token);
+    // }
+
+    // '(' is classifed as an operator, so we need to check if it is the correct symbol
+    if(token.get_value() != "("){
         parsing_error("Syntax error: expected '('", token);
     }
 
@@ -638,6 +990,7 @@ void parse_function(std::vector<Token>& tokens, Node* current){
         }
     }
 
+
     token = pop(tokens);
     if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
         parsing_error("Syntax error: expected ')'", token);
@@ -653,6 +1006,7 @@ void parse_function(std::vector<Token>& tokens, Node* current){
         pop(tokens);
         return; // Empty function
     }
+
 
     Node* stmt_list = new Node(NodeType::STMT_LIST_NODE, "");
     function->add_child(stmt_list);
@@ -709,10 +1063,10 @@ void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
 Parse a map; Ex: let m = map { let a = 1; let b = 2; };
 Can have any value type inside the map as well as mixing types
 */
-void parse_map(std::vector<Token>& tokens, Node* current){
-    pop(tokens); // Skip the 'map' keyword
-    Node* map_node = new Node(NodeType::MAP_NODE, "");
-    current->add_child(map_node);
+void parse_map(std::vector<Token>& tokens, Node* map_node){
+    // pop(tokens); // Skip the 'map' keyword
+    // Node* map_node = new Node(NodeType::MAP_NODE, "");
+    // current->add_child(map_node);
 
     // check for opening bracket
     Token token = pop(tokens);
