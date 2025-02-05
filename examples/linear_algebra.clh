@@ -1,0 +1,218 @@
+let pretty_print_matrix = func(augmented){
+    print "\nMatrix:";
+    let padding = 9;
+    let width = $vector_length(augmented[0]);
+    let temp = "--";
+    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
+        temp = temp + " ";
+    }
+    temp = temp + "--";
+    print temp;
+
+    for (let i = 0; i < $vector_length(augmented); i = i + 1){
+        let temp = "|";
+        for (let j = 0; j < $vector_length(augmented[i]); j = j + 1){
+            let len = $string_length(augmented[i][j] + "");
+            for (let k = 0; k < padding - len; k = k + 1){
+                temp = temp + " ";
+            }
+            if (j == $vector_length(augmented[i]) - 1){
+                temp = temp + augmented[i][j] + " |";
+                print temp;
+            }
+            else{
+                temp = temp + augmented[i][j] + " ";
+            }
+        }
+    }
+
+    temp = "--";
+    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
+        temp = temp + " ";
+    }
+    temp = temp + "--";
+    print temp;
+
+    print "";
+    return 0;
+};
+
+let pretty_print_augmented = func(augmented){
+    print "\nAugmented Matrix:";
+    let padding = 9;
+    let width = $vector_length(augmented[0]);
+    let temp = "--";
+    for (let i = 0; i < width * (padding + 1); i = i + 1){
+        temp = temp + " ";
+    }
+    temp = temp + "--";
+    print temp;
+
+    for (let i = 0; i < $vector_length(augmented); i = i + 1){
+        let temp = "|";
+        for (let j = 0; j < $vector_length(augmented[i]); j = j + 1){
+            let len = $string_length(augmented[i][j] + "");\
+            if (j == $vector_length(augmented[i]) - 1){
+                temp = temp + "| ";
+                for (let k = 0; k < padding - len; k = k + 1){
+                    temp = temp + " ";
+                }  
+                temp = temp + augmented[i][j] + " |";
+                print temp;
+            }
+            else{
+                for (let k = 0; k < padding - len; k = k + 1){
+                    temp = temp + " ";
+                }
+                temp = temp + augmented[i][j] + " ";
+            }
+        }
+    }
+
+    temp = "--";
+    for (let i = 0; i < width * (padding + 1); i = i + 1){
+        temp = temp + " ";
+    }
+    temp = temp + "--";
+    print temp;
+
+    print "";
+    return 0;
+};
+
+let augment_matrix = func(A, b){
+    let n = $vector_length(b);
+    let augmented = [];
+    for (let i = 0; i < n; i = i + 1){
+        augmented = $vector_push(augmented, $vector_push(A[i], b[i]));
+    }
+
+    return augmented;
+};
+
+let REF_GE = func(augmented){
+    let n = $vector_length(augmented);    
+    
+    // Helper functions ------------------------------------------
+    let scale_row = func(augmented, row, scale){
+        for (let i = 0; i < $vector_length(augmented[row]); i = i + 1){
+            augmented[row][i] = augmented[row][i] * scale;
+        }
+        return augmented;
+    };
+
+    let add_row = func(augmented, row1, row2, scale){
+        for (let i = 0; i < $vector_length(augmented[row1]); i = i + 1){
+            augmented[row1][i] = augmented[row1][i] + augmented[row2][i] * scale;
+        }
+        return augmented;
+    };
+    // -----------------------------------------------------------
+
+    // Gaussian Elimination
+    for(let i = 0; i < n; i = i + 1){
+        // Scale A[i][i] to 1
+        let scale = 1 / augmented[i][i];
+        augmented = scale_row(augmented, i, scale);
+
+        // Eliminate all elements below A[i][i]
+        for(let j = i + 1; j < n; j = j + 1){
+            let scale = -augmented[j][i];
+            augmented = add_row(augmented, j, i, scale);
+        }
+    }
+
+    return augmented;
+};
+
+let RREF_GE = func(augmented){
+    let n = $vector_length(augmented);
+
+    // Helper functions ------------------------------------------
+    let scale_row = func(augmented, row, scale){
+        for (let i = 0; i < $vector_length(augmented[row]); i = i + 1){
+            augmented[row][i] = augmented[row][i] * scale;
+        }
+        return augmented;
+    };
+
+    let add_row = func(augmented, row1, row2, scale){
+        for (let i = 0; i < $vector_length(augmented[row1]); i = i + 1){
+            augmented[row1][i] = augmented[row1][i] + augmented[row2][i] * scale;
+        }
+        return augmented;
+    };
+    // -----------------------------------------------------------
+
+    // Gaussian Elimination
+    for(let i = 0; i < n; i = i + 1){
+        // Scale A[i][i] to 1
+        let scale = 1 / augmented[i][i];
+        augmented = scale_row(augmented, i, scale);
+
+        // Eliminate all elements in the column
+        for(let j = 0; j < n; j = j + 1){
+            if (j != i){
+                let scale = -augmented[j][i];
+                augmented = add_row(augmented, j, i, scale);
+            }
+        }
+    }
+
+    return augmented;
+};
+
+let Back_Substitution = func(REF_augmented){
+    let n = $vector_length(REF_augmented); // n: 3
+    let x = [];
+
+    for (let i = n - 1; i >= 0; i = i - 1){ // i: 2, 1, 0
+        let sum = REF_augmented[i][n]; // gets value from b
+        for(let j = 0; j < n - 1 - i; j = j + 1){ // i = 2, j: X; i = 1, j: 0; i = 0, j: 0, 1
+            sum = sum - REF_augmented[i][n - 1 - j] * x[j];
+        }
+        x = $vector_push(x, sum); // Asssumes that diagonal entries are 1
+    }
+
+    x = $vector_reverse(x); // to put x as, x_0, x_1, x_2, ...
+    return x;
+};
+
+let determinant = func(A){
+    let minor = func(A, row, col){
+        let sub = [];
+        for(let i = 0; i < $vector_length(A); i = i + 1){
+            if(i == row){continue;}
+            let temp = [];
+            for(let j = 0; j < $vector_length(A); j = j + 1){
+                if(j == col){continue;}
+                temp = $vector_push(temp, A[i][j]);
+            }
+            sub = $vector_push(sub, temp);
+        }
+        return sub;
+    };
+
+    let determinant_2x2 = func(A){return A[0][0] * A[1][1] - A[0][1] * A[1][0];};
+
+    // Expect square matrix
+    let n = $vector_length(A);
+
+    if(n == 2){
+        return determinant_2x2(A);
+    }
+    
+    let det = 0;
+    for(let i = 0; i < n; i = i + 1){
+        let m = minor(A, 0, i);
+        if(i % 2 == 0){
+            det = det + A[0][i] * determinant(m);
+        }
+        else{
+            det = det - A[0][i] * determinant(m);
+        }
+    }
+
+    return det;
+};
+
