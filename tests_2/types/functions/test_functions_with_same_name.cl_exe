@@ -6,26 +6,26 @@ a
 x
 b
 6
-function|function () {15, 1, 16, 3, 19, 3, 36, 33, }
-function|function () {15, 2, 33, }
+function|function () {16, 1, 17, 3, 19, 3, 37, 34, }
+function|function () {16, 2, 34, }
 number|1
-function|function () {15, 4, 16, 3, 19, 3, 36, 33, }
-function|function () {15, 5, 33, }
+function|function () {16, 4, 17, 3, 19, 3, 37, 34, }
+function|function () {16, 5, 34, }
 number|2
 16
-15
+16
 0
-16
+17
 2
-15
+16
 3
-16
+17
 4
 19
 2
-36
-39
+37
+40
 19
 4
-36
-39
+37
+40

@@ -148,6 +148,7 @@ maps operators to their precedence and type
 std::map<std::string, std::tuple<int, std::string>> operators = {
     {"(", {20, "call"}}, // function call
     {"[", {20, "access"}}, // access map or vector
+    {"^", {19, "binary"}}, // exponentiation
     {"u-", {11, "unary"}}, // Unary minus 
     {"*", {10, "binary"}},
     {"/", {10, "binary"}},
@@ -605,7 +606,7 @@ std::map<std::string, std::string> op_types = {
     {"/", {"multiplicative"}},
     {"%", {"multiplicative"}},
     {"^", {"exponentiation"}},
-    {"!", {"prefix"}},
+    {"u!", {"prefix"}},
     {"u-", {"prefix"}},
     {"[", {"postfix"}},
     {"(", {"postfix"}}
@@ -713,8 +714,12 @@ Node* parse_multiplicative_expr(std::vector<Token>& tokens, Node* current){
 }
 
 Node* parse_prefix_expr(std::vector<Token>& tokens, Node* current){
-    if(is_op_type(peek(tokens).get_value(), "prefix")){
-        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+    if(is_op_type("u"+peek(tokens).get_value(), "prefix")){ // kinda janky but it works, cause now in map, not is 'u!'
+        std::string value = pop(tokens).get_value();
+        if(value == "-"){
+            value = "u-";
+        }
+        Node* op = new Node(NodeType::OP_NODE, value);
         op->add_child(parse_prefix_expr(tokens, current));
         return op;
     }
@@ -760,7 +765,30 @@ Node* parse_postfix_expr(std::vector<Token>& tokens, Node* current){
             }
         }
         else if(op->get_value() == "("){
-            op->add_child(parse_arguments(tokens, current));
+            Node* list = new Node(NodeType::LIST_NODE, "");
+            op->add_child(list);
+            Token token = peek(tokens);
+            if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
+                for(;;){ // Can have 0 or more parameters
+                    Node* expr = new Node(NodeType::EXPR_NODE, "");
+                    parse_expr(tokens, expr);
+                    list->add_child(expr);
+
+                    token = peek(tokens);
+                    if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
+                        break;
+                    } else if(token.get_type() == TokenType::COMMA_TOKEN){
+                        pop(tokens);
+                    } else {
+                        parsing_error("Syntax error: expected ',' or ')'", token);
+                    }
+                }
+            }
+
+            token = pop(tokens);
+            if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+                parsing_error("Syntax error: expected ')'", token);
+            }
         }
 
         primary = op;
@@ -830,34 +858,6 @@ Node* parse_literal(std::vector<Token>& tokens, Node* current){
     }
 }
 
-Node* parse_arguments(std::vector<Token>& tokens, Node* current){
-    // Parse the parameters
-    Node* list = new Node(NodeType::LIST_NODE, "");
-    // current->add_child(list);
-    Token token = peek(tokens);
-    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
-        for(;;){ // Can have 0 or more parameters
-            parse_expr(tokens, list);
-
-            token = peek(tokens);
-            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
-                break;
-            } else if(token.get_type() == TokenType::COMMA_TOKEN){
-                pop(tokens);
-            } else {
-                parsing_error("Syntax error: expected ',' or ')'", token);
-            }
-        }
-    }
-
-    token = pop(tokens);
-    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
-        parsing_error("Syntax error: expected ')'", token);
-    }
-
-    return list;
-}
-
 
 
 /*
@@ -904,7 +904,7 @@ void parse_function_call(std::vector<Token>& tokens, Node* current){
     current->add_value(token.get_value());
 
     token = pop(tokens);
-    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    if(token.get_value() != "("){
         parsing_error("Syntax error: expected '('", token);
     }
 
@@ -946,7 +946,7 @@ void parse_std_lib_call(std::vector<Token>& tokens, Node* current){
     current->add_value(token.get_value());
 
     token = pop(tokens);
-    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    if(token.get_value() != "("){
         parsing_error("Syntax error: expected '('", token);
     }
 
@@ -1226,7 +1226,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
     current->add_child(if_node);
 
     Token token = pop(tokens);
-    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    if(token.get_value() != "("){
         parsing_error("Syntax error: expected '('", token);
     }
 
@@ -1260,7 +1260,7 @@ void parse_if(std::vector<Token>& tokens, Node* current){
     // parse else if blocks (if they exist)
     while(peek(tokens).get_type() == TokenType::ELSE_IF_TOKEN){
         pop(tokens); // Skip the 'else if' keyword
-        if(pop(tokens).get_type() != TokenType::OPENPAR_TOKEN){
+        if(pop(tokens).get_value() != "("){
             parsing_error("Syntax error: expected '('", token);
         }
 
@@ -1400,7 +1400,7 @@ void parse_for(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
     Node* for_node = new Node(NodeType::FOR_NODE, "");
     current->add_child(for_node);
-    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    if(token.get_value() != "("){
         parsing_error("Syntax error: expected '('", token);
     }
 
@@ -1467,7 +1467,7 @@ void parse_foreach(std::vector<Token>& tokens, Node* current){
     current->add_child(foreach_node);
     
     Token token = pop(tokens);    
-    if(token.get_type() != TokenType::OPENPAR_TOKEN){
+    if(token.get_value() != "("){
         parsing_error("Syntax error: expected '('", token);
     }
 

@@ -37,6 +37,11 @@ enum OpCode{
                 If the second value is 0, throws a runtime error
     */
     OP_MOD,
+    /*
+    * OP_EXP: Exponentiation of the top two values on the stack
+                Pushes the result back onto the stack
+    */
+    OP_EXP,
     // Boolean
     /*
     * OP_AND: Logical AND of the top two values on the stack
@@ -270,6 +275,8 @@ std::string opcode_to_string(CODE_SIZE op){
             return "OP_DIV";
         case OpCode::OP_MOD:
             return "OP_MOD";
+        case OpCode::OP_EXP:
+            return "OP_EXP";
         case OpCode::OP_AND:
             return "OP_AND";
         case OpCode::OP_OR:

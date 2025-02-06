@@ -23,6 +23,7 @@ void interpretation_error(std::string message, Node *node, function *func);
 For athritmetic and boolean operations
 */
 std::unordered_map<std::string, OpCode> opCodeMap = {
+    {"(", OpCode::OP_FUNCTION_CALL},
     {"[", OpCode::OP_ACCESS},
     {"u-", OpCode::OP_U_SUB},
     {"+", OpCode::OP_ADD},
@@ -30,6 +31,7 @@ std::unordered_map<std::string, OpCode> opCodeMap = {
     {"*", OpCode::OP_MUL},
     {"/", OpCode::OP_DIV},
     {"%", OpCode::OP_MOD},
+    {"^", OpCode::OP_EXP},
     {"==", OpCode::OP_EQ},
     {"!=", OpCode::OP_NEQ},
     {">", OpCode::OP_GT},
@@ -78,6 +80,9 @@ void display_bytecode(function *func)
             break;
         case OpCode::OP_MOD:
             std::cout << "OP_MOD" << std::endl;
+            break;
+        case OpCode::OP_EXP:
+            std::cout << "OP_EXP" << std::endl;
             break;
 
         // Boolean
@@ -451,64 +456,98 @@ void evaluate(Node *value, function *func)
         interpret_expr(value, func);
     }
     break;
-    case NodeType::FUNCTION_NODE:
-    {
-        interpret_function(value, func);
-    }
-    break;
-    case NodeType::LIST_NODE:
-    {
-        WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
-        interpret_list(value, func); // interpret the list and leave the vector on the stack
-    }
-    break;
-    case NodeType::NULL_NODE:
-    {
-        WRITE_BYTE(OpCode::OP_LOAD, func);
-        WRITE_BYTE(constants.size(), func);
-        WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
-    }
-    break;
-    case NodeType::MAP_NODE:
-    {
-        // Create the map
-        WRITE_BYTE(OpCode::OP_CREATE_MAP, func); // Create an empty map
+    // case NodeType::FUNCTION_NODE:
+    // {
+    //     interpret_function(value, func);
+    // }
+    // break;
+    // case NodeType::LIST_NODE:
+    // {
+    //     WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
+    //     interpret_list(value, func); // interpret the list and leave the vector on the stack
+    // }
+    // break;
+    // case NodeType::NULL_NODE:
+    // {
+    //     WRITE_BYTE(OpCode::OP_LOAD, func);
+    //     WRITE_BYTE(constants.size(), func);
+    //     WRITE_VALUE({Value_Type::NULL_VALUE, nullptr});
+    // }
+    // break;
+    // case NodeType::MAP_NODE:
+    // {
+    //     // Create the map
+    //     WRITE_BYTE(OpCode::OP_CREATE_MAP, func); // Create an empty map
 
-        // Assign the values to the map
-        Node *list = value->get_child(0);
-        for (int i = 0; i < (int)list->get_children().size(); i++)
-        {
-            // assignment nodes
-            Node *assign = list->get_child(i);
-            if (assign->get_type() != NodeType::ASSIGN_NODE)
-            {
-                interpretation_error("Map assignment doesn't start with ASSIGN Node", assign, func);
-            }
+    //     // Assign the values to the map
+    //     Node *list = value->get_child(0);
+    //     for (int i = 0; i < (int)list->get_children().size(); i++)
+    //     {
+    //         // assignment nodes
+    //         Node *assign = list->get_child(i);
+    //         if (assign->get_type() != NodeType::ASSIGN_NODE)
+    //         {
+    //             interpretation_error("Map assignment doesn't start with ASSIGN Node", assign, func);
+    //         }
 
-            //assign children
-            std::vector<Node*> assign_children = assign->get_children();
-            if(assign_children.size() != 2){
-                interpretation_error("Invalid number of children for ASSIGN Node", assign, func);
-            }
+    //         //assign children
+    //         std::vector<Node*> assign_children = assign->get_children();
+    //         if(assign_children.size() != 2){
+    //             interpretation_error("Invalid number of children for ASSIGN Node", assign, func);
+    //         }
 
-            // std::string assign_var_name = assign_children[0]->get_value();
-            // WRITE_BYTE(OpCode::OP_LOAD, func);
-            // WRITE_BYTE(constants.size(), func);
-            // WRITE_VALUE({Value_Type::STRING, assign_var_name});
+    //         // std::string assign_var_name = assign_children[0]->get_value();
+    //         // WRITE_BYTE(OpCode::OP_LOAD, func);
+    //         // WRITE_BYTE(constants.size(), func);
+    //         // WRITE_VALUE({Value_Type::STRING, assign_var_name});
 
-            // interpret the key which can be any value, so evaluate it and leave it on the stack
-            evaluate(assign_children[0], func);
+    //         // interpret the key which can be any value, so evaluate it and leave it on the stack
+    //         evaluate(assign_children[0], func);
 
-            Node* assign_value = assign_children[1];
-            interpret_map_assign(assign_value, func);   
-        }
-    }
-    break;
+    //         Node* assign_value = assign_children[1];
+    //         interpret_map_assign(assign_value, func);   
+    //     }
+    // }
+    // break;
     default:
         interpretation_error("Invalid node type for evaluate", value, func);
         break;
     }
 }
+
+// /*
+// Pushes the arguments of a function call to the stack
+// Pushes the function to the stack
+// Calls the function
+// */
+// void interpret_function_call(Node *node, function *func)
+// {
+//     if (node->get_type() != NodeType::FUNCTION_CALL_NODE)
+//     {
+//         interpretation_error("Function call doesn't start with FUNCTION_CALL Node", node, func);
+//     }
+
+//     // get the name of the function
+//     std::string name = node->get_value(1);
+
+//     // push the arguments to the stack
+//     Node *arg_list = node->get_child(0);
+//     for (int i = 0; i < (int)arg_list->get_children().size(); i++)
+//     {
+//         evaluate(arg_list->get_child(i), func);
+//     }
+
+//     // Push the function onto the stack
+//     WRITE_BYTE(OpCode::OP_LOAD_FUNCTION_VAR, func);
+//     if (get_variable_index(name) == -1)
+//     {
+//         interpretation_error("Function not found", node, func);
+//     }
+//     WRITE_BYTE(get_variable_index(name), func);
+
+//     // call the function
+//     WRITE_BYTE(OpCode::OP_FUNCTION_CALL, func);
+// }
 
 /*
 Pushes the arguments of a function call to the stack
@@ -517,31 +556,7 @@ Calls the function
 */
 void interpret_function_call(Node *node, function *func)
 {
-    if (node->get_type() != NodeType::FUNCTION_CALL_NODE)
-    {
-        interpretation_error("Function call doesn't start with FUNCTION_CALL Node", node, func);
-    }
 
-    // get the name of the function
-    std::string name = node->get_value(1);
-
-    // push the arguments to the stack
-    Node *arg_list = node->get_child(0);
-    for (int i = 0; i < (int)arg_list->get_children().size(); i++)
-    {
-        evaluate(arg_list->get_child(i), func);
-    }
-
-    // Push the function onto the stack
-    WRITE_BYTE(OpCode::OP_LOAD_FUNCTION_VAR, func);
-    if (get_variable_index(name) == -1)
-    {
-        interpretation_error("Function not found", node, func);
-    }
-    WRITE_BYTE(get_variable_index(name), func);
-
-    // call the function
-    WRITE_BYTE(OpCode::OP_FUNCTION_CALL, func);
 }
 
 /*
@@ -618,8 +633,42 @@ void choose_expr_operand(Node *node, function *func)
             interpretation_error("Invalid number of children for VAR Node", node, func);
         }
         break;
-    case NodeType::FUNCTION_CALL_NODE:
-        interpret_function_call(node, func);
+    // case NodeType::FUNCTION_CALL_NODE:
+    //     interpret_function_call(node, func);
+    //     break;
+    case NodeType::FUNCTION_NODE:
+        interpret_function(node, func);
+        break;
+    case NodeType::MAP_NODE:
+    {
+        // Create the map
+        WRITE_BYTE(OpCode::OP_CREATE_MAP, func); // Create an empty map
+
+        // Assign the values to the map
+        Node *list = node->get_child(0);
+        for (int i = 0; i < (int)list->get_children().size(); i++)
+        {
+            // assignment nodes
+            Node *assign = list->get_child(i);
+            if (assign->get_type() != NodeType::ASSIGN_NODE)
+            {
+                interpretation_error("Map assignment doesn't start with ASSIGN Node", assign, func);
+            }
+            //assign children
+            std::vector<Node*> assign_children = assign->get_children();
+            if(assign_children.size() != 2){
+                interpretation_error("Invalid number of children for ASSIGN Node", assign, func);
+            }
+            // interpret the key which can be any value, so evaluate it and leave it on the stack
+            evaluate(assign_children[0], func);
+            Node* assign_value = assign_children[1];
+            interpret_map_assign(assign_value, func);
+        }
+    }
+        break;
+    case NodeType::LIST_NODE:
+        WRITE_BYTE(OpCode::OP_CREATE_VECTOR, func); // Create an empty vector and push it to the stack
+        interpret_list(node, func); // interpret the list and leave the vector on the stack
         break;
     case NodeType::STD_LIB_CALL_NODE:
         interpret_std_lib_call(node, func);
@@ -677,6 +726,19 @@ void interpret_op(Node *node, function *func)
 
             Node *r_child = node->get_child(1);
             choose_expr_operand(r_child, func);
+        }
+        else if (std::get<1>(operators[opStr]) == "call")
+        {
+            // push args
+            Node *r_child = node->get_child(1);
+            for (int i = 0; i < (int)r_child->get_children().size(); i++)
+            {
+                interpret_expr(r_child->get_child(i), func);
+            }
+        
+            // push function
+            Node *l_child = node->get_child(0);
+            choose_expr_operand(l_child, func);
         }
         else
         {
