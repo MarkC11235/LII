@@ -246,6 +246,7 @@ std::vector<Token> analyze(std::string input, int line_number){
             case '-':
             case '*':
             case '%':
+            case '^':
                 tokens.push_back(Token(TokenType::OPERATOR_TOKEN, std::string(1, input[i]), line_number));
                 break;
             case '/':

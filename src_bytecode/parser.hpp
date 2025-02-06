@@ -307,7 +307,7 @@ void parse_function(std::vector<Token>& tokens, Node* current);
 void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const = false);
 void parse_if(std::vector<Token>& tokens, Node* current);
 void parse_return(std::vector<Token>& tokens, Node* current);
-void parse_list(std::vector<Token>& tokens, Node* current, int level);
+void parse_list(std::vector<Token>& tokens, Node* current);
 void parse_map(std::vector<Token>& tokens, Node* current);
 void parse_accessor(std::vector<Token>& tokens, Node* current);
 void parse_variable_update(std::vector<Token>& tokens, Node* current);
@@ -562,8 +562,8 @@ Uses a stack based algorithm to parse expressions
 /*
 
 expression             → logical_or_expression
-logical_or_expression  → logical_and_expression ( 'or' logical_and_expression )*
-logical_and_expression → comparison_expression ( 'and' comparison_expression )*
+logical_or_expression  → logical_and_expression ( '||' logical_and_expression )*
+logical_and_expression → comparison_expression ( '&&' comparison_expression )*
 comparison_expression  → additive_expression ( ( '==' | '!=' | '<' | '>' | '<=' | '>=' ) additive_expression )*
 additive_expression    → multiplicative_expression ( ( '+' | '-' ) multiplicative_expression )*
 multiplicative_expression → prefix_expression ( ( '*' | '/' | '%' ) prefix_expression )*  
@@ -578,17 +578,17 @@ arguments              → expression ( ',' expression )*
 
 
 void parse_expr(std::vector<Token>& tokens, Node* current, bool nested);
-void parse_logical_or_expr(std::vector<Token>& tokens, Node* current);
-void parse_logical_and_expr(std::vector<Token>& tokens, Node* current);
-void parse_comparison_expr(std::vector<Token>& tokens, Node* current);
-void parse_additive_expr(std::vector<Token>& tokens, Node* current);
-void parse_multiplicative_expr(std::vector<Token>& tokens, Node* current);
-void parse_prefix_expr(std::vector<Token>& tokens, Node* current);
-void parse_exponentiation_expr(std::vector<Token>& tokens, Node* current);
-void parse_postfix_expr(std::vector<Token>& tokens, Node* current);
-void parse_primary(std::vector<Token>& tokens, Node* current);
-void parse_literal(std::vector<Token>& tokens, Node* current);
-void parse_arguments(std::vector<Token>& tokens, Node* current);
+Node* parse_logical_or_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_logical_and_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_comparison_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_additive_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_multiplicative_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_prefix_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_exponentiation_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_postfix_expr(std::vector<Token>& tokens, Node* current);
+Node* parse_primary(std::vector<Token>& tokens, Node* current);
+Node* parse_literal(std::vector<Token>& tokens, Node* current);
+Node* parse_arguments(std::vector<Token>& tokens, Node* current);
 
 std::map<std::string, std::string> op_types = {
     {"||", {"logical_or"}},
@@ -625,101 +625,130 @@ bool is_op_type(std::string op, std::string type){
 }
 
 void parse_expr(std::vector<Token>& tokens, Node* current, bool nested = false){
-    parse_logical_or_expr(tokens, current);
+    Node* logical_or_expr = parse_logical_or_expr(tokens, current);
+    if(logical_or_expr == nullptr){
+        parsing_error("Syntax error: expected expression", Token(TokenType::EOF_TOKEN, "EOF", -1));
+    }
+    current->add_child(logical_or_expr);
 }
 
-void parse_logical_or_expr(std::vector<Token>& tokens, Node* current){
-    parse_logical_and_expr(tokens, current);
+Node* parse_logical_or_expr(std::vector<Token>& tokens, Node* current){
+    Node* logical_and_expr = parse_logical_and_expr(tokens, current);
+    if(logical_and_expr == nullptr){
+        return nullptr;
+    }
 
     while(is_op_type(peek(tokens).get_value(), "logical_or")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        op->add_child(current->get_child(current->get_children().size() - 1));
-        parse_logical_and_expr(tokens, op);
-        current->add_child(op);
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(logical_and_expr);
+        op->add_child(parse_logical_and_expr(tokens, current));
+        logical_and_expr = op;
     }
+
+    return logical_and_expr;
 }
 
-void parse_logical_and_expr(std::vector<Token>& tokens, Node* current){
-    parse_comparison_expr(tokens, current);
+Node* parse_logical_and_expr(std::vector<Token>& tokens, Node* current){
+    Node* comparison_expr = parse_comparison_expr(tokens, current);
+    if(comparison_expr == nullptr){
+        return nullptr;
+    }
 
     while(is_op_type(peek(tokens).get_value(), "logical_and")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        op->add_child(current->get_child(current->get_children().size() - 1));
-        parse_comparison_expr(tokens, op);
-        current->add_child(op);
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(comparison_expr);
+        op->add_child(parse_comparison_expr(tokens, current));
+        comparison_expr = op;
     }
-}   
 
-void parse_comparison_expr(std::vector<Token>& tokens, Node* current){
-    parse_additive_expr(tokens, current);
+    return comparison_expr;
+}
+
+Node* parse_comparison_expr(std::vector<Token>& tokens, Node* current){
+    Node* additive_expr = parse_additive_expr(tokens, current);
+    if(additive_expr == nullptr){
+        return nullptr;
+    }
 
     while(is_op_type(peek(tokens).get_value(), "comparison")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        op->add_child(current->get_child(current->get_children().size() - 1));
-        parse_additive_expr(tokens, op);
-        current->add_child(op);
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(additive_expr);
+        op->add_child(parse_additive_expr(tokens, current));
+        additive_expr = op;
     }
+
+    return additive_expr;
 }
 
-void parse_additive_expr(std::vector<Token>& tokens, Node* current){
-    parse_multiplicative_expr(tokens, current);
+Node* parse_additive_expr(std::vector<Token>& tokens, Node* current){
+    Node* multiplicative_expr = parse_multiplicative_expr(tokens, current);
+    if(multiplicative_expr == nullptr){
+        return nullptr;
+    }
 
     while(is_op_type(peek(tokens).get_value(), "additive")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        op->add_child(current->get_child(current->get_children().size() - 1));
-        parse_multiplicative_expr(tokens, op);
-        current->add_child(op);
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(multiplicative_expr);
+        op->add_child(parse_multiplicative_expr(tokens, current));
+        multiplicative_expr = op;
     }
+
+    return multiplicative_expr;
 }
 
-void parse_multiplicative_expr(std::vector<Token>& tokens, Node* current){
-    parse_prefix_expr(tokens, current);
+Node* parse_multiplicative_expr(std::vector<Token>& tokens, Node* current){
+    Node* prefix_expr = parse_prefix_expr(tokens, current);
+    if(prefix_expr == nullptr){
+        return nullptr;
+    }
 
     while(is_op_type(peek(tokens).get_value(), "multiplicative")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        op->add_child(current->get_child(current->get_children().size() - 1));
-        parse_prefix_expr(tokens, op);
-        current->add_child(op);
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(prefix_expr);
+        op->add_child(parse_prefix_expr(tokens, current));
+        prefix_expr = op;
     }
+
+    return prefix_expr;
 }
 
-void parse_prefix_expr(std::vector<Token>& tokens, Node* current){
+Node* parse_prefix_expr(std::vector<Token>& tokens, Node* current){
     if(is_op_type(peek(tokens).get_value(), "prefix")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        parse_prefix_expr(tokens, op);
-        current->add_child(op);
-    } else {
-        parse_exponentiation_expr(tokens, current);
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(parse_prefix_expr(tokens, current));
+        return op;
     }
+
+    return parse_exponentiation_expr(tokens, current);
 }
 
-void parse_exponentiation_expr(std::vector<Token>& tokens, Node* current){
-    parse_postfix_expr(tokens, current);
+Node* parse_exponentiation_expr(std::vector<Token>& tokens, Node* current){
+    Node* postfix_expr = parse_postfix_expr(tokens, current);
+    if(postfix_expr == nullptr){
+        return nullptr;
+    }
 
     while(is_op_type(peek(tokens).get_value(), "exponentiation")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        op->add_child(current->get_child(current->get_children().size() - 1));
-        parse_postfix_expr(tokens, op);
-        current->add_child(op);
+        std::cout << "Exponentiation" << std::endl;
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(postfix_expr);
+        op->add_child(parse_postfix_expr(tokens, current));
+        postfix_expr = op;
     }
+
+    return postfix_expr;
 }
 
-void parse_postfix_expr(std::vector<Token>& tokens, Node* current){
-    parse_primary(tokens, current);
+Node* parse_postfix_expr(std::vector<Token>& tokens, Node* current){
+    Node* primary = parse_primary(tokens, current);
+    if(primary == nullptr){
+        return nullptr;
+    }
 
     while(is_op_type(peek(tokens).get_value(), "postfix")){
-        Token token = pop(tokens);
-        Node* op = new Node(NodeType::OP_NODE, token.get_value());
-        op->add_child(current->get_child(current->get_children().size() - 1));
-
-        if(token.get_value() == "["){ // Array access
+        Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
+        op->add_child(primary);
+        if(op->get_value() == "["){
             Node* expr = new Node(NodeType::EXPR_NODE, "");
             parse_expr(tokens, expr);
             op->add_child(expr);
@@ -730,98 +759,105 @@ void parse_postfix_expr(std::vector<Token>& tokens, Node* current){
                 parsing_error("Syntax error: expected ']'", token);
             }
         }
-        else if(token.get_value() == "("){ // Function call
-            Node* list = new Node(NodeType::LIST_NODE, "");
-            op->add_child(list);
-            token = peek(tokens);
-            if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
-                for(;;){ // Can have 0 or more parameters
-                    parse_expr(tokens, list);
-
-                    token = peek(tokens);
-                    if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
-                        break;
-                    } else if(token.get_type() == TokenType::COMMA_TOKEN){
-                        pop(tokens);
-                    } else {
-                        parsing_error("Syntax error: expected ',' or ')'", token);
-                    }
-                }
-            }
-
-            token = pop(tokens);
-            if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
-                parsing_error("Syntax error: expected ')'", token);
-            }
-        }
-        else {
-            parsing_error("Syntax error: unknown postfix operator", token);
+        else if(op->get_value() == "("){
+            op->add_child(parse_arguments(tokens, current));
         }
 
-        current->add_child(op);
+        primary = op;
     }
+
+    return primary;
 }
 
-void parse_primary(std::vector<Token>& tokens, Node* current){
+Node* parse_primary(std::vector<Token>& tokens, Node* current){
     Token token = pop(tokens);
-    if(token.get_type() == TokenType::NUMBER_TOKEN){
-        Node* num = new Node(NodeType::NUM_NODE, token.get_value());
-        current->add_child(num);
-    }
-    else if(token.get_type() == TokenType::BOOL_TOKEN){
-        Node* bool_node = new Node(NodeType::BOOL_NODE, token.get_value());
-        current->add_child(bool_node);
-    }
-    else if(token.get_type() == TokenType::NULL_TOKEN){
-        Node* null_node = new Node(NodeType::NULL_NODE, "null");
-        current->add_child(null_node);
-    }
-    else if(token.get_type() == TokenType::STD_LIB_TOKEN){
-        Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, token.get_value());
-        parse_std_lib_call(tokens, std_lib);
-        current->add_child(std_lib);
-    }
-    else if(token.get_type() == TokenType::MAP_TOKEN){
-        Node* map = new Node(NodeType::MAP_NODE, "");
-        parse_map(tokens, map);
-        current->add_child(map);
-    }
-    else if(token.get_type() == TokenType::FUNC_TOKEN){
-        Node* function = new Node(NodeType::FUNCTION_NODE, "");
-        parse_function(tokens, function);
-        current->add_child(function);
-    }
-    else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
-        Node* var = new Node(NodeType::VAR_NODE, token.get_value());
-        current->add_child(var);
-    }
-    else if(token.get_type() == TokenType::STRING_TOKEN){
-        Node* str = new Node(NodeType::STRING_NODE, token.get_value());
-        current->add_child(str);
-    }
-    else if(token.get_type() == TokenType::OPENPAR_TOKEN){
+    if(token.get_value() == "("){ // Nested expression
         Node* expr = new Node(NodeType::EXPR_NODE, "");
-        parse_expr(tokens, expr, true); // Nested expression
-        current->add_child(expr);
-
+        parse_expr(tokens, expr);
         token = pop(tokens);
         if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
             parsing_error("Syntax error: expected ')'", token);
         }
+        return expr;
+    }
+    else if(token.get_type() == TokenType::IDENTIFIER_TOKEN){
+        Node* var = new Node(NodeType::VAR_NODE, token.get_value());
+        return var;
     }
     else {
-        parsing_error("Syntax error: expected number or identifier", token);
+        place_token_back(tokens, token);
+        return parse_literal(tokens, current);
     }
 }
 
-// void parse_arguments(std::vector<Token>& tokens, Node* current){
-//     parse_expr(tokens, current);
+Node* parse_literal(std::vector<Token>& tokens, Node* current){
+    Token token = pop(tokens);
+    if(token.get_type() == TokenType::NUMBER_TOKEN){
+        return new Node(NodeType::NUM_NODE, token.get_value());
+    }
+    else if(token.get_type() == TokenType::STRING_TOKEN){
+        return new Node(NodeType::STRING_NODE, token.get_value());
+    }
+    else if(token.get_type() == TokenType::BOOL_TOKEN){
+        return new Node(NodeType::BOOL_NODE, token.get_value());
+    }
+    else if(token.get_type() == TokenType::NULL_TOKEN){
+        return new Node(NodeType::NULL_NODE, "null");
+    }
+    else if(token.get_type() == TokenType::MAP_TOKEN){
+        Node* map = new Node(NodeType::MAP_NODE, "");
+        parse_map(tokens, map);
+        return map;
+    }
+    else if(token.get_type() == TokenType::FUNC_TOKEN){
+        Node* function = new Node(NodeType::FUNCTION_NODE, "");
+        parse_function(tokens, function);
+        return function;
+    }
+    else if(token.get_type() == TokenType::STD_LIB_TOKEN){
+        Node* std_lib = new Node(NodeType::STD_LIB_CALL_NODE, token.get_value());
+        parse_std_lib_call(tokens, std_lib);
+        return std_lib;
+    }
+    else if(token.get_value() == "["){ // Vector
+        Node* list = new Node(NodeType::LIST_NODE, "");
+        parse_list(tokens, list);
+        return list;
+    }
+    else {
+        parsing_error("Syntax error: expected literal", token);
+        return nullptr; // to avoid warning, but the program will exit on previous line
+    }
+}
 
-//     while(peek(tokens).get_type() == TokenType::COMMA_TOKEN){
-//         pop(tokens);
-//         parse_expr(tokens, current);
-//     }
-// }
+Node* parse_arguments(std::vector<Token>& tokens, Node* current){
+    // Parse the parameters
+    Node* list = new Node(NodeType::LIST_NODE, "");
+    // current->add_child(list);
+    Token token = peek(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){ // Check if there are parameters
+        for(;;){ // Can have 0 or more parameters
+            parse_expr(tokens, list);
+
+            token = peek(tokens);
+            if(token.get_type() == TokenType::CLOSEPAR_TOKEN){ // End of parameters
+                break;
+            } else if(token.get_type() == TokenType::COMMA_TOKEN){
+                pop(tokens);
+            } else {
+                parsing_error("Syntax error: expected ',' or ')'", token);
+            }
+        }
+    }
+
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
+    }
+
+    return list;
+}
+
 
 
 /*
@@ -1022,21 +1058,46 @@ void parse_function(std::vector<Token>& tokens, Node* function){
 Parses a vector; Ex: let a = [1, 2, 3];
 Can have any value type inside the vector as well as mixing types
 */
-void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
-    pop(tokens); // Skip the '['
-    Node* list = new Node(NodeType::LIST_NODE, "");
-    current->add_child(list);
+void parse_list(std::vector<Token>& tokens, Node* current){
     //check if the list is empty
     if(peek(tokens).get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
         pop(tokens);
         return;
     }
 
-    // Parse the elements, allow nested lists
+    // // Parse the elements, allow nested lists
+    // bool prev_was_comma = false;
+    // for(;;){
+    //     Token token = peek(tokens);
+    //     if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
+    //         pop(tokens);
+    //         break;
+    //     }
+    //     if(token.get_type() == TokenType::COMMA_TOKEN){
+    //         if(prev_was_comma){
+    //             parsing_error("Syntax error: expected expression", token);
+    //         }
+    //         pop(tokens);
+    //         prev_was_comma = true;
+    //         continue;
+    //     }
+
+    //     if(token.get_value() == "["){ // Nested list
+    //         parse_list(tokens, list, level + 1);
+    //     } 
+    //     else {
+    //         parse_value(tokens, list);
+    //     }
+    //     prev_was_comma = false;
+    // }
+
     bool prev_was_comma = false;
     for(;;){
         Token token = peek(tokens);
         if(token.get_type() == TokenType::CLOSESQUAREBRACKET_TOKEN){
+            if(prev_was_comma){
+                parsing_error("Syntax error: expected expression", token);
+            }
             pop(tokens);
             break;
         }
@@ -1049,12 +1110,7 @@ void parse_list(std::vector<Token>& tokens, Node* current, int level = 0){
             continue;
         }
 
-        if(token.get_value() == "["){ // Nested list
-            parse_list(tokens, list, level + 1);
-        } 
-        else {
-            parse_value(tokens, list);
-        }
+        parse_value(tokens, current);
         prev_was_comma = false;
     }
 }
