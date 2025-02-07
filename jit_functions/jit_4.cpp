@@ -7,54 +7,165 @@
                         #include "../src_bytecode/jit.hpp"
                         extern "C" void jit_4(VM* vm){
 label_0: 
-// OP_STORE_VAR
+// OP_CREATE_VECTOR
 {
 
-            set_variable(vm, vm->variable_names[7], pop(vm));
+            push(vm, {Value_Type::VECTOR, std::vector<Value>()});
+}
+
+label_1: 
+// OP_CREATE_VECTOR
+{
+
+            push(vm, {Value_Type::VECTOR, std::vector<Value>()});
 }
 
 label_2: 
-// OP_STORE_VAR
+// OP_LOAD
 {
 
-            set_variable(vm, vm->variable_names[6], pop(vm));
+            push(vm, get_vm_constant(vm, 17));
 }
 
 label_4: 
-// OP_LOAD_VAR
+// OP_VECTOR_PUSH
 {
 
-            push(vm, get_variable(vm, vm->variable_names[7]));
+            Value value = pop(vm);
+            Value vector = pop(vm);
+            if (vector.type != Value_Type::VECTOR)
+            {
+                vm_error("Invalid type for vector push");
+            }
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+            vec.push_back(value);
+            push(vm, {Value_Type::VECTOR, vec});
+            
 }
 
-label_6: 
-// OP_LOAD_VAR
+label_5: 
+// OP_LOAD
 {
 
-            push(vm, get_variable(vm, vm->variable_names[6]));
+            push(vm, get_vm_constant(vm, 18));
+}
+
+label_7: 
+// OP_VECTOR_PUSH
+{
+
+            Value value = pop(vm);
+            Value vector = pop(vm);
+            if (vector.type != Value_Type::VECTOR)
+            {
+                vm_error("Invalid type for vector push");
+            }
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+            vec.push_back(value);
+            push(vm, {Value_Type::VECTOR, vec});
+            
 }
 
 label_8: 
-// OP_ADD
+// OP_VECTOR_PUSH
 {
 
-            Value a = pop(vm);                                                                       
-            Value b = pop(vm);                                                                        
-            if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
+            Value value = pop(vm);
+            Value vector = pop(vm);
+            if (vector.type != Value_Type::VECTOR)
             {
-                push(vm, {Value_Type::NUMBER, std::get<double>(a.data) + std::get<double>(b.data)});
+                vm_error("Invalid type for vector push");
             }
-            else if (a.type == Value_Type::STRING || b.type == Value_Type::STRING)
-            {
-                push(vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
-            }
-            else
-            {
-                vm_error("Invalid types for addition");
-            }
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+            vec.push_back(value);
+            push(vm, {Value_Type::VECTOR, vec});
+            
 }
 
 label_9: 
+// OP_CREATE_VECTOR
+{
+
+            push(vm, {Value_Type::VECTOR, std::vector<Value>()});
+}
+
+label_10: 
+// OP_LOAD
+{
+
+            push(vm, get_vm_constant(vm, 19));
+}
+
+label_12: 
+// OP_VECTOR_PUSH
+{
+
+            Value value = pop(vm);
+            Value vector = pop(vm);
+            if (vector.type != Value_Type::VECTOR)
+            {
+                vm_error("Invalid type for vector push");
+            }
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+            vec.push_back(value);
+            push(vm, {Value_Type::VECTOR, vec});
+            
+}
+
+label_13: 
+// OP_LOAD
+{
+
+            push(vm, get_vm_constant(vm, 20));
+}
+
+label_15: 
+// OP_VECTOR_PUSH
+{
+
+            Value value = pop(vm);
+            Value vector = pop(vm);
+            if (vector.type != Value_Type::VECTOR)
+            {
+                vm_error("Invalid type for vector push");
+            }
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+            vec.push_back(value);
+            push(vm, {Value_Type::VECTOR, vec});
+            
+}
+
+label_16: 
+// OP_VECTOR_PUSH
+{
+
+            Value value = pop(vm);
+            Value vector = pop(vm);
+            if (vector.type != Value_Type::VECTOR)
+            {
+                vm_error("Invalid type for vector push");
+            }
+            std::vector<Value> vec = VALUE_AS_VECTOR(vector);
+            vec.push_back(value);
+            push(vm, {Value_Type::VECTOR, vec});
+            
+}
+
+label_17: 
+// OP_STORE_VAR
+{
+
+            set_variable(vm, vm->variable_names[10], pop(vm));
+}
+
+label_19: 
+// OP_LOAD_VAR
+{
+
+            push(vm, get_variable(vm, vm->variable_names[10]));
+}
+
+label_21: 
 // OP_RETURN
 {
 

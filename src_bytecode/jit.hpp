@@ -56,8 +56,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_ADD:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
                 push(vm, {Value_Type::NUMBER, std::get<double>(a.data) + std::get<double>(b.data)});
@@ -65,6 +65,26 @@ void jit_compile_function(VM* vm, function* func)
             else if (a.type == Value_Type::STRING || b.type == Value_Type::STRING)
             {
                 push(vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
+            }
+            else if (a.type == Value_Type::MAP && b.type == Value_Type::MAP)
+            {
+                std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+                std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+                for(const auto& pair : map_b)
+                {
+                    map_a[pair.first] = pair.second;
+                }
+                push(vm, {Value_Type::MAP, map_a});
+            }
+            else if (a.type == Value_Type::VECTOR && b.type == Value_Type::VECTOR)
+            {
+                std::vector<Value> vec_a = VALUE_AS_VECTOR(a);
+                std::vector<Value> vec_b = VALUE_AS_VECTOR(b);
+                for (const auto& value : vec_b)
+                {
+                    vec_a.push_back(value);
+                }
+                push(vm, {Value_Type::VECTOR, vec_a});
             }
             else
             {
@@ -75,8 +95,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_SUB:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
                 push(vm, {Value_Type::NUMBER, std::get<double>(a.data) - std::get<double>(b.data)});
@@ -104,11 +124,33 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_MUL:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
                 push(vm, {Value_Type::NUMBER, std::get<double>(a.data) * std::get<double>(b.data)});
+            }
+            else if(a.type == Value_Type::STRING && b.type == Value_Type::NUMBER)
+            {
+                std::string str = VALUE_AS_STRING(a);
+                int times = (int)VALUE_AS_NUMBER(b);
+                std::string result = "";
+                for (int i = 0; i < times; i++)
+                {
+                    result += str;
+                }
+                push(vm, {Value_Type::STRING, result});
+            }
+            else if(a.type == Value_Type::NUMBER && b.type == Value_Type::STRING)
+            {
+                std::string str = VALUE_AS_STRING(b);
+                int times = (int)VALUE_AS_NUMBER(a);
+                std::string result = "";
+                for (int i = 0; i < times; i++)
+                {
+                    result += str;
+                }
+                push(vm, {Value_Type::STRING, result});
             }
             else
             {
@@ -119,8 +161,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_DIV:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
                 if (std::get<double>(b.data) == 0)                                                  
@@ -138,8 +180,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_MOD:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
                 if (std::get<double>(b.data) == 0)                                                  
@@ -154,22 +196,37 @@ void jit_compile_function(VM* vm, function* func)
             })";
             break;
         }
+        case OpCode::OP_EXP:
+        {
+            program += R"(
+            Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
+            if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
+            {
+                push(vm, {Value_Type::NUMBER, std::pow(std::get<double>(a.data), std::get<double>(b.data))});
+            }
+            else
+            {
+                vm_error("Invalid types for power");
+            })";
+            break;
+        }
 
         // Logical operations
         // uses type coercion, check VALUE_AS_BOOL for more info
         case OpCode::OP_AND:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             push(vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});)";
             break;
         }
         case OpCode::OP_OR:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             push(vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});)";
             break;
         }
@@ -188,8 +245,8 @@ void jit_compile_function(VM* vm, function* func)
             program += R"(
             // If both are strings, compare the strings
             // Else compare the bool values
-            Value a = pop(vm);
             Value b = pop(vm);
+            Value a = pop(vm);
             if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
                 push(vm, {Value_Type::BOOL, VALUE_AS_STRING(a) == VALUE_AS_STRING(b)});
             }
@@ -215,8 +272,8 @@ void jit_compile_function(VM* vm, function* func)
             program += R"(
             // If both are strings, compare the strings
             // Else compare the bool values
-            Value a = pop(vm);
             Value b = pop(vm);
+            Value a = pop(vm);
             if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
                 push(vm, {Value_Type::BOOL, VALUE_AS_STRING(a) != VALUE_AS_STRING(b)});
             }
@@ -240,8 +297,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_GT:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {                                                                                      
                 push(vm, {Value_Type::BOOL, std::get<double>(a.data) > std::get<double>(b.data)});     
@@ -255,8 +312,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_GTEQ:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {                                                                                      
                 push(vm, {Value_Type::BOOL, std::get<double>(a.data) >= std::get<double>(b.data)});    
@@ -270,8 +327,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_LT:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {                                                                                      
                 push(vm, {Value_Type::BOOL, std::get<double>(a.data) < std::get<double>(b.data)});     
@@ -285,8 +342,8 @@ void jit_compile_function(VM* vm, function* func)
         case OpCode::OP_LTEQ:
         {
             program += R"(
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {                                                                                      
                 push(vm, {Value_Type::BOOL, std::get<double>(a.data) <= std::get<double>(b.data)});    
