@@ -10,42 +10,42 @@ label_0:
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[3], pop(vm));
+            set_variable(vm, vm->variable_names[5], pop(vm));
 }
 
 label_2: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[2], pop(vm));
+            set_variable(vm, vm->variable_names[4], pop(vm));
 }
 
 label_4: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[0], pop(vm));
+            set_variable(vm, vm->variable_names[2], pop(vm));
 }
 
 label_6: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[0]));
+            push(vm, get_variable(vm, vm->variable_names[2]));
 }
 
 label_8: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[4], pop(vm));
+            set_variable(vm, vm->variable_names[6], pop(vm));
 }
 
 label_10: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[4]));
+            push(vm, get_variable(vm, vm->variable_names[6]));
 }
 
 label_12: 
@@ -59,7 +59,7 @@ label_14:
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[3]));
+            push(vm, get_variable(vm, vm->variable_names[5]));
 }
 
 label_16: 
@@ -102,14 +102,14 @@ label_17:
 // OP_UPDATE_VAR
 {
 
-            update_variable(vm, vm->variable_names[4], pop(vm));
+            update_variable(vm, vm->variable_names[6], pop(vm));
 }
 
 label_19: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[4]));
+            push(vm, get_variable(vm, vm->variable_names[6]));
 }
 
 label_21: 
@@ -123,7 +123,7 @@ label_23:
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[2]));
+            push(vm, get_variable(vm, vm->variable_names[4]));
 }
 
 label_25: 
@@ -166,14 +166,14 @@ label_26:
 // OP_UPDATE_VAR
 {
 
-            update_variable(vm, vm->variable_names[4], pop(vm));
+            update_variable(vm, vm->variable_names[6], pop(vm));
 }
 
 label_28: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[4]));
+            push(vm, get_variable(vm, vm->variable_names[6]));
 }
 
 label_30: 

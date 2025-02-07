@@ -10,31 +10,38 @@ label_0:
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[2], pop(vm));
+            set_variable(vm, vm->variable_names[4], pop(vm));
 }
 
 label_2: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[0], pop(vm));
+            set_variable(vm, vm->variable_names[2], pop(vm));
 }
 
 label_4: 
-// OP_LOAD_VAR
+// OP_STORE_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[2]));
+            set_variable(vm, vm->variable_names[8], pop(vm));
 }
 
 label_6: 
+// OP_LOAD_VAR
+{
+
+            push(vm, get_variable(vm, vm->variable_names[4]));
+}
+
+label_8: 
 // OP_LOAD
 {
 
             push(vm, get_vm_constant(vm, 15));
 }
 
-label_8: 
+label_10: 
 // OP_ACCESS
 {
 
@@ -70,7 +77,7 @@ label_8:
             
 }
 
-label_9: 
+label_11: 
 // OP_PRINT
 {
 
@@ -78,25 +85,18 @@ label_9:
             std::cout << std::endl;
 }
 
-label_10: 
-// OP_LOAD
-{
-
-            push(vm, get_vm_constant(vm, 16));
-}
-
 label_12: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[2]));
+            push(vm, get_variable(vm, vm->variable_names[4]));
 }
 
 label_14: 
 // OP_LOAD
 {
 
-            push(vm, get_vm_constant(vm, 17));
+            push(vm, get_vm_constant(vm, 16));
 }
 
 label_16: 
@@ -136,13 +136,20 @@ label_16:
 }
 
 label_17: 
+// OP_LOAD
+{
+
+            push(vm, get_vm_constant(vm, 17));
+}
+
+label_19: 
 // OP_NEQ
 {
 
             // If both are strings, compare the strings
             // Else compare the bool values
-            Value a = pop(vm);
             Value b = pop(vm);
+            Value a = pop(vm);
             if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
                 push(vm, {Value_Type::BOOL, VALUE_AS_STRING(a) != VALUE_AS_STRING(b)});
             }
@@ -163,18 +170,18 @@ label_17:
             }
 }
 
-label_18: 
+label_20: 
 // OP_JUMP_IF_FALSE
 {
 
             Value val = pop(vm);                                                                     
             if (!VALUE_AS_BOOL(val))                                                                
             {                                                                                      
-                goto label_36;                         
+                goto label_40;                         
             }
 }
 
-label_20: 
+label_22: 
 // OP_INC_SCOPE
 {
 
@@ -182,28 +189,35 @@ label_20:
             get_current_function_frame(vm)->variables.push_back(std::map<std::string, Value>());
 }
 
-label_21: 
+label_23: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[0]));
+            push(vm, get_variable(vm, vm->variable_names[8]));
 }
 
-label_23: 
+label_25: 
 // OP_LOAD_VAR
 {
 
             push(vm, get_variable(vm, vm->variable_names[2]));
 }
 
-label_25: 
+label_27: 
+// OP_LOAD_VAR
+{
+
+            push(vm, get_variable(vm, vm->variable_names[4]));
+}
+
+label_29: 
 // OP_LOAD
 {
 
             push(vm, get_vm_constant(vm, 18));
 }
 
-label_27: 
+label_31: 
 // OP_ACCESS
 {
 
@@ -239,14 +253,14 @@ label_27:
             
 }
 
-label_28: 
-// OP_LOAD_FUNCTION_VAR
+label_32: 
+// OP_LOAD_VAR
 {
 
-            push(vm, get_function_variable(vm, vm->variable_names[6]));
+            push(vm, get_variable(vm, vm->variable_names[8]));
 }
 
-label_30: 
+label_34: 
 // OP_FUNCTION_CALL
 {
 
@@ -269,14 +283,14 @@ label_30:
             }
 }
 
-label_31: 
+label_35: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[7], pop(vm));
+            set_variable(vm, vm->variable_names[9], pop(vm));
 }
 
-label_33: 
+label_37: 
 // OP_DEC_SCOPE
 {
 
@@ -284,21 +298,21 @@ label_33:
             get_current_function_frame(vm)->variables.pop_back();
 }
 
-label_34: 
+label_38: 
 // OP_JUMP
 {
 
-            goto label_36;
+            goto label_40;
 }
 
-label_36: 
+label_40: 
 // OP_LOAD
 {
 
             push(vm, get_vm_constant(vm, 19));
 }
 
-label_38: 
+label_42: 
 // OP_RETURN
 {
 

@@ -52,8 +52,8 @@ void vm_loop(bool verbose)
     // Arithmetic operations
     case OpCode::OP_ADD:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) + std::get<double>(b.data)});
@@ -61,6 +61,26 @@ void vm_loop(bool verbose)
         else if (a.type == Value_Type::STRING || b.type == Value_Type::STRING)
         {
             push(&vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
+        }
+        else if (a.type == Value_Type::MAP && b.type == Value_Type::MAP)
+        {
+            std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+            std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+            for(const auto& pair : map_b)
+            {
+                map_a[pair.first] = pair.second;
+            }
+            push(&vm, {Value_Type::MAP, map_a});
+        }
+        else if (a.type == Value_Type::VECTOR && b.type == Value_Type::VECTOR)
+        {
+            std::vector<Value> vec_a = VALUE_AS_VECTOR(a);
+            std::vector<Value> vec_b = VALUE_AS_VECTOR(b);
+            for (const auto& value : vec_b)
+            {
+                vec_a.push_back(value);
+            }
+            push(&vm, {Value_Type::VECTOR, vec_a});
         }
         else
         {
@@ -70,8 +90,8 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_SUB:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) - std::get<double>(b.data)});
@@ -97,11 +117,33 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_MUL:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) * std::get<double>(b.data)});
+        }
+        else if(a.type == Value_Type::STRING && b.type == Value_Type::NUMBER)
+        {
+            std::string str = VALUE_AS_STRING(a);
+            int times = (int)VALUE_AS_NUMBER(b);
+            std::string result = "";
+            for (int i = 0; i < times; i++)
+            {
+                result += str;
+            }
+            push(&vm, {Value_Type::STRING, result});
+        }
+        else if(a.type == Value_Type::NUMBER && b.type == Value_Type::STRING)
+        {
+            std::string str = VALUE_AS_STRING(b);
+            int times = (int)VALUE_AS_NUMBER(a);
+            std::string result = "";
+            for (int i = 0; i < times; i++)
+            {
+                result += str;
+            }
+            push(&vm, {Value_Type::STRING, result});
         }
         else
         {
@@ -111,8 +153,8 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_DIV:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             if (std::get<double>(b.data) == 0)
@@ -129,8 +171,8 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_MOD:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             if (std::get<double>(b.data) == 0)
@@ -145,20 +187,34 @@ void vm_loop(bool verbose)
         }
         break;
     }
+    case OpCode::OP_EXP:
+    {
+        Value b = pop(&vm);
+        Value a = pop(&vm);
+        if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
+        {
+            push(&vm, {Value_Type::NUMBER, std::pow(std::get<double>(a.data), std::get<double>(b.data))});
+        }
+        else
+        {
+            vm_error("Invalid types for exponentiation");
+        }
+        break;
+    }
 
     // Logical operations
     // uses type coercion, check VALUE_AS_BOOL for more info
     case OpCode::OP_AND:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});
         break;
     }
     case OpCode::OP_OR:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});
         break;
     }
@@ -175,8 +231,8 @@ void vm_loop(bool verbose)
     {
         // If both are strings, compare the strings
         // Else compare the bool values
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
             push(&vm, {Value_Type::BOOL, VALUE_AS_STRING(a) == VALUE_AS_STRING(b)});
         }
@@ -201,8 +257,8 @@ void vm_loop(bool verbose)
     {
         // If both are strings, compare the strings
         // Else compare the bool values
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if(a.type == Value_Type::STRING && b.type == Value_Type::STRING){
             push(&vm, {Value_Type::BOOL, VALUE_AS_STRING(a) != VALUE_AS_STRING(b)});
         }
@@ -225,8 +281,8 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_GT:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) > std::get<double>(b.data)});
@@ -239,8 +295,8 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_GTEQ:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) >= std::get<double>(b.data)});
@@ -253,8 +309,8 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_LT:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) < std::get<double>(b.data)});
@@ -267,8 +323,8 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_LTEQ:
     {
-        Value a = pop(&vm);
         Value b = pop(&vm);
+        Value a = pop(&vm);
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) <= std::get<double>(b.data)});

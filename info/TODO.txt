@@ -1,1 +1,9 @@
 add syntax highlighting for .clh files
+Make new ways to use operators 
+    Ex:
+        map + map = concat maps 
+        list + list = concat lists
+        num * string = repeat string
+        string * num = repeat string
+
+    - To extend on this, make a way to map types to how operators will work with them besides the current if statements in the operator functions

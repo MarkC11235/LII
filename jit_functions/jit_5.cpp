@@ -10,36 +10,36 @@ label_0:
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[7], pop(vm));
+            set_variable(vm, vm->variable_names[9], pop(vm));
 }
 
 label_2: 
 // OP_STORE_VAR
 {
 
-            set_variable(vm, vm->variable_names[6], pop(vm));
+            set_variable(vm, vm->variable_names[8], pop(vm));
 }
 
 label_4: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[7]));
+            push(vm, get_variable(vm, vm->variable_names[8]));
 }
 
 label_6: 
 // OP_LOAD_VAR
 {
 
-            push(vm, get_variable(vm, vm->variable_names[6]));
+            push(vm, get_variable(vm, vm->variable_names[9]));
 }
 
 label_8: 
 // OP_SUB
 {
 
-            Value a = pop(vm);                                                                       
             Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
             if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
                 push(vm, {Value_Type::NUMBER, std::get<double>(a.data) - std::get<double>(b.data)});
