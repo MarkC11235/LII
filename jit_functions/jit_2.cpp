@@ -4,6 +4,7 @@
                         #include "../src_bytecode/Value.hpp"
                         #include "../src_bytecode/std_lib/std_lib.hpp"
                         #include "../src_bytecode/virtual_machine.hpp"
+                        #include "../src_bytecode/bytecode_generator.hpp"
                         #include "../src_bytecode/jit.hpp"
                         extern "C" void jit_2(VM* vm){
 label_0: 
