@@ -1,6 +1,3 @@
-Integrate new parser changes with jit engine
-Eliminate dead code (with new expr parsing, lots of old code is no longer needed)
-Add new tests for lots of expressions
 Make new ways to use operators 
     Ex:
         map + map = concat maps 
