@@ -734,7 +734,6 @@ Node* parse_exponentiation_expr(std::vector<Token>& tokens, Node* current){
     }
 
     while(is_op_type(peek(tokens).get_value(), "exponentiation")){
-        std::cout << "Exponentiation" << std::endl;
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(postfix_expr);
         op->add_child(parse_postfix_expr(tokens, current));

@@ -62,6 +62,26 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
         }
+        else if (a.type == Value_Type::MAP && b.type == Value_Type::MAP)
+        {
+            std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+            std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+            for(const auto& pair : map_b)
+            {
+                map_a[pair.first] = pair.second;
+            }
+            push(&vm, {Value_Type::MAP, map_a});
+        }
+        else if (a.type == Value_Type::VECTOR && b.type == Value_Type::VECTOR)
+        {
+            std::vector<Value> vec_a = VALUE_AS_VECTOR(a);
+            std::vector<Value> vec_b = VALUE_AS_VECTOR(b);
+            for (const auto& value : vec_b)
+            {
+                vec_a.push_back(value);
+            }
+            push(&vm, {Value_Type::VECTOR, vec_a});
+        }
         else
         {
             vm_error("Invalid types for addition");
@@ -102,6 +122,28 @@ void vm_loop(bool verbose)
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) * std::get<double>(b.data)});
+        }
+        else if(a.type == Value_Type::STRING && b.type == Value_Type::NUMBER)
+        {
+            std::string str = VALUE_AS_STRING(a);
+            int times = (int)VALUE_AS_NUMBER(b);
+            std::string result = "";
+            for (int i = 0; i < times; i++)
+            {
+                result += str;
+            }
+            push(&vm, {Value_Type::STRING, result});
+        }
+        else if(a.type == Value_Type::NUMBER && b.type == Value_Type::STRING)
+        {
+            std::string str = VALUE_AS_STRING(b);
+            int times = (int)VALUE_AS_NUMBER(a);
+            std::string result = "";
+            for (int i = 0; i < times; i++)
+            {
+                result += str;
+            }
+            push(&vm, {Value_Type::STRING, result});
         }
         else
         {
