@@ -69,5 +69,6 @@
         "cinttypes": "cpp",
         "cstring": "cpp",
         "csignal": "cpp"
-    }
+    },
+    "makefile.configureOnOpen": false
 }
