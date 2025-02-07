@@ -29,6 +29,10 @@ typedef void (*JIT_FUNCTION)(VM* vm);
 // #define CALLS_TO_JIT 1
 #define JIT_OPTIMIZATION_LEVEL "-O2"
 
+Value pop(VM* vm);
+Value top(VM* vm);
+void push(VM* vm, Value value);
+
 /*
 Created when starting the program
 Holds all data about the program
@@ -50,6 +54,8 @@ struct VM
 };
 
 VM vm; // Statically allocated because only one VM is needed
+
+#include "jit.hpp"
 
 void vm_error(const std::string &message)
 {
@@ -80,6 +86,37 @@ function_frame *create_function_frame(function *func)
     frame->variables.push_back(std::map<std::string, Value>());
 
     return frame;
+}
+
+void function_call(bool verbose = false){
+    if (verbose)
+    {
+        std::cout << "Calling function: " << std::endl;
+    }
+
+    function* func = VALUE_AS_FUNCTION(pop(&vm));
+
+    func->times_called++; // for jit compilation
+
+    if(vm.jit && func->times_called == vm.calls_to_jit){
+        if(verbose){
+            std::cout << "JIT compiling function: " << func->name << std::endl;
+        }        
+        jit_compile_function(&vm, func);
+    }
+
+    if(vm.jit && func->jit_index != -1){
+        if(verbose){
+            std::cout << "Calling JIT function: " << func->jit_index << std::endl;
+        }
+        vm.function_frames.push_back(create_function_frame(func));
+        jit_run_function(&vm, func->jit_index);
+    }
+    else{
+        vm.function_frames.push_back(create_function_frame(func));
+
+        get_current_function_frame(&vm)->ip = func->code - 1; // -1 because the ip will be increased by 1
+    }
 }
 // -------------------------------------------------------------------
 
@@ -261,5 +298,59 @@ Value get_function_variable(VM* vm, const std::string &name)
 }
 // -------------------------------------------------------------------
 
+// Custom types
+// -------------------------------------------------------------------
+bool are_maps(Value a, Value b)
+{
+    return a.type == Value_Type::MAP && b.type == Value_Type::MAP;
+}
+
+bool are_maps_of_same_type(Value a, Value b)
+{
+    if (!are_maps(a, b))
+    {
+        return false;
+    }
+    std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+    std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+    if (map_a.find("__type") == map_a.end() || map_b.find("__type") == map_b.end())
+    {
+        return false;
+    }
+    return VALUE_AS_STRING(map_a["__type"]) == VALUE_AS_STRING(map_b["__type"]);
+}
+
+void operate_on_maps(VM* vm, Value a, Value b, std::string op, bool verbose = false)
+{
+    std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+    std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+
+    // use map a's '__op' function to operate on the maps
+    if(map_a.find(op) != map_a.end()){
+        push(vm, {Value_Type::MAP, map_a});
+        push(vm, {Value_Type::MAP, map_b});
+        push(vm, map_a[op]);
+        function_call(verbose);
+    }
+    else{
+        vm_error("Map does not have operator " + op);
+    }
+}
+
+void operate_on_map(VM* vm, Value a, std::string op, bool verbose = false)
+{
+    std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+
+    // use map a's '__op' function to operate on the maps
+    if(map_a.find(op) != map_a.end()){
+        push(vm, {Value_Type::MAP, map_a});
+        push(vm, map_a[op]);
+        function_call(verbose);
+    }
+    else{
+        vm_error("Map does not have operator " + op);
+    }
+}
+// -------------------------------------------------------------------
 
 #endif // VM_HPP

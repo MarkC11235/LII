@@ -62,10 +62,15 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
         }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "__add", verbose);
+        }
         else if (a.type == Value_Type::MAP && b.type == Value_Type::MAP)
         {
             std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
             std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+
             for(const auto& pair : map_b)
             {
                 map_a[pair.first] = pair.second;
@@ -95,6 +100,10 @@ void vm_loop(bool verbose)
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) - std::get<double>(b.data)});
+        }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "__sub", verbose);
         }
         else
         {
@@ -668,34 +677,7 @@ void vm_loop(bool verbose)
     }
     case OpCode::OP_FUNCTION_CALL:
     {
-        if (verbose)
-        {
-            std::cout << "Calling function: " << std::endl;
-        }
-
-        function* func = VALUE_AS_FUNCTION(pop(&vm));
-
-        func->times_called++; // for jit compilation
-
-        if(vm.jit && func->times_called == vm.calls_to_jit){
-            if(verbose){
-                std::cout << "JIT compiling function: " << func->name << std::endl;
-            }        
-            jit_compile_function(&vm, func);
-        }
-
-        if(vm.jit && func->jit_index != -1){
-            if(verbose){
-                std::cout << "Calling JIT function: " << func->jit_index << std::endl;
-            }
-            vm.function_frames.push_back(create_function_frame(func));
-            jit_run_function(&vm, func->jit_index);
-        }
-        else{
-            vm.function_frames.push_back(create_function_frame(func));
-
-            get_current_function_frame(&vm)->ip = func->code - 1; // -1 because the ip will be increased by 1
-        }
+        function_call(verbose);
 
         break;
     }
