@@ -1,4 +1,3 @@
-add syntax highlighting for .clh files
 Make new ways to use operators 
     Ex:
         map + map = concat maps 
@@ -7,3 +6,30 @@ Make new ways to use operators
         string * num = repeat string
 
     - To extend on this, make a way to map types to how operators will work with them besides the current if statements in the operator functions
+
+
+????????????????????????????????
+
+This would allow any operator to be used with any type, and the operator would be able to be defined for any type. This would allow for a lot of flexibility in the language.
+$register_operator("string", "string", "+", func(a, b){
+    return a + b;
+});
+
+$register_operator(type, op, func)
+Ex:
+    $register_operator("matrix", "+", func(a, b){
+        let a_rows = a["rows"];
+        let a_cols = a["cols"];
+        let b_rows = b["rows"];
+        let b_cols = b["cols"];
+        if (a_rows != b_rows || a_cols != b_cols) {
+            print "Error: incompatible matrix sizes for addition";
+            return null; // BECAUSE NULL CAN'T BE OPERATED ON
+        }
+        for (let i = 0; i < a_rows; i = i + 1) {
+            for (let j = 0; j < a_cols; j = j + 1) {
+                a["data"][i][j] = a["data"][i][j] + b["data"][i][j];
+            }
+        }
+        return a;
+    });
