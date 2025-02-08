@@ -64,7 +64,7 @@ void vm_loop(bool verbose)
         }
         else if (are_maps_of_same_type(a, b))
         {
-            operate_on_maps(&vm, a, b, "__add", verbose);
+            operate_on_maps(&vm, a, b, "__+", verbose);
         }
         else if (a.type == Value_Type::MAP && b.type == Value_Type::MAP)
         {
@@ -81,10 +81,7 @@ void vm_loop(bool verbose)
         {
             std::vector<Value> vec_a = VALUE_AS_VECTOR(a);
             std::vector<Value> vec_b = VALUE_AS_VECTOR(b);
-            for (const auto& value : vec_b)
-            {
-                vec_a.push_back(value);
-            }
+            vec_a.insert(vec_a.end(), vec_b.begin(), vec_b.end());
             push(&vm, {Value_Type::VECTOR, vec_a});
         }
         else
@@ -103,7 +100,7 @@ void vm_loop(bool verbose)
         }
         else if (are_maps_of_same_type(a, b))
         {
-            operate_on_maps(&vm, a, b, "__sub", verbose);
+            operate_on_maps(&vm, a, b, "__-", verbose);
         }
         else
         {
@@ -154,6 +151,36 @@ void vm_loop(bool verbose)
             }
             push(&vm, {Value_Type::STRING, result});
         }
+        else if(a.type == Value_Type::VECTOR && b.type == Value_Type::NUMBER)
+        {
+            std::vector<Value> vec = VALUE_AS_VECTOR(a);
+            int times = (int)VALUE_AS_NUMBER(b);
+            std::vector<Value> result;
+            result.reserve(vec.size() * times);
+            for (int i = 0; i < times; i++)
+            {
+                result.insert(result.end(), vec.begin(), vec.end());
+            }
+            push(&vm, {Value_Type::VECTOR, result});
+        }
+        else if(a.type == Value_Type::NUMBER && b.type == Value_Type::VECTOR)
+        {
+            std::vector<Value> vec = VALUE_AS_VECTOR(b);
+            int times = (int)VALUE_AS_NUMBER(a);
+            std::vector<Value> result = {};
+            for (int i = 0; i < times; i++)
+            {
+                for (const auto& value : vec)
+                {
+                    result.push_back(value);
+                }
+            }
+            push(&vm, {Value_Type::VECTOR, result});
+        }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "__*", verbose);
+        }
         else
         {
             vm_error("Invalid types for multiplication");
@@ -171,6 +198,10 @@ void vm_loop(bool verbose)
                 vm_error("Division by zero");
             }
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) / std::get<double>(b.data)});
+        }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "__/", verbose);
         }
         else
         {
@@ -190,6 +221,10 @@ void vm_loop(bool verbose)
             }
             push(&vm, {Value_Type::NUMBER, std::fmod(std::get<double>(a.data), std::get<double>(b.data))});
         }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "__%", verbose);
+        }
         else
         {
             vm_error("Invalid types for modulus");
@@ -203,6 +238,10 @@ void vm_loop(bool verbose)
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::NUMBER, std::pow(std::get<double>(a.data), std::get<double>(b.data))});
+        }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "__^", verbose);
         }
         else
         {
