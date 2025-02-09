@@ -4,7 +4,6 @@
                         #include "../src_bytecode/Value.hpp"
                         #include "../src_bytecode/std_lib/std_lib.hpp"
                         #include "../src_bytecode/virtual_machine.hpp"
-                        #include "../src_bytecode/bytecode_generator.hpp"
                         #include "../src_bytecode/jit.hpp"
                         extern "C" void jit_1(VM* vm){
 label_0: 
@@ -15,169 +14,36 @@ label_0:
 }
 
 label_2: 
-// OP_STORE_VAR
-{
-
-            set_variable(vm, vm->variable_names[4], pop(vm));
-}
-
-label_4: 
-// OP_STORE_VAR
-{
-
-            set_variable(vm, vm->variable_names[2], pop(vm));
-}
-
-label_6: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[2]));
-}
-
-label_8: 
-// OP_STORE_VAR
-{
-
-            set_variable(vm, vm->variable_names[6], pop(vm));
-}
-
-label_10: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[6]));
-}
-
-label_12: 
-// OP_LOAD
-{
-
-            push(vm, get_vm_constant(vm, 12));
-}
-
-label_14: 
 // OP_LOAD_VAR
 {
 
             push(vm, get_variable(vm, vm->variable_names[5]));
 }
 
-label_16: 
-// OP_UPDATE_STACK_ELEMENT
-{
-
-            Value value = pop(vm);
-            Value index = pop(vm);
-            Value obj = pop(vm);
-        
-            if (obj.type == Value_Type::MAP)
-            {
-                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
-                //if the key does not exist, it will be added
-                map_map[VALUE_AS_STRING(index)] = value;
-                push(vm, {Value_Type::MAP, map_map});
-            }
-            else if (obj.type == Value_Type::VECTOR)
-            {
-                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
-                if (index.type != Value_Type::NUMBER)
-                {
-                    vm_error("Invalid index type for vector access");
-                }
-                if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
-                {
-                    vm_error("Index out of bounds");
-                }
-                vec[(int)VALUE_AS_NUMBER(index)] = value;
-                push(vm, {Value_Type::VECTOR, vec});
-            }
-            else
-            {
-                vm_error("Invalid type for access");
-            }
-            
-}
-
-label_17: 
-// OP_UPDATE_VAR
-{
-
-            update_variable(vm, vm->variable_names[6], pop(vm));
-}
-
-label_19: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[6]));
-}
-
-label_21: 
+label_4: 
 // OP_LOAD
 {
 
-            push(vm, get_vm_constant(vm, 13));
+            push(vm, get_vm_constant(vm, 6));
 }
 
-label_23: 
-// OP_LOAD_VAR
+label_6: 
+// OP_EXP
 {
 
-            push(vm, get_variable(vm, vm->variable_names[4]));
-}
-
-label_25: 
-// OP_UPDATE_STACK_ELEMENT
-{
-
-            Value value = pop(vm);
-            Value index = pop(vm);
-            Value obj = pop(vm);
-        
-            if (obj.type == Value_Type::MAP)
+            Value b = pop(vm);                                                                        
+            Value a = pop(vm);                                                                       
+            if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)                       
             {
-                std::map<std::string, Value> map_map = VALUE_AS_MAP(obj);
-                //if the key does not exist, it will be added
-                map_map[VALUE_AS_STRING(index)] = value;
-                push(vm, {Value_Type::MAP, map_map});
-            }
-            else if (obj.type == Value_Type::VECTOR)
-            {
-                std::vector<Value> vec = VALUE_AS_VECTOR(obj);
-                if (index.type != Value_Type::NUMBER)
-                {
-                    vm_error("Invalid index type for vector access");
-                }
-                if (VALUE_AS_NUMBER(index) < 0 || VALUE_AS_NUMBER(index) >= vec.size())
-                {
-                    vm_error("Index out of bounds");
-                }
-                vec[(int)VALUE_AS_NUMBER(index)] = value;
-                push(vm, {Value_Type::VECTOR, vec});
+                push(vm, {Value_Type::NUMBER, std::pow(std::get<double>(a.data), std::get<double>(b.data))});
             }
             else
             {
-                vm_error("Invalid type for access");
+                vm_error("Invalid types for power");
             }
-            
 }
 
-label_26: 
-// OP_UPDATE_VAR
-{
-
-            update_variable(vm, vm->variable_names[6], pop(vm));
-}
-
-label_28: 
-// OP_LOAD_VAR
-{
-
-            push(vm, get_variable(vm, vm->variable_names[6]));
-}
-
-label_30: 
+label_7: 
 // OP_RETURN
 {
 

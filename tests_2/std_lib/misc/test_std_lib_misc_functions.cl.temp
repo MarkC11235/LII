@@ -1,4 +1,1 @@
-tester.calc
-0
-42
-2
+ERROR: Invalid types for less than comparison

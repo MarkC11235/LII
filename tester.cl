@@ -185,8 +185,8 @@ let random_matrix = func(new_matrix, n, m) {
     return res;
 };
 
-// let A = random_matrix(new_matrix, 3, 3);
-// let x = random_matrix(new_matrix, 3, 1);
+let A = random_matrix(new_matrix, 3, 3);
+let x = random_matrix(new_matrix, 3, 1);
 
 let n = 10;
 let A = random_matrix(new_matrix, n, n);
@@ -217,3 +217,4 @@ let res = pretty_print_matrix(b["data"]);
 // let res = pretty_print_matrix(A["data"]);
 // let res = pretty_print_matrix(x["data"]);
 // let res = pretty_print_matrix(b["data"]);
+

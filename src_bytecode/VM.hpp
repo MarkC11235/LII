@@ -51,6 +51,12 @@ struct VM
     bool jit;
     int calls_to_jit;
     std::vector<JIT_FUNCTION> jit_functions;
+
+    // CUSTOM_TYPES
+    // custom map types
+    // contains a submap for each operator, each operator maps to a function that takes either a map or two maps (depending on the operator) and returns a Value
+    // map {"type_name": {"__op": Value}}
+    // std::map<std::string, std::map<std::string, Value>> custom_types;
 };
 
 VM vm; // Statically allocated because only one VM is needed
