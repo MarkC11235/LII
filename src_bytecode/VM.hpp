@@ -56,7 +56,7 @@ struct VM
     // custom map types
     // contains a submap for each operator, each operator maps to a function that takes either a map or two maps (depending on the operator) and returns a Value
     // map {"type_name": {"__op": Value}}
-    // std::map<std::string, std::map<std::string, Value>> custom_types;
+    std::map<std::string, std::map<std::string, Value>> custom_types;
 };
 
 VM vm; // Statically allocated because only one VM is needed
@@ -332,15 +332,29 @@ void operate_on_maps(VM* vm, Value a, Value b, std::string op, bool verbose = fa
     std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
 
     // use map a's '__op' function to operate on the maps
-    if(map_a.find(op) != map_a.end()){
-        push(vm, {Value_Type::MAP, map_a});
-        push(vm, {Value_Type::MAP, map_b});
-        push(vm, map_a[op]);
-        function_call(verbose);
+    // if(map_a.find(op) != map_a.end()){
+    //     push(vm, {Value_Type::MAP, map_a});
+    //     push(vm, {Value_Type::MAP, map_b});
+    //     push(vm, map_a[op]);
+    //     function_call(verbose);
+    // }
+    // else{
+    //     vm_error("Map does not have operator " + op);
+    // }
+
+    // look for type and op in custom types
+    if(vm->custom_types.find(VALUE_AS_STRING(map_a["__type"])) == vm->custom_types.end()){
+        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " not found");
     }
-    else{
-        vm_error("Map does not have operator " + op);
+
+    if(vm->custom_types[VALUE_AS_STRING(map_a["__type"])].find(op) == vm->custom_types[VALUE_AS_STRING(map_a["__type"])].end()){
+        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " does not have operator " + op);
     }
+
+    push(vm, {Value_Type::MAP, map_a});
+    push(vm, {Value_Type::MAP, map_b});
+    push(vm, vm->custom_types[VALUE_AS_STRING(map_a["__type"])][op]);
+    function_call(verbose);
 }
 
 void operate_on_map(VM* vm, Value a, std::string op, bool verbose = false)

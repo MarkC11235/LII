@@ -28,6 +28,7 @@ enum NodeType {
     // ASSIGNMENTS
     ASSIGN_NODE,
     UPDATE_NODE,
+    DEFINE_NODE,
     // ARITHMETIC
     EXPR_NODE,
     TERM_NODE,
@@ -81,6 +82,8 @@ std::string node_type_to_string(NodeType type){
             return "ASSIGN";
         case NodeType::UPDATE_NODE:
             return "UPDATE";
+        case NodeType::DEFINE_NODE:
+            return "DEFINE";
         case NodeType::EXPR_NODE:
             return "EXPR";
         case NodeType::TERM_NODE:
@@ -394,7 +397,7 @@ Node* parse_logical_or_expr(std::vector<Token>& tokens, Node* current){
         return nullptr;
     }
 
-    while(is_op_type(peek(tokens).get_value(), "logical_or")){
+    while(is_op_type(peek(tokens).get_value(), "logical_or") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(logical_and_expr);
         op->add_child(parse_logical_and_expr(tokens, current));
@@ -410,7 +413,7 @@ Node* parse_logical_and_expr(std::vector<Token>& tokens, Node* current){
         return nullptr;
     }
 
-    while(is_op_type(peek(tokens).get_value(), "logical_and")){
+    while(is_op_type(peek(tokens).get_value(), "logical_and") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(comparison_expr);
         op->add_child(parse_comparison_expr(tokens, current));
@@ -426,7 +429,7 @@ Node* parse_comparison_expr(std::vector<Token>& tokens, Node* current){
         return nullptr;
     }
 
-    while(is_op_type(peek(tokens).get_value(), "comparison")){
+    while(is_op_type(peek(tokens).get_value(), "comparison") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(additive_expr);
         op->add_child(parse_additive_expr(tokens, current));
@@ -442,7 +445,7 @@ Node* parse_additive_expr(std::vector<Token>& tokens, Node* current){
         return nullptr;
     }
 
-    while(is_op_type(peek(tokens).get_value(), "additive")){
+    while(is_op_type(peek(tokens).get_value(), "additive") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(multiplicative_expr);
         op->add_child(parse_multiplicative_expr(tokens, current));
@@ -458,7 +461,7 @@ Node* parse_multiplicative_expr(std::vector<Token>& tokens, Node* current){
         return nullptr;
     }
 
-    while(is_op_type(peek(tokens).get_value(), "multiplicative")){
+    while(is_op_type(peek(tokens).get_value(), "multiplicative") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(prefix_expr);
         op->add_child(parse_prefix_expr(tokens, current));
@@ -469,7 +472,7 @@ Node* parse_multiplicative_expr(std::vector<Token>& tokens, Node* current){
 }
 
 Node* parse_prefix_expr(std::vector<Token>& tokens, Node* current){
-    if(is_op_type("u"+peek(tokens).get_value(), "prefix")){ // kinda janky but it works, cause now in map, not is 'u!'
+    if(is_op_type("u"+peek(tokens).get_value(), "prefix") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){ // kinda janky but it works, cause now in map, not is 'u!'
         std::string value = pop(tokens).get_value();
         if(value == "-"){
             value = "u-";
@@ -488,7 +491,7 @@ Node* parse_exponentiation_expr(std::vector<Token>& tokens, Node* current){
         return nullptr;
     }
 
-    while(is_op_type(peek(tokens).get_value(), "exponentiation")){
+    while(is_op_type(peek(tokens).get_value(), "exponentiation") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(postfix_expr);
         op->add_child(parse_postfix_expr(tokens, current));
@@ -504,7 +507,7 @@ Node* parse_postfix_expr(std::vector<Token>& tokens, Node* current){
         return nullptr;
     }
 
-    while(is_op_type(peek(tokens).get_value(), "postfix")){
+    while(is_op_type(peek(tokens).get_value(), "postfix") && peek(tokens).get_type() == TokenType::OPERATOR_TOKEN){
         Node* op = new Node(NodeType::OP_NODE, pop(tokens).get_value());
         op->add_child(primary);
         if(op->get_value() == "["){
@@ -1219,6 +1222,38 @@ void parse_foreach(std::vector<Token>& tokens, Node* current){
     }
 }
 
+void parse_define(std::vector<Token>& tokens, Node* current){
+    Node* define_node = new Node(NodeType::DEFINE_NODE, "");
+    current->add_child(define_node);
+
+    // parse string (op)
+    parse_value(tokens, define_node);
+
+    // check for in keyword
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::IN_TOKEN){
+        parsing_error("Syntax error: expected 'in'", token);
+    }
+
+    // parse string (type)
+    parse_value(tokens, define_node);
+
+    // check for the as keyword
+    token = pop(tokens);
+    if(token.get_type() != TokenType::AS_TOKEN){
+        parsing_error("Syntax error: expected 'as'", token);
+    }
+
+    // parse func
+    parse_value(tokens, define_node);
+
+    // check for semicolon
+    token = pop(tokens);
+    if(token.get_type() != TokenType::SEMICOLON_TOKEN){
+        parsing_error("Syntax error: expected ';'", token);
+    }
+}
+
 /*
 Starting point for parsing a statement
 */
@@ -1238,6 +1273,9 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             break;
         case TokenType::CONST_TOKEN:
             parse_assignment(tokens, current, true);
+            break;
+        case TokenType::DEFINE_TOKEN:
+            parse_define(tokens, current);
             break;
         case TokenType::PRINT_TOKEN:
             parse_print(tokens, current);

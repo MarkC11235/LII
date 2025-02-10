@@ -14,6 +14,8 @@ enum TokenType {
     LET_TOKEN,
     CONST_TOKEN,
     ASSIGNMENT_TOKEN,
+    DEFINE_TOKEN,
+    AS_TOKEN,
     FUNC_TOKEN,
     MAP_TOKEN,
     ACCESSOR_TOKEN,
@@ -60,6 +62,10 @@ std::string token_type_to_string(TokenType type){
             return "CONST";
         case TokenType::ASSIGNMENT_TOKEN:
             return "ASSIGNMENT";
+        case TokenType::DEFINE_TOKEN:
+            return "DEFINE";
+        case TokenType::AS_TOKEN:
+            return "AS";
         case TokenType::FUNC_TOKEN:
             return "FUNC";
         case TokenType::MAP_TOKEN:
@@ -390,6 +396,12 @@ std::vector<Token> analyze(std::string input, int line_number){
                     }
                     else if(identifier == "return"){
                         tokens.push_back(Token(TokenType::RETURN_TOKEN, "return", line_number));
+                    }
+                    else if(identifier == "define"){
+                        tokens.push_back(Token(TokenType::DEFINE_TOKEN, "define", line_number));
+                    }
+                    else if(identifier == "as"){
+                        tokens.push_back(Token(TokenType::AS_TOKEN, "as", line_number));
                     }
                     else if(identifier == "while"){
                         tokens.push_back(Token(TokenType::WHILE_TOKEN, "while", line_number));

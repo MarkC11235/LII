@@ -185,6 +185,9 @@ void display_bytecode(function *func)
         case OpCode::OP_ACCESS_FOR_UPDATE:
             std::cout << "OP_ACCESS_FOR_UPDATE" << std::endl;
             break;
+        case OpCode::OP_DEFINE_OP_FOR_TYPE:
+            std::cout << "OP_DEFINE_OP_FOR_TYPE" << std::endl;
+            break;
 
         // Stack
         case OpCode::OP_UPDATE_STACK_ELEMENT:
@@ -1175,6 +1178,47 @@ void interpret_foreach(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }
 
+void interpret_define(Node *node, function *func)
+{
+    if (node->get_type() != NodeType::DEFINE_NODE)
+    {
+        interpretation_error("Define doesn't start with DEFINE Node", node, func);
+    }
+
+    // first child is the operation
+    Node *operation = node->get_child(0);
+    // second child is the type
+    Node *type = node->get_child(1);
+    // third child is the function 
+    Node *function = node->get_child(2);
+
+    if (operation->get_type() != NodeType::EXPR_NODE)
+    {
+        interpretation_error("Define operation doesn't start with EXPR Node", node, func);
+    }
+
+    if (type->get_type() != NodeType::EXPR_NODE)
+    {
+        interpretation_error("Define type doesn't start with EXPR Node", node, func);
+    }
+
+    if (function->get_type() != NodeType::EXPR_NODE)
+    {
+        interpretation_error("Define function doesn't start with EXPR Node", node, func);
+    }
+
+    // evaluate function because it needs to be on the bottom of the stack
+    evaluate(function, func);
+
+    // evaluate type
+    evaluate(type, func);
+
+    // evaluate operation
+    evaluate(operation, func);
+
+    WRITE_BYTE(OpCode::OP_DEFINE_OP_FOR_TYPE, func);
+}
+
 /*
 Determines the type of statement and calls the appropriate function
 */
@@ -1199,6 +1243,9 @@ void interpret_stmt(Node *node, function *func)
             break;
         case NodeType::UPDATE_NODE:
             interpret_update(child, func);
+            break;
+        case NodeType::DEFINE_NODE:
+            interpret_define(child, func);
             break;
         case NodeType::PRINT_NODE:
             interpret_print(child, func);
