@@ -1178,6 +1178,13 @@ void interpret_foreach(Node *node, function *func)
     WRITE_BYTE(OpCode::OP_DEC_SCOPE, func); // Decrease the scope for the for loop
 }
 
+/*
+Interprets a define statement
+Starts with an operation
+Then a type
+Then a function
+All of the Nodes must be EXPR Nodes
+*/
 void interpret_define(Node *node, function *func)
 {
     if (node->get_type() != NodeType::DEFINE_NODE)

@@ -317,7 +317,8 @@ void parse_accessor(std::vector<Token>& tokens, Node* current);
 void parse_variable_update(std::vector<Token>& tokens, Node* current);
 void parse_print(std::vector<Token>& tokens, Node* current);
 
-// EXPR GRAMMAR
+// EXPR PARSER ------------------------------------------------------------------------------------------------------------
+    // EXPR GRAMMAR
 /*
 
 expression             → logical_or_expression
@@ -615,6 +616,7 @@ Node* parse_literal(std::vector<Token>& tokens, Node* current){
     }
 }
 
+// -----------------------------------------------------------------------------------------------
 
 /*
 Finds type of value and calls the appropriate function to parse it
@@ -1222,11 +1224,15 @@ void parse_foreach(std::vector<Token>& tokens, Node* current){
     }
 }
 
+/*
+Parses a define statement; Ex: define op in type as func
+where op, type, and func are expressions
+*/
 void parse_define(std::vector<Token>& tokens, Node* current){
     Node* define_node = new Node(NodeType::DEFINE_NODE, "");
     current->add_child(define_node);
 
-    // parse string (op)
+    // parse expr (op)
     parse_value(tokens, define_node);
 
     // check for in keyword
@@ -1235,7 +1241,7 @@ void parse_define(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected 'in'", token);
     }
 
-    // parse string (type)
+    // parse expr (type)
     parse_value(tokens, define_node);
 
     // check for the as keyword
@@ -1244,7 +1250,7 @@ void parse_define(std::vector<Token>& tokens, Node* current){
         parsing_error("Syntax error: expected 'as'", token);
     }
 
-    // parse func
+    // parse expr
     parse_value(tokens, define_node);
 
     // check for semicolon
