@@ -289,14 +289,7 @@ let str = "Hello World!";
 print $string_length(str);
 ```
 
-### List of Standard Library Functions
-
-#### String Functions
-1. string_length(string) -> number  
-    - Returns the length of the string.
-
-...
-
+List of all standard library functions at the bottom of this document.
 
 ###  Foreign Function Interface (FFI) 
 The VM has a foreign function interface (FFI) that allows CastleLang to call predefined C++ functions. The interface is a list that contains information about each function,
@@ -308,6 +301,101 @@ The VM has a foreign function interface (FFI) that allows CastleLang to call pre
 The function pointer is created dynamically using templates and lambda functions, so that functions with any return type and parameter types can be used without modifying the interface. 
 
 To add more functions, add another entry to the STD_LIB_FUNCTIONS_DEFINITIONS vector with the proper function information.
+
+## Operator Overloading
+Operator overloading is a way to define how maps with __type field should behave when an operator is used on them.
+For operators with two operands, both operands must have the same __type field.
+
+
+The following is an example of how to use operator overloading for a matrix type:  
+The negative sign must be defined as "u-" because the "-" operator is already used for subtraction.  
+
+```
+let matrix = map {
+    "__type": "matrix",
+    "rows": 0,
+    "cols": 0,
+    "data": []
+};
+
+define "+" in "matrix" as func(a, b){
+    let a_rows = a["rows"];
+    let a_cols = a["cols"];
+    let b_rows = b["rows"];
+    let b_cols = b["cols"];
+    if (a_rows != b_rows || a_cols != b_cols) {
+        print "Error: incompatible matrix sizes for addition";
+        return null; // BECAUSE NULL CAN'T BE OPERATED ON
+    }
+    for (let i = 0; i < a_rows; i = i + 1) {
+        for (let j = 0; j < a_cols; j = j + 1) {
+            a["data"][i][j] = a["data"][i][j] + b["data"][i][j];
+        }
+    }
+    return a;
+};
+
+define "-" in "matrix" as func(a, b){
+    let a_rows = a["rows"];
+    let a_cols = a["cols"];
+    let b_rows = b["rows"];
+    let b_cols = b["cols"];
+    if (a_rows != b_rows || a_cols != b_cols) {
+        print "Error: incompatible matrix sizes for subtraction";
+        return null; // BECAUSE NULL CAN'T BE OPERATED ON
+    }
+    for (let i = 0; i < a_rows; i = i + 1) {
+        for (let j = 0; j < a_cols; j = j + 1) {
+            a["data"][i][j] = a["data"][i][j] - b["data"][i][j];
+        }
+    }
+    return a;
+};
+
+define "*" in "matrix" as func(a, b){
+    a["data"] = $matrix_multiply(a["data"], b["data"]);
+    return a;
+};
+
+define "u-" in "matrix" as func(a){
+    for (let i = 0; i < a["rows"]; i = i + 1) {
+        for (let j = 0; j < a["cols"]; j = j + 1) {
+            a["data"][i][j] = -a["data"][i][j];
+        }
+    }
+    return a;
+};
+
+let m1 = matrix;
+m1["rows"] = 2;
+m1["cols"] = 2;
+m1["data"] = [[1, 2],
+               [3, 4]];
+
+let m2 = matrix;
+m2["rows"] = 2;
+m2["cols"] = 2;
+m2["data"] = [[5, 6],
+               [7, 8]];
+
+
+let m3 = m1 + m2;
+let m4 = m1 - m2;
+let m5 = m1 * m2;
+let m6 = -m1;
+
+print "m1 + m2";
+print m3; // [[6, 8], [10, 12]]
+print "m1 - m2";
+print m4; // [[-4, -4], [-4, -4]]
+print "m1 * m2";
+print m5; // [[19, 22], [43, 50]]
+print "-m1";
+print m6; // [[-1, -2], [-3, -4]]
+```
+
+
+
 
 ## **Process to compile and run CastleLang**
 
@@ -378,3 +466,136 @@ The tokenizer skips invalid characters and does not throw an error.
 1. Expand the standard library  
 2. Improve the jit compiler  
     - make the jit compiler look ahead in the bytecode and identify chunks of the code that would be good to compile together. Do this on another thread so that the main thread can continue to run the VM.
+
+
+
+## Standard Library Functions
+
+The `STD_LIB_FUNCTIONS_DEFINITIONS` vector contains the definitions of all standard library functions available in CastleLang. Each function is defined with its name, a function pointer, its return type, and its argument types.
+
+### Test Functions
+- **do_nothing**: `int do_nothing()`
+  - Does nothing and returns 0.
+- **test**: `double test()`
+  - Returns the value 42.0.
+- **inc**: `double inc(double a)`
+  - Increments the given number by 1.
+
+### String Functions
+- **string_join**: `std::string string_join(std::string, std::string)`
+  - Joins two strings together.
+- **string_substring**: `std::string string_substring(std::string, int, int)`
+  - Returns a substring from the given string starting at the specified position and of the specified length.
+- **string_length**: `int string_length(std::string)`
+  - Returns the length of the given string.
+- **char_at**: `std::string char_at(std::string, int)`
+  - Returns the character at the specified position in the given string.
+- **replace_char**: `std::string replace_char(std::string, int, std::string)`
+  - Replaces the character at the specified position in the given string with another character.
+- **print_colored_text**: `int print_colored_text(std::string, std::string)`
+  - Prints the specified text in the specified color.
+- **string_to_vector**: `std::vector<Value> string_to_vector(std::string)`
+  - Converts the given string to a vector of characters.
+- **string_split**: `std::vector<Value> string_split(std::string, std::string)`
+  - Splits the given string by the specified delimiter and returns a vector of substrings.
+
+### Vector Functions
+- **vector_create**: `std::vector<Value> vector_create(int, Value)`
+  - Creates a vector of the specified size, filled with the given value.
+- **vector_length**: `int vector_length(std::vector<Value>)`
+  - Returns the length of the given vector.
+- **vector_push**: `std::vector<Value> vector_push(std::vector<Value>, Value)`
+  - Pushes a value onto the end of the given vector.
+- **vector_pop**: `std::vector<Value> vector_pop(std::vector<Value>)`
+  - Pops a value from the end of the given vector.
+- **vector_insert**: `std::vector<Value> vector_insert(std::vector<Value>, int, Value)`
+  - Inserts a value at the specified position in the given vector.
+- **vector_remove**: `std::vector<Value> vector_remove(std::vector<Value>, int)`
+  - Removes the value at the specified position in the given vector.
+- **vector_clear**: `std::vector<Value> vector_clear(std::vector<Value>)`
+  - Clears all values from the given vector.
+- **vector_get**: `Value vector_get(std::vector<Value>, int)`
+  - Gets the value at the specified position in the given vector.
+- **vector_set**: `std::vector<Value> vector_set(std::vector<Value>, int, Value)`
+  - Sets the value at the specified position in the given vector.
+- **vector_slice**: `std::vector<Value> vector_slice(std::vector<Value>, int, int)`
+  - Returns a slice of the given vector from the specified start position to the specified end position.
+- **vector_reverse**: `std::vector<Value> vector_reverse(std::vector<Value>)`
+  - Reverses the given vector.
+- **vector_join**: `std::vector<Value> vector_join(std::vector<Value>, std::vector<Value>)`
+  - Joins two vectors together.
+
+### Map Functions
+- **map_size**: `int map_size(std::map<std::string, Value>)`
+  - Returns the size of the given map.
+- **map_join**: `std::map<std::string, Value> map_join(std::map<std::string, Value>, std::map<std::string, Value>)`
+  - Joins two maps together.
+
+### File Functions
+- **file_write**: `int file_write(std::string, std::string)`
+  - Writes the given string to the specified file.
+- **file_write_lines**: `int file_write_lines(std::string, std::vector<Value>)`
+  - Writes the given vector of strings to the specified file, each string on a new line.
+- **file_read**: `std::string file_read(std::string)`
+  - Reads the contents of the specified file and returns it as a string.
+- **file_read_lines**: `std::vector<Value> file_read_lines(std::string)`
+  - Reads the contents of the specified file and returns it as a vector of strings, each line as a separate string.
+- **stdin_read**: `std::string stdin_read()`
+  - Reads input from standard input and returns it as a string.
+  - Waits for the user to press enter.
+- **csv_write**: `int csv_write(std::string, std::vector<Value>)`
+  - Writes the given vector of vectors of strings to the specified CSV file.
+- **csv_read**: `std::vector<Value> csv_read(std::string)`
+  - Reads the contents of the specified CSV file and returns it as a vector of vectors of strings.
+- **run_python_file**: `int run_python_file(std::string)`
+  - Runs the specified Python file.
+- **map_to_json**: `std::string map_to_json(std::map<std::string, Value>)`
+  - Converts the given map to a JSON string.
+- **json_to_map**: `std::map<std::string, Value> json_to_map(std::string)`
+  - Converts the given JSON string to a map.
+
+### Graphics Functions
+- **get_events**: `std::vector<Value> get_events()`
+  - Gets the current events from the graphics system.
+- **init_graphics**: `int init_graphics(std::string, int, int)`
+  - Initializes the graphics system with the specified title, width, and height.
+- **close_graphics**: `int close_graphics()`
+  - Closes the graphics system.
+- **clear_screen**: `int clear_screen()`
+  - Clears the screen.
+- **update_screen**: `int update_screen()`
+  - Updates the screen.
+- **draw_rect**: `int draw_rect(int, int, int, int)`
+  - Draws a rectangle with the specified position and size.
+
+### Random Functions
+- **random_int**: `int random_int(int, int)`
+  - Returns a random integer between the specified minimum and maximum values.
+
+### Misc Functions
+- **exit_program**: `int exit_program(std::string)`
+  - Exits the program with the specified message.
+- **wait**: `int wait(double)`
+  - Waits for the specified number of seconds.
+- **system_command**: `int system_command(std::string)`
+  - Executes the specified system command.
+
+### HTTP Functions
+- **start_server**: `int start_server(int)`
+  - Starts an HTTP server on the specified port.
+- **stop_server**: `int stop_server()`
+  - Stops the HTTP server.
+- **pop_request**: `std::map<std::string, Value> pop_request()`
+  - Pops the next request from the HTTP server.
+- **push_response**: `int push_response(int, std::map<std::string, Value>)`
+  - Pushes a response to the HTTP server.
+- **server_should_close**: `bool server_should_close()`
+  - Checks if the HTTP server should close.
+
+### HTTP Client Functions
+- **send_request**: `std::map<std::string, Value> send_request(std::string, int, std::map<std::string, Value>)`
+  - Sends an HTTP request and returns the response.
+
+### Matrix Operations
+- **matrix_multiply**: `std::vector<Value> matrix_multiply(std::vector<Value>, std::vector<Value>)`
+  - Multiplies two matrices together.
