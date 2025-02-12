@@ -304,7 +304,7 @@ To add more functions, add another entry to the STD_LIB_FUNCTIONS_DEFINITIONS ve
 
 ## Operator Overloading
 Operator overloading is a way to define how maps with __type field should behave when an operator is used on them.
-For operators with two operands, both operands must have the same __type field. The define statement globally defines the operator for that type.  
+For operators with two operands, both operands must have the same __type field. The define statement globally defines the operator for that type. Can overload any operator except for function calls '()' and access '[]'.
 
 
 The following is an example of how to use operator overloading for a matrix type:  
