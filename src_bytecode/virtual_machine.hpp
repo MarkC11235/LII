@@ -319,6 +319,9 @@ void vm_loop(bool verbose)
         else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
             push(&vm, {Value_Type::BOOL, false});
         }
+        else if(are_maps_of_same_type(a, b)){
+            operate_on_maps(&vm, a, b, "==", verbose);
+        }
         else{
             push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) == VALUE_AS_BOOL(b)});
         }
@@ -345,6 +348,9 @@ void vm_loop(bool verbose)
         else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
             push(&vm, {Value_Type::BOOL, true});
         }
+        else if(are_maps_of_same_type(a, b)){
+            operate_on_maps(&vm, a, b, "!=", verbose);
+        }
         else{
             push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) != VALUE_AS_BOOL(b)});
         }
@@ -357,6 +363,10 @@ void vm_loop(bool verbose)
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) > std::get<double>(b.data)});
+        }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, ">", verbose);
         }
         else
         {
@@ -372,6 +382,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) >= std::get<double>(b.data)});
         }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, ">=", verbose);
+        }
         else
         {
             vm_error("Invalid types for greater than or equal comparison");
@@ -386,6 +400,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) < std::get<double>(b.data)});
         }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "<", verbose);
+        }
         else
         {
             vm_error("Invalid types for less than comparison");
@@ -399,6 +417,10 @@ void vm_loop(bool verbose)
         if (a.type == Value_Type::NUMBER && b.type == Value_Type::NUMBER)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) <= std::get<double>(b.data)});
+        }
+        else if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "<=", verbose);
         }
         else
         {
