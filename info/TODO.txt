@@ -17,3 +17,5 @@ Issue: if you don't put a function witht correct number of args for a define ope
     - related to the issue that I wasnt to be able to check for the correct number of args to a function
 
 ------------------------------------------------------------------------------------------------------------------
+
+Improve Error Messages

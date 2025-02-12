@@ -431,6 +431,7 @@ void interpretation_error(std::string message, Node *node, function *func)
 {
     std::cout << "Bytecode generation failed" << std::endl;
 
+    std::cout << "Error at line " << node->get_line_number() << ": " << std::endl;
     std::cout << message << std::endl;
     node->print();
 
