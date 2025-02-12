@@ -44,6 +44,15 @@ define "*" in "matrix" as func(a, b){
     return a;
 };
 
+define "u-" in "matrix" as func(a){
+    for (let i = 0; i < a["rows"]; i = i + 1) {
+        for (let j = 0; j < a["cols"]; j = j + 1) {
+            a["data"][i][j] = -a["data"][i][j];
+        }
+    }
+    return a;
+};
+
 let m1 = matrix;
 m1["rows"] = 2;
 m1["cols"] = 2;
@@ -60,6 +69,7 @@ m2["data"] = [[5, 6],
 let m3 = m1 + m2;
 let m4 = m1 - m2;
 let m5 = m1 * m2;
+let m6 = -m1;
 
 print "m1 + m2";
 print m3;
@@ -67,3 +77,5 @@ print "m1 - m2";
 print m4;
 print "m1 * m2";
 print m5;
+print "-m1";
+print m6;

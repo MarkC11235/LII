@@ -115,6 +115,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::NUMBER, -std::get<double>(a.data)});
         }
+        else if (are_maps_of_same_type(a, a))
+        {
+            operate_on_map(&vm, a, "u-", verbose);
+        }
         else
         {
             vm_error("Invalid types for unary subtraction");
@@ -256,19 +260,38 @@ void vm_loop(bool verbose)
     {
         Value b = pop(&vm);
         Value a = pop(&vm);
-        push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});
+        if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "&&", verbose);
+        }
+        else
+        {
+            push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});
+        }
         break;
     }
     case OpCode::OP_OR:
     {
         Value b = pop(&vm);
         Value a = pop(&vm);
-        push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});
+        if (are_maps_of_same_type(a, b))
+        {
+            operate_on_maps(&vm, a, b, "||", verbose);
+        }
+        else
+        {
+            push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});
+        }
         break;
     }
     case OpCode::OP_NOT:
     {
         Value a = pop(&vm);
+        if(are_maps_of_same_type(a, a)) // a bit of a hack, but it works
+        {
+            operate_on_map(&vm, a, "!", verbose);
+        }
+        else
         push(&vm, {Value_Type::BOOL, !VALUE_AS_BOOL(a)});
         break;
     }

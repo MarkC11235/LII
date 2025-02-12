@@ -369,14 +369,26 @@ void operate_on_map(VM* vm, Value a, std::string op, bool verbose = false)
     std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
 
     // use map a's '__op' function to operate on the maps
-    if(map_a.find(op) != map_a.end()){
-        push(vm, {Value_Type::MAP, map_a});
-        push(vm, map_a[op]);
-        function_call(verbose);
+    // if(map_a.find(op) != map_a.end()){
+    //     push(vm, {Value_Type::MAP, map_a});
+    //     push(vm, map_a[op]);
+    //     function_call(verbose);
+    // }
+    // else{
+    //     vm_error("Map does not have operator " + op);
+    // }
+
+    // look for type and op in custom types
+    if(vm->custom_types.find(VALUE_AS_STRING(map_a["__type"])) == vm->custom_types.end()){
+        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " not found");
     }
-    else{
-        vm_error("Map does not have operator " + op);
+    if(vm->custom_types[VALUE_AS_STRING(map_a["__type"])].find(op) == vm->custom_types[VALUE_AS_STRING(map_a["__type"])].end()){
+        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " does not have operator " + op);
     }
+    push(vm, {Value_Type::MAP, map_a});
+    push(vm, vm->custom_types[VALUE_AS_STRING(map_a["__type"])][op]);
+    function_call(verbose);
+    
 }
 // -------------------------------------------------------------------
 

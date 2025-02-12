@@ -192,51 +192,48 @@ m2["data"] = [[9, 8, 7],
 
 // convention to define a custom type as a var (with the type name as the var name), then define operators for it
 // this map can be used as a constructor for the type
-// let point = map {
-//     "__type": "point",
-//     "x": 0,
-//     "y": 0,
-//     "z": 0
-// };
+let point = map {
+    "__type": "point",
+    "x": 0,
+    "y": 0,
+    "z": 0
+};
 
 // addition between two maps with the type "3point"
-// define "+" in "point" as func(a, b){
-//     a["x"] = a["x"] + b["x"];
-//     a["y"] = a["y"] + b["y"];
-//     a["z"] = a["z"] + b["z"];
-//     return a;
-// };
+define "+" in "point" as func(a, b){
+    a["x"] = a["x"] + b["x"];
+    a["y"] = a["y"] + b["y"];
+    a["z"] = a["z"] + b["z"];
+    return a;
+};
 
-// // unary negation for a map with the type "3point"
-// define "u-" in "point" as func(a){
-//     a["x"] = -a["x"];
-//     a["y"] = -a["y"];
-//     a["z"] = -a["z"];
-//     return a;
-// };
+// unary negation for a map with the type "3point"
+define "u-" in "point" as func(a){
+    a["x"] = -a["x"];
+    a["y"] = -a["y"];
+    a["z"] = -a["z"];
+    return a;
+};
 
-// let p1 = point;
-// p1["x"] = 1;
-// p1["y"] = 2;
-// p1["z"] = 3;
+let p1 = point;
+p1["x"] = 1;
+p1["y"] = 2;
+p1["z"] = 3;
 
-// let p2 = point;
-// p2["x"] = 4;
-// p2["y"] = 5;
-// p2["z"] = 6;
+let p2 = point;
+p2["x"] = 4;
+p2["y"] = 5;
+p2["z"] = 6;
 
-// let p3 = p1 + p2;
-// // let p4 = -p1;
+let p3 = p1 + p2;
+let p4 = -p1;
 
-// let print_point = func(p) {
-//     print "x: " + p["x"] + ", y: " + p["y"] + ", z: " + p["z"];
-//     return 0;
-// };
-// let res = print_point(p1);
-// res = print_point(p2);
-// res = print_point(p3);
-// res = print_point(p4);
+let print_point = func(p) {
+    print "x: " + p["x"] + ", y: " + p["y"] + ", z: " + p["z"];
+    return 0;
+};
+let res = print_point(p1);
+res = print_point(p2);
+res = print_point(p3);
+res = print_point(p4);
 
-
-let m = 2 * [2 * [0]];
-print m;
