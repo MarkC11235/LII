@@ -48,9 +48,9 @@ struct VM
 
     std::vector<function_frame *> function_frames;
 
-    bool jit;
-    int calls_to_jit;
-    std::vector<JIT_FUNCTION> jit_functions;
+    // bool jit;
+    // int calls_to_jit;
+    // std::vector<JIT_FUNCTION> jit_functions;
 
     // CUSTOM_TYPES
     // custom map types
@@ -61,7 +61,7 @@ struct VM
 
 VM vm; // Statically allocated because only one VM is needed
 
-#include "jit.hpp"
+// #include "jit.hpp"
 
 void vm_error(const std::string &message)
 {
@@ -102,27 +102,33 @@ void function_call(bool verbose = false){
 
     function* func = VALUE_AS_FUNCTION(pop(&vm));
 
-    func->times_called++; // for jit compilation
+    // TEMPORARY UNTIL I DECIDE TO REINTEGRE JIT
 
-    if(vm.jit && func->times_called == vm.calls_to_jit){
-        if(verbose){
-            std::cout << "JIT compiling function: " << func->name << std::endl;
-        }        
-        jit_compile_function(&vm, func);
-    }
+    // func->times_called++; // for jit compilation
 
-    if(vm.jit && func->jit_index != -1){
-        if(verbose){
-            std::cout << "Calling JIT function: " << func->jit_index << std::endl;
-        }
-        vm.function_frames.push_back(create_function_frame(func));
-        jit_run_function(&vm, func->jit_index);
-    }
-    else{
-        vm.function_frames.push_back(create_function_frame(func));
+    // if(vm.jit && func->times_called == vm.calls_to_jit){
+    //     if(verbose){
+    //         std::cout << "JIT compiling function: " << func->name << std::endl;
+    //     }        
+    //     jit_compile_function(&vm, func);
+    // }
 
-        get_current_function_frame(&vm)->ip = func->code - 1; // -1 because the ip will be increased by 1
-    }
+    // if(vm.jit && func->jit_index != -1){
+    //     if(verbose){
+    //         std::cout << "Calling JIT function: " << func->jit_index << std::endl;
+    //     }
+    //     vm.function_frames.push_back(create_function_frame(func));
+    //     jit_run_function(&vm, func->jit_index);
+    // }
+    // else{
+    //     vm.function_frames.push_back(create_function_frame(func));
+
+    //     get_current_function_frame(&vm)->ip = func->code - 1; // -1 because the ip will be increased by 1
+    // }
+
+    vm.function_frames.push_back(create_function_frame(func));
+
+    get_current_function_frame(&vm)->ip = func->code - 1; // -1 because the ip will be increased by 1
 }
 // -------------------------------------------------------------------
 
@@ -283,6 +289,7 @@ Value get_variable(VM* vm, const std::string &name)
     return Value(); // To avoid warning, but this line will never be reached because of vm_error
 }
 
+/// DON'T THINK THIS IS BEING USED ANYMORE
 /*
 Will look for the variable in the current function frame and all parent frames
 Looks for the variable in the closest scope, so climbs out of ifs, loops, etc. and also the closest function frame

@@ -8,7 +8,7 @@
 #include "Function.hpp"
 #include "cl_exe_file.hpp"
 #include "VM.hpp"
-#include "jit.hpp"
+// #include "jit.hpp"
 
 // Initializes the virtual machine ----------------------------------
 /*
@@ -26,8 +26,8 @@ void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 
     vm.constants = exe->constants;
     vm.variable_names = exe->variable_names;
 
-    vm.jit = jit;
-    vm.calls_to_jit = calls_to_jit;
+    // vm.jit = jit;
+    // vm.calls_to_jit = calls_to_jit;
 
     // Add argc and argv to the main function as variables
     set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count});
