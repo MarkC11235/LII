@@ -1,107 +1,3 @@
-// OLD SYNTAX 
-// let new_point = func(x, y, z) {
-//     return map{
-//         "__type": "3point",
-//         "__add" : func(a, b) {
-//             a["x"] = a["x"] + b["x"];
-//             a["y"] = a["y"] + b["y"];
-//             a["z"] = a["z"] + b["z"];
-//             return a;
-//         },
-//         "__sub" : func(a, b) {
-//             a["x"] = a["x"] - b["x"];
-//             a["y"] = a["y"] - b["y"];
-//             a["z"] = a["z"] - b["z"];
-//             return a;
-//         },
-//         "x": x,
-//         "y": y,
-//         "z": z
-//     };
-// };
-
-// let print_point = func(p) {
-//     print "x: " + p["x"] + ", y: " + p["y"] + ", z: " + p["z"];
-//     return 0;
-// };
-
-// let p1 = new_point(1, 2, 3);
-// let p2 = new_point(4, 5, 6);
-// let p3 = p1 + p2;
-
-// let res = print_point(p1);
-// res = print_point(p2);
-// res = print_point(p3);
-
-// let p4 = p1 - p2;
-// res = print_point(p4);
-
-
-
-// let new_matrix = func (rows, cols, data) {
-//     return map {
-//         "__type": "matrix",
-//         "__+" : func(a, b) {
-//             let a_rows = a["rows"];
-//             let a_cols = a["cols"];
-//             let b_rows = b["rows"];
-//             let b_cols = b["cols"];
-//             if (a_rows != b_rows || a_cols != b_cols) {
-//                 print "Error: incompatible matrix sizes for addition";
-//                 return 0;
-//             }
-//             for (let i = 0; i < a_rows; i = i + 1) {
-//                 for (let j = 0; j < a_cols; j = j + 1) {
-//                     a["data"][i][j] = a["data"][i][j] + b["data"][i][j];
-//                 }
-//             }
-//             return a;
-//         },
-//         "__-" : func(a, b) {
-//             let a_rows = a["rows"];
-//             let a_cols = a["cols"];
-//             let b_rows = b["rows"];
-//             let b_cols = b["cols"];
-//             if (a_rows != b_rows || a_cols != b_cols) {
-//                 print "Error: incompatible matrix sizes for subtraction";
-//                 return 0;
-//             }
-//             for (let i = 0; i < a_rows; i = i + 1) {
-//                 for (let j = 0; j < a_cols; j = j + 1) {
-//                     a["data"][i][j] = a["data"][i][j] - b["data"][i][j];
-//                 }
-//             }
-//             return a;
-//         },
-//         "__*" : func(a, b) {
-//             // let a_rows = a["rows"];
-//             // let a_cols = a["cols"];
-//             // let b_rows = b["rows"];
-//             // let b_cols = b["cols"];
-//             // if (a_cols != b_rows) {
-//             //     print "Error: incompatible matrix sizes for multiplication";
-//             //     return 0;
-//             // }
-//             // let res = a; // duplicate a (kinda makes every map a constructor for itself as long as you clear the data)
-//             // for (let i = 0; i < a_rows; i = i + 1) {
-//             //     for (let j = 0; j < b_cols; j = j + 1) {
-//             //         res["data"][i][j] = 0;
-//             //         for (let k = 0; k < a_cols; k = k + 1) {
-//             //             res["data"][i][j] = res["data"][i][j] + a["data"][i][k] * b["data"][k][j];
-//             //         }
-//             //     }
-//             // }
-//             // return res;
-
-//             a["data"] = $matrix_multiply(a["data"], b["data"]);
-//             return a;
-//         },
-//         "rows": rows,
-//         "cols": cols,
-//         "data": data
-//     };
-// };
-
 let matrix = map {
     "__type": "matrix",
     "rows": 0,
@@ -220,21 +116,21 @@ m2["data"] = [[9, 8, 7],
                [6, 5, 4],
                [3, 2, 1]];
 
-print "m1";
-let res = pretty_print_matrix(m1["data"]);
-print "m2";
-let res = pretty_print_matrix(m2["data"]);
+// print "m1";
+// let res = pretty_print_matrix(m1["data"]);
+// print "m2";
+// let res = pretty_print_matrix(m2["data"]);
 
-let m3 = m1 + m2;
-let m4 = m1 - m2;
-let m5 = m1 * m2;
+// let m3 = m1 + m2;
+// let m4 = m1 - m2;
+// let m5 = m1 * m2;
 
-print "m1 + m2";
-let res = pretty_print_matrix(m3["data"]);
-print "m1 - m2";
-let res = pretty_print_matrix(m4["data"]);
-print "m1 * m2";
-let res = pretty_print_matrix(m5["data"]);
+// print "m1 + m2";
+// let res = pretty_print_matrix(m3["data"]);
+// print "m1 - m2";
+// let res = pretty_print_matrix(m4["data"]);
+// print "m1 * m2";
+// let res = pretty_print_matrix(m5["data"]);
 
 
 
@@ -340,3 +236,7 @@ let res = pretty_print_matrix(m5["data"]);
 // res = print_point(p2);
 // res = print_point(p3);
 // res = print_point(p4);
+
+
+let m = 2 * [2 * [0]];
+print m;

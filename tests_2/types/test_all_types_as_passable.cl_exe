@@ -12,7 +12,7 @@ res5
 res6
 res7
 18
-function|function (x) {17, 3, 19, 3, 40, 19, 3, 34, }
+function|function (x) {17, 3, 19, 3, 41, 19, 3, 35, }
 number|1
 string|hello
 number|1
@@ -26,7 +26,7 @@ string|vec2
 number|4
 number|5
 number|6
-function|function () {16, 15, 34, }
+function|function () {16, 15, 35, }
 number|1
 bool|true
 null|null
@@ -39,14 +39,14 @@ null|null
 1
 19
 2
-37
+38
 17
 4
 16
 2
 19
 2
-37
+38
 17
 5
 21
@@ -61,10 +61,10 @@ null|null
 22
 19
 2
-37
+38
 17
 6
-25
+26
 16
 6
 21
@@ -77,7 +77,7 @@ null|null
 16
 9
 22
-30
+31
 16
 10
 21
@@ -90,30 +90,30 @@ null|null
 16
 13
 22
-30
+31
 19
 2
-37
+38
 17
 7
 16
 14
 19
 2
-37
+38
 17
 8
 16
 16
 19
 2
-37
+38
 17
 9
 16
 17
 19
 2
-37
+38
 17
 10

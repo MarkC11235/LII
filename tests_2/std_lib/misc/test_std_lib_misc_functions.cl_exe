@@ -5,7 +5,7 @@ argv
 string_len
 x
 3
-function|function (x) {17, 3, 19, 3, 34, }
+function|function (x) {17, 3, 19, 3, 35, }
 string|tester.calc
 number|1
 21
@@ -17,16 +17,16 @@ number|1
 1
 19
 2
-37
-40
+38
 41
+42
 0
-40
 41
+42
 1
-40
+41
 16
 2
-41
+42
 2
-40
+41

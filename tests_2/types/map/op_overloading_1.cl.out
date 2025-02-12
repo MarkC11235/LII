@@ -1,0 +1,6 @@
+m1 + m2
+{"__type":"matrix","cols":2,"data":[[6, 8],[10, 12]],"rows":2}
+m1 - m2
+{"__type":"matrix","cols":2,"data":[[-4, -4],[-4, -4]],"rows":2}
+m1 * m2
+{"__type":"matrix","cols":2,"data":[[19, 22],[43, 50]],"rows":2}

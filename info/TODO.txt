@@ -95,3 +95,17 @@ when it finds OP_DEFINE_OP_FOR_TYPE
 -----------------------------------------------------------------------------------------------------------------
 
 Clear out unused OpCodes
+
+------------------------------------------------------------------------------------------------------------------
+
+Either make the comparison operators work with all types or make them throw errors if they don't work with the given types
+
+------------------------------------------------------------------------------------------------------------------
+
+Issue: if you don't put a function witht correct number of args for a define operator (undefined behavior)
+    - related to the issue that I wasnt to be able to check for the correct number of args to a function
+
+------------------------------------------------------------------------------------------------------------------
+
+Explain how op overloading works in readme
+      - u- and u! should be explained in readme

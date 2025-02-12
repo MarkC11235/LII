@@ -6,11 +6,11 @@ a
 x
 b
 6
-function|function () {16, 1, 17, 3, 19, 3, 37, 34, }
-function|function () {16, 2, 34, }
+function|function () {16, 1, 17, 3, 19, 3, 38, 35, }
+function|function () {16, 2, 35, }
 number|1
-function|function () {16, 4, 17, 3, 19, 3, 37, 34, }
-function|function () {16, 5, 34, }
+function|function () {16, 4, 17, 3, 19, 3, 38, 35, }
+function|function () {16, 5, 35, }
 number|2
 16
 16
@@ -23,9 +23,9 @@ number|2
 4
 19
 2
-37
-40
+38
+41
 19
 4
-37
-40
+38
+41

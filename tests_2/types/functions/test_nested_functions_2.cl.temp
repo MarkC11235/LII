@@ -1,1 +1,4 @@
-ERROR: pop: Stack underflow
+1
+2
+3
+ERROR: get_variable: Variable p not found
