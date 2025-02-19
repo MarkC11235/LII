@@ -66,9 +66,19 @@ let augmented = augment_matrix(A, b);
 print "Augmented Matrix:";
 let res = pretty_print_augmented(augmented);
 let REF_augmented = REF_GE(augmented);
+let x = null;
 if(REF_augmented != null){
+    print "REF:";
     let res = pretty_print_augmented(REF_augmented);
-    let x = Back_Substitution(REF_augmented);
+    x = Back_Substitution(REF_augmented);
     print "Solution: " + x;
 }
+
+let diff = [];
+for(let i = 0; i < $vector_length(x); i = i + 1){
+    diff = diff + [x[i] - xexact[i]];
+}
+print "One Norm: " + norm(diff, "1");
+print "Two Norm: " + norm(diff, "2");
+print "Infinity Norm: " + norm(diff, "inf");
 

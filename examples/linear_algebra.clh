@@ -1,6 +1,6 @@
 let pretty_print_matrix = func(augmented){
     // print "\nMatrix:";
-    let padding = 9;
+    let padding = 22;
     let width = $vector_length(augmented[0]);
     let temp = "--";
     for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
@@ -39,7 +39,7 @@ let pretty_print_matrix = func(augmented){
 
 let pretty_print_augmented = func(augmented){
     // print "\nAugmented Matrix:";
-    let padding = 9;
+    let padding = 22;
     let width = $vector_length(augmented[0]);
     let temp = "--";
     for (let i = 0; i < width * (padding + 1); i = i + 1){
