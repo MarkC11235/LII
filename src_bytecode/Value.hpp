@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <charconv>
+#include <array>
 #include "Function.hpp"
 
 void display_bytecode(function* func);
@@ -160,13 +162,21 @@ std::string VALUE_AS_STRING(Value value){
                      // This is because the tests expect the output to not have trailing zeros
                      // Could use some fancy math things to remove trailing zeros
         {
-            std::string str = std::to_string(std::get<double>(value.data));
-            if(str.find('.') != std::string::npos){
-                str.erase(str.find_last_not_of('0') + 1, std::string::npos);
-                if(str[str.size() - 1] == '.'){
-                    str.pop_back();
-                }
-            }
+            // std::string str = std::to_string(std::get<double>(value.data));
+            // if(str.find('.') != std::string::npos){
+            //     str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+            //     if(str[str.size() - 1] == '.'){
+            //         str.pop_back();
+            //     }
+            // }
+            // return str;
+
+            // This method can be used to remove trailing zeros, get more precision, and remove the decimal point if the number is an integer
+            std::array<char, 32> buffer;  // Buffer size enough for full precision
+
+            auto [ptr, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), 
+                                            std::get<double>(value.data), std::chars_format::general);
+            std::string str(buffer.data(), ptr);  // Store result in std::string
             return str;
         }
         case BOOL:

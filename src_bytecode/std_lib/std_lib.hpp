@@ -18,6 +18,7 @@
 #include "http_utils.hpp"
 #include "maps.hpp"
 #include "matrix.hpp"
+#include "math.hpp"
 
 typedef std::function<std::any(std::vector<std::any>, std::vector<std::string>)> STD_LIB_FUNCTION;
 
@@ -124,10 +125,12 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     // http client functions
     {"send_request", make_std_lib_function(send_request), "std::map<std::string, Value>", {"std::string", "int", "std::map<std::string, Value>"}},
 
-
     // Matrix operations
     {"matrix_multiply", make_std_lib_function(matrix_multiply), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
 
+    // Math 
+    {"sqrt", make_std_lib_function(math_sqrt), "double", {"double"}},
+    {"pow", make_std_lib_function(math_pow), "double", {"double", "double"}},
 };
 
 /*
