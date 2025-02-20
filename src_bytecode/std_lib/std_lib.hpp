@@ -105,7 +105,11 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"close_graphics", make_std_lib_function(close_graphics), "int", {}},
     {"clear_screen", make_std_lib_function(clear_screen), "int", {}},
     {"update_screen", make_std_lib_function(update_screen), "int", {}},
+    {"change_color", make_std_lib_function(change_color), "int", {"int", "int", "int"}},
     {"draw_rect", make_std_lib_function(draw_rect), "int", {"int", "int", "int", "int"}},
+    {"draw_line", make_std_lib_function(draw_line), "int", {"int", "int", "int", "int"}},
+    {"draw_circle", make_std_lib_function(draw_circle), "int", {"int", "int", "int"}},
+    {"draw_lines", make_std_lib_function(draw_lines), "int", {"std::vector<Value>"}},
 
     // random functions
     {"random_int", make_std_lib_function(random_int), "int", {"int", "int"}},

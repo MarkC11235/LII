@@ -94,16 +94,46 @@
         std::vector<Value> events;
         std::lock_guard<std::mutex> lock(eventMutex);
         for (auto &event : eventQueue) {
-            switch (event.type) {
-                case SDL_QUIT:
-                    events.push_back({Value_Type::STRING, "quit"});
-                    break;
-                case SDL_KEYDOWN:
-                    events.push_back({Value_Type::STRING, "keydown"});
-                    break;
-                default:
-                    events.push_back({Value_Type::STRING, "unknown"});
-                    break;
+            std::map<std::string, Value> eventMap;
+            switch (event.type) {  
+            case SDL_QUIT:
+                eventMap["type"] = Value(Value_Type::STRING, "quit");
+                events.push_back(Value(Value_Type::MAP, eventMap));
+                break;
+            case SDL_KEYDOWN:
+                eventMap["type"] = Value(Value_Type::STRING, "keydown");
+                eventMap["key"] = Value(Value_Type::STRING, SDL_GetKeyName(event.key.keysym.sym));
+                events.push_back(Value(Value_Type::MAP, eventMap));
+                break;
+            case SDL_KEYUP:
+                eventMap["type"] = Value(Value_Type::STRING, "keyup");
+                eventMap["key"] = Value(Value_Type::STRING, SDL_GetKeyName(event.key.keysym.sym));
+                events.push_back(Value(Value_Type::MAP, eventMap));
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                eventMap["type"] = Value(Value_Type::STRING, "mousedown");
+                eventMap["button"] = Value(Value_Type::NUMBER, static_cast<double>(event.button.button));
+                eventMap["x"] = Value(Value_Type::NUMBER, static_cast<double>(event.button.x));
+                eventMap["y"] = Value(Value_Type::NUMBER, static_cast<double>(event.button.y));
+                events.push_back(Value(Value_Type::MAP, eventMap));
+                break;
+            case SDL_MOUSEBUTTONUP:
+                eventMap["type"] = Value(Value_Type::STRING, "mouseup");
+                eventMap["button"] = Value(Value_Type::NUMBER, static_cast<double>(event.button.button));
+                eventMap["x"] = Value(Value_Type::NUMBER, static_cast<double>(event.button.x));
+                eventMap["y"] = Value(Value_Type::NUMBER, static_cast<double>(event.button.y));
+                events.push_back(Value(Value_Type::MAP, eventMap));
+                break;
+            case SDL_MOUSEMOTION:
+                eventMap["type"] = Value(Value_Type::STRING, "mousemove");
+                eventMap["x"] = Value(Value_Type::NUMBER, static_cast<double>(event.motion.x));
+                eventMap["y"] = Value(Value_Type::NUMBER, static_cast<double>(event.motion.y));
+                events.push_back(Value(Value_Type::MAP, eventMap));
+                break;
+            default:
+                eventMap["type"] = Value(Value_Type::STRING, "unknown");
+                events.push_back(Value(Value_Type::MAP, eventMap));
+                break;
             }
         }
         eventQueue.clear();
@@ -131,6 +161,12 @@
         return 0;
     }
 
+    int change_color(int r, int g, int b) {
+        SDL_SetRenderDrawColor(ren, r, g, b, 255);
+
+        return 0;
+    }
+
     /*
     Draw a rectangle on the screen.
     Top-left corner is at (x, y), with width w and height h.
@@ -142,11 +178,42 @@
         rect.w = w;
         rect.h = h;
 
-        SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
         SDL_RenderFillRect(ren, &rect);
 
         return 0;
     }
+
+    int draw_line(int x1, int y1, int x2, int y2) {
+        SDL_RenderDrawLine(ren, x1, y1, x2, y2);
+
+        return 0;
+    }
+
+    int draw_circle(int x, int y, int r) {
+        for (int w = 0; w < r * 2; w++) {
+            for (int h = 0; h < r * 2; h++) {
+                int dx = r - w; // horizontal offset
+                int dy = r - h; // vertical offset
+                if ((dx*dx + dy*dy) <= (r * r)) {
+                    SDL_RenderDrawPoint(ren, x + dx, y + dy);
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    int draw_lines(std::vector<Value> points) {
+        for (int i = 0; i < (int)points.size() - 1; i++) {
+            draw_line(VALUE_AS_NUMBER(VALUE_AS_VECTOR(points[i])[0]), 
+                      VALUE_AS_NUMBER(VALUE_AS_VECTOR(points[i])[1]), 
+                      VALUE_AS_NUMBER(VALUE_AS_VECTOR(points[i+1])[0]), 
+                      VALUE_AS_NUMBER(VALUE_AS_VECTOR(points[i+1])[1]));
+        }
+        return 0;
+    }
+        
+
 
 #else
     // SDL2 is not available, provide alternative implementations or error messages
