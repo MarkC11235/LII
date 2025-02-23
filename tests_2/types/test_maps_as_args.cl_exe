@@ -1,4 +1,4 @@
-./tests_2/types/test_maps_as_args
+tests_2/types/test_maps_as_args
 5
 argc
 argv

@@ -1,4 +1,4 @@
-./tests_2/expressions/test_mult_str_num
+tests_2/expressions/test_mult_str_num
 2
 argc
 argv

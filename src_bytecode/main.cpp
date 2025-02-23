@@ -3,166 +3,36 @@
 #include <map>
 #include <vector>
 
-#include "Function.hpp"
-#include "Value.hpp"
-#include "./std_lib/std_lib.hpp" // Include the standard library, first so that the objects are declared before they are used
-#include "tokenizer.hpp"
-#include "parser.hpp"
-#include "bytecode_generator.hpp"
+#include "Compiler.hpp"
 #include "virtual_machine.hpp"
-#include "cl_exe_file.hpp"
-
-// TODO: ADD 
-//           exit expr ; // exit the program completely and prints the value of expr
-// TODO: ADD bitwise operators (&, |, ^, ~, <<, >>)
 
 int main(int argc, char *argv[]) {
-    // Check if the user has provided the input file and verbosity flag
-    // Args are strings and should appear after the input file
-    // All strings after the input file until the first flag (starts with -) are considered arguments
-    if(argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file.cl> [arg0 arg1 ...] -d -v [-vT -vP -vB -vV] -jit [num] -cs [num]" << std::endl;
-        return 1;
-    }
-    std::string input_file = argv[1];
-    // Check if the input file has the correct extension
-    if(input_file.substr(input_file.find_last_of(".") + 1) != "cl") {
-        std::cout << "Input file must have a .cl extension." << std::endl;
-        return 1;
-    }
+    Compiler compiler;
 
-    bool verboseT = false;
-    bool verboseP = false;
-    bool verboseB = false;
-    bool verboseV = false;
+    // Add the FlagParsingPass first
+    compiler.add_pass(new FlagParsingPass(compiler.get_context(), argc, argv));
+    
+    // Add the other passes without retrieving context values now.
+    compiler.add_pass(new TokenizationPass(compiler.get_context()));
+    compiler.add_pass(new ParsingPass(compiler.get_context()));
+    compiler.add_pass(new BytecodeGenerationPass(compiler.get_context()));
 
-    bool debug = false;
-
-    bool time = false;
-
-    bool jit = false;
-    int calls_to_jit = 10;
-
-    int stack_capacity = 256;
-
-    int args_count = 0;
-    std::vector<std::string> args;
-
-    int arg_start = 2;
-    // Check for arguments
-    for(int i = 2; i < argc; i++) {
-        if(std::string(argv[i]).find("-") == 0) {
-            arg_start = i;
-            break;
-        }
-        args.push_back(argv[i]);
-        args_count++;
-    }
-
-    // Check for flags
-    for(int i = arg_start + args_count; i < argc; i++) {
-        if(std::string(argv[i]) == "-v") {
-            verboseT = true;
-            verboseP = true;
-            verboseB = true;
-            verboseV = true;
-        } else if(std::string(argv[i]) == "-vT") {
-            verboseT = true;
-        } else if(std::string(argv[i]) == "-vP") {
-            verboseP = true;
-        } else if(std::string(argv[i]) == "-vB") {
-            verboseB = true;
-        } else if(std::string(argv[i]) == "-vV") {
-            verboseV = true;
-        } else if(std::string(argv[i]) == "-d"){
-            debug = true;
-        } else if(std::string(argv[i]) == "-t"){
-            time = true;
-        } else if(std::string(argv[i]) == "-jit"){
-            jit = true;
-            if(i + 1 < argc){
-                try{
-                    calls_to_jit = std::stoi(argv[i + 1]);
-                } catch(std::invalid_argument e){
-                    std::cout << "Invalid argument for -jit flag" << std::endl;
-                    return 1;
-                }
-            }
-        }else if(std::string(argv[i]) == "-cs"){
-            if(i + 1 < argc){
-                try{
-                    stack_capacity = std::stoi(argv[i + 1]);
-                } catch(std::invalid_argument e){
-                    std::cout << "Invalid argument for -cs flag" << std::endl;
-                    return 1;
-                }
-            }
-        }
-    }
-
-    // set the directory path for the files.hpp functions and tokenize the input when there are include statements
-    input_file = "./" + input_file;
-    int last_slash = input_file.find_last_of("/");
-    directory_path = input_file.substr(0, last_slash + 1);
-
-    // Read the input file and tokenize the input
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<Token> tokens = read_input(input_file, verboseT);
-
-    auto end = std::chrono::high_resolution_clock::now();
-    if (verboseT || time) {
-        std::cout << "\nTokens: " << std::endl;
-        for(Token token : tokens){
-            token.print();
-        }
-        std::cout << std::endl;
-        std::cout << "Tokenization took "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << " milliseconds.\n" << std::endl;
-    }
-
-    // Parse the tokens and form the AST
-    start = std::chrono::high_resolution_clock::now();
-    Node* ast = parse(tokens, verboseP);
-    end = std::chrono::high_resolution_clock::now();
-    if (verboseP || time) {
-        std::cout << "Parsing took "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << " milliseconds.\n" << std::endl;
-    }
-
-    // Traverse the AST and generate the bytecode
-    start = std::chrono::high_resolution_clock::now();
-    function* func = generate_bytecode(ast, input_file);
-    end = std::chrono::high_resolution_clock::now();
-    if (verboseB || time) {
-        std::cout << "Bytecode generation took "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-                  << " milliseconds.\n" << std::endl;
-
-        std::cout << "Constants:" << std::endl;
-        display_constants();
-        std::cout << std::endl;
-
-        std::cout << "Variables:" << std::endl;
-        display_variables();
-        std::cout << std::endl;
-
-        std::cout << "Bytecode:" << std::endl;
-        std::cout << "Main Function: " << std::endl;
-        display_bytecode(func);
-        std::cout << std::endl;
-    }
-
-    // Free the memory
-    delete ast;
+    compiler.run();
 
     // Interpret the bytecode
-    start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
+    std::string input_file = compiler.get_context().get<std::string>("input_file");
     input_file = input_file.substr(0, input_file.find_last_of(".")) + ".cl_exe";
-    interpret_bytecode("./" + input_file, verboseV, debug, jit, calls_to_jit, stack_capacity, args_count, args);
-    end = std::chrono::high_resolution_clock::now();
-    if (verboseV || time) {
+    interpret_bytecode("./" + input_file, 
+                       compiler.get_context().get<bool>("verboseV"), 
+                       compiler.get_context().get<bool>("debug"),
+                       compiler.get_context().get<bool>("jit"), 
+                       compiler.get_context().get<int>("calls_to_jit"),
+                       compiler.get_context().get<int>("stack_capacity"), 
+                       compiler.get_context().get<int>("args_count"),
+                       compiler.get_context().get<std::vector<std::string>>("args"));
+    auto end = std::chrono::high_resolution_clock::now();
+    if (compiler.get_context().get<bool>("verboseV") || compiler.get_context().get<bool>("time")) {
         std::cout << "Interpretation took "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
                   << " milliseconds." << std::endl;

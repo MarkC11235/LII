@@ -5,6 +5,7 @@
 
 #include "Value.hpp"
 #include "./std_lib/std_lib.hpp"
+#include "opcodes.hpp"
 #include "Function.hpp"
 #include "cl_exe_file.hpp"
 #include "VM.hpp"

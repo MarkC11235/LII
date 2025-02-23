@@ -461,12 +461,15 @@ std::vector<Token> analyze(std::string input, int line_number){
 Takes in the current vector of tokens whenever an include token is found (#"file_name.clh")
 Tokenizes the included file and returns a new vector of tokens with the included file's tokens inserted in place of the include token
 */
-std::vector<Token> includes(std::vector<Token> tokens, bool verbose = false){
+std::vector<Token> includes(std::vector<Token> tokens, std::string file_path, bool verbose = false){
     std::vector<Token> new_tokens;
     for(int i = 0; i < int(tokens.size()); i++){
         if(tokens[i].get_type() == TokenType::INCLUDE_TOKEN){
             std::string include_file = tokens[i].get_value();
-            std::vector<Token> include_tokens = read_input(directory_path + include_file, verbose, true);
+            // std::vector<Token> include_tokens = read_input("./" + include_file, verbose, true);
+            //get directory of the file 
+            std::string directory = file_path.substr(0, file_path.find_last_of("/\\"));
+            std::vector<Token> include_tokens = read_input(directory + "/" + include_file, verbose, true);
             new_tokens.insert(new_tokens.end(), include_tokens.begin(), include_tokens.end());
         }
         else{
@@ -504,7 +507,7 @@ std::vector<Token> read_input(std::string file_path, bool verbose = false, bool 
     File.close();
 
     // Recursively include files
-    tokens = includes(tokens, verbose);
+    tokens = includes(tokens, file_path, verbose);
 
     // Add an EOF token to the end of the file
     if(include == false){

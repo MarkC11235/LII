@@ -1,4 +1,4 @@
-./tests_2/control_flow/test_break_continue
+tests_2/control_flow/test_break_continue
 3
 argc
 argv

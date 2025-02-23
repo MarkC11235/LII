@@ -1,4 +1,4 @@
-./tests_2/types/string/test_escape_sequences
+tests_2/types/string/test_escape_sequences
 2
 argc
 argv
