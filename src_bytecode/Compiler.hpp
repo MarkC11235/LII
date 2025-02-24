@@ -25,6 +25,11 @@ public:
     bool contains(const std::string& key) const {
         return data.find(key) != data.end();
     }
+
+    static void error(const std::string& message) {
+        std::cerr << "CompilerContext Error: " << message << std::endl;
+        exit(1);
+    }
 };
 
 class CompilerPass {
@@ -35,6 +40,10 @@ class CompilerPass {
         CompilerPass(CompilerContext& ctx) : context(ctx) {}
         virtual ~CompilerPass() {} // Virtual destructor
         virtual void run() = 0;
+        static void error(const std::string& message) {
+            std::cerr << "CompilerPass Error: " << message << std::endl;
+            exit(1);
+        }
 };
 
 class Compiler {
@@ -70,6 +79,11 @@ class Compiler {
     
         CompilerContext& get_context() {
             return context;
+        }
+
+        static void error(const std::string& message) {
+            std::cerr << "Compiler Error: " << message << std::endl;
+            exit(1);
         }
     };
 

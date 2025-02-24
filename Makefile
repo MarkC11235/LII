@@ -1,27 +1,52 @@
-# CC = g++
 CC = clang++-16
-CXXFLAGS = -Wall -std=c++17 
+CXXFLAGS = -Wall -std=c++17 -I$(SRC_DIR)
 LDFLAGS = -lSDL2
 INPUT_FILE = tester.cl
 EXE = ./lii
 
-VERSION = BYTECODE
+SRC_DIR = ./src_bytecode
+SRCS = $(wildcard $(SRC_DIR)/*.cpp) \
+       $(wildcard $(SRC_DIR)/Tokenizer/*.cpp) \
+       $(wildcard $(SRC_DIR)/Parser/*.cpp) \
+       $(wildcard $(SRC_DIR)/BytecodeGenerator/*.cpp) \
+       $(wildcard $(SRC_DIR)/VM/*.cpp) \
+       $(wildcard $(SRC_DIR)/FlagParser/*.cpp) \
+	   $(wildcard $(SRC_DIR)/helpers/*.cpp) \
+       $(wildcard $(SRC_DIR)/std_lib/*.cpp) \
+       $(wildcard $(SRC_DIR)/std_lib/*/*.cpp)
+OBJS = $(SRCS:.cpp=.o)
+
+%.o: %.cpp # compiles all .cpp files into .o files for each file in SRCS, then they are linked together to form the executable
+	$(CC) $(CXXFLAGS) -c $< -o $@
 
 all: build_bytecode runv
 
-build_base:
-	@start_time=$$(date +%s); \
-	$(CC) $(CXXFLAGS) ./src_base/main.cpp -o $(EXE); \
-	end_time=$$(date +%s); \
-	elapsed_time=$$((end_time - start_time)); \
-	echo "Bytecode version compiled in $$elapsed_time seconds"
-
 build_bytecode:
-	@start_time=$$(date +%s); \
-	$(CC) $(CXXFLAGS) ./src_bytecode/main.cpp $(LDFLAGS) -o $(EXE) ; \
-	end_time=$$(date +%s); \
-	elapsed_time=$$((end_time - start_time)); \
-	echo "Bytecode version compiled in $$elapsed_time seconds"
+	@echo "Starting compilation..."
+	@total_start=`date +%s%N`; \
+    for src in $(SRCS); do \
+        obj=`echo $$src | sed 's/\.cpp/\.o/'`; \
+        start=`date +%s%N`; \
+        $(CC) $(CXXFLAGS) -c $$src -o $$obj; \
+        end=`date +%s%N`; \
+        elapsed=`expr \( $$end - $$start \) / 1000000`; \
+        sec=`expr $$elapsed / 1000`; \
+        msec=`expr $$elapsed % 1000`; \
+        printf "Compiled %-70s in %d.%03d seconds\n" $$src $$sec $$msec; \
+    done; \
+    echo "Linking..."; \
+    link_start=`date +%s%N`; \
+    $(CC) -o $(EXE) $(OBJS) $(LDFLAGS); \
+    link_end=`date +%s%N`; \
+    link_time=`expr \( $$link_end - $$link_start \) / 1000000`; \
+    total_time=`expr \( $$link_end - $$total_start \) / 1000000`; \
+    link_sec=`expr $$link_time / 1000`; \
+    link_msec=`expr $$link_time % 1000`; \
+    total_sec=`expr $$total_time / 1000`; \
+    total_msec=`expr $$total_time % 1000`; \
+    printf "Linking completed in %d.%03d seconds\n" $$link_sec $$link_msec; \
+    printf "Total compilation time: %d.%03d seconds\n" $$total_sec $$total_msec
+
 
 run_jit: build_bytecode
 	@echo "Running $(INPUT_FILE)\n"
@@ -73,9 +98,6 @@ time_jit:
 	@echo "Timing $(INPUT_FILE) with jit enabled\n"
 	@$(EXE) $(INPUT_FILE) -jit 1 -t
 
-compile_latex:
-	@pdflatex paper.tex
-
 debug:
 	@echo "Running $(INPUT_FILE) in debug mode\n"
 	@$(EXE) $(INPUT_FILE) -d -vV
@@ -105,13 +127,7 @@ count:
 	@find ./ -name '*.cl' -o -name '*.clh' | xargs wc -l
 
 clean:
-	@rm -f main.exe
-	@for i in tests/*.temp; do \
-		rm -f $$i; \
-	done
-	@for i in tests_2/*.temp; do \
-		rm -f $$i; \
-	done
-	@for i in jit_functions/*; do \
-		rm -f $$i; \
-	done
+	@rm -f $(OBJS) $(EXE)
+	@rm -f tests/*.temp
+	@rm -f tests_2/*.temp
+	@rm -f jit_functions/*

@@ -13,10 +13,7 @@
 int main(int argc, char *argv[]) {
     Compiler compiler;
 
-    // Add the FlagParsingPass first
     compiler.add_pass(new FlagParsingPass(compiler.get_context(), argc, argv));
-    
-    // Add the other passes without retrieving context values now.
     compiler.add_pass(new TokenizationPass(compiler.get_context()));
     compiler.add_pass(new ParsingPass(compiler.get_context()));
     compiler.add_pass(new BytecodeGenerationPass(compiler.get_context()));

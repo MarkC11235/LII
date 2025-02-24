@@ -8,11 +8,7 @@
 
 typedef int16_t CODE_SIZE; // Bytecode size, only 8 bits for pointers will be too small for large programs
 
-std::string CODE_TO_NUMBER_STRING(CODE_SIZE code){
-    return std::to_string((int)code);
-}
-
-struct function; 
+std::string CODE_TO_NUMBER_STRING(CODE_SIZE code);
 
 /*
 Defines a function object, which contains the bytecode array, the arguments, and jit information
