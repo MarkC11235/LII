@@ -1,0 +1,6 @@
+STMT_LIST
+    STMT
+        PRINT
+            OP +
+                NUM 5
+                NUM 4
