@@ -1,0 +1,177 @@
+#ifndef NODE_HPP
+#define NODE_HPP
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+enum NodeType {
+    // PROGRAM
+    PROGRAM_NODE,
+    FUNCTION_NODE,
+    STD_LIB_CALL_NODE,
+    STMT_LIST_NODE,
+    STMT_NODE,
+    // CONTROL FLOW
+    WHILE_NODE,
+    FOR_NODE,
+    FOREACH_NODE,
+    IF_NODE,
+    RETURN_NODE,
+    BREAK_NODE,
+    CONTINUE_NODE,
+    // ASSIGNMENTS
+    ASSIGN_NODE,
+    UPDATE_NODE,
+    DEFINE_NODE,
+    // ARITHMETIC
+    EXPR_NODE,
+    TERM_NODE,
+    FACTOR_NODE,
+    VAR_NODE,
+    NUM_NODE,
+    OP_NODE,
+    STRING_NODE,
+    BOOL_NODE,
+    NULL_NODE,
+
+    // OTHERS
+    LIST_NODE,
+    MAP_NODE,
+    PRINT_NODE,
+    FUNCTION_CALL_NODE
+};
+
+
+std::string node_type_to_string(NodeType type){
+    switch(type){
+        case NodeType::PROGRAM_NODE:
+            return "PROGRAM";
+        case NodeType::FUNCTION_NODE:
+            return "FUNCTION";
+        case NodeType::STD_LIB_CALL_NODE:
+            return "STD_LIB_CALL";
+        case NodeType::STMT_LIST_NODE:
+            return "STMT_LIST";
+        case NodeType::STMT_NODE:
+            return "STMT";
+        case NodeType::WHILE_NODE:
+            return "WHILE";
+        case NodeType::FOR_NODE:
+            return "FOR";
+        case NodeType::FOREACH_NODE:
+            return "FOREACH";
+        case NodeType::IF_NODE:
+            return "IF";
+        case NodeType::RETURN_NODE:
+            return "RETURN";
+        case NodeType::BREAK_NODE:
+            return "BREAK";
+        case NodeType::CONTINUE_NODE:
+            return "CONTINUE";
+        case NodeType::ASSIGN_NODE:
+            return "ASSIGN";
+        case NodeType::UPDATE_NODE:
+            return "UPDATE";
+        case NodeType::DEFINE_NODE:
+            return "DEFINE";
+        case NodeType::EXPR_NODE:
+            return "EXPR";
+        case NodeType::TERM_NODE:
+            return "TERM";
+        case NodeType::FACTOR_NODE:
+            return "FACTOR";
+        case NodeType::VAR_NODE:
+            return "VAR";
+        case NodeType::NUM_NODE:
+            return "NUM";
+        case NodeType::OP_NODE:
+            return "OP";
+        case NodeType::STRING_NODE:
+            return "STRING";
+        case NodeType::BOOL_NODE:   
+            return "BOOL";
+        case NodeType::NULL_NODE:
+            return "NULL";
+        case NodeType::LIST_NODE:
+            return "LIST";
+        case NodeType::MAP_NODE:
+            return "MAP";
+        case NodeType::PRINT_NODE:
+            return "PRINT";
+        case NodeType::FUNCTION_CALL_NODE:
+            return "FUNCTION_CALL";
+    }
+    return "UNKNOWN";
+}
+
+
+class Node {
+    NodeType type;
+    std::vector<std::string> values;
+    std::vector<Node*> children;
+    int line_number;
+public:
+    Node(NodeType type, std::vector<std::string> values, int line_number){
+        this->type = type;
+        this->values = values;
+        this->line_number = line_number;
+    }
+    Node(NodeType type, std::string value, int line_number){
+        this->type = type;
+        this->values.push_back(value);
+        this->line_number = line_number;
+    }
+    ~Node(){
+        for(int i = 0; i < int(this->children.size()); i++){
+            delete this->children[i];
+        }
+
+        this->children.clear();
+
+        this->values.clear();
+    }
+    void add_child(Node* child){
+        this->children.push_back(child);
+    }
+    void add_value(std::string value){
+        this->values.push_back(value);
+    }
+    void change_value(std::string value, int index){
+        this->values[index] = value;
+    }
+    NodeType get_type(){
+        return this->type;
+    }
+    std::string get_value(int index = 0){
+        return this->values[index];
+    }
+    std::vector<std::string> get_values(){
+        return this->values;
+    }
+    std::vector<Node*> get_children(){
+        return this->children;
+    }
+    Node* get_child(int index){
+        return this->children[index];
+    }
+    int get_line_number(){
+        return this->line_number;
+    }
+
+    void print(int level = 0){
+        for(int i = 0; i < level; i++){
+            std::cout << "  ";
+        }
+        std::cout << node_type_to_string(this->get_type()) << " ";
+        for(int i = 0; i < int(this->values.size()); i++){
+            std::cout << this->values[i] << " ";
+        }
+        std::cout << std::endl;
+        for(int i = 0; i < int(this->children.size()); i++){
+            this->children[i]->print(level + 1);
+        }
+    }
+};
+
+#endif // NODE_HPP

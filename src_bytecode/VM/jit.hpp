@@ -7,10 +7,10 @@
 #include <unistd.h>
 #include <limits.h>
 
-#include "VM.hpp"
-#include "virtual_machine.hpp"
-#include "Value.hpp"
-#include "opcodes.hpp"
+#include "./VM.hpp"
+#include "./virtual_machine.hpp"
+#include "../helpers/Value.hpp"
+#include "../helpers/opcodes.hpp"
 
 /*
 Adds the function to the jit_functions vector

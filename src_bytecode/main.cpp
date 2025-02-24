@@ -3,8 +3,12 @@
 #include <map>
 #include <vector>
 
-#include "Compiler.hpp"
-#include "virtual_machine.hpp"
+#include "./Compiler.hpp"
+#include "./FlagParser/flag_parser.hpp"
+#include "./Tokenizer/tokenizer.hpp"
+#include "./Parser/parser.hpp"
+#include "./BytecodeGenerator/bytecode_generator.hpp"
+#include "./VM/virtual_machine.hpp"
 
 int main(int argc, char *argv[]) {
     Compiler compiler;

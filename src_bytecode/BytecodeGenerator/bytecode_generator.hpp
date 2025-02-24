@@ -10,12 +10,43 @@
 #include <variant>
 #include <unordered_map>
 
-#include "parser.hpp"
-#include "Function.hpp"
-#include "Value.hpp"
-#include "./std_lib/std_lib.hpp"
-#include "cl_exe_file.hpp"
-#include "opcodes.hpp"
+#include "../Compiler.hpp"
+#include "../helpers/Function.hpp"
+#include "../helpers/Value.hpp"
+#include "../helpers/Node.hpp"
+#include "../std_lib/std_lib.hpp"
+#include "../helpers/cl_exe_file.hpp"
+#include "../helpers/opcodes.hpp"
+
+function* generate_bytecode(Node* node, std::string file_name);
+    
+class BytecodeGenerationPass : public CompilerPass {
+    public:
+        BytecodeGenerationPass(CompilerContext& ctx)
+            : CompilerPass(ctx) {}
+    
+        void run() override {
+            if (!context.contains("input_file")) {
+                std::cerr << "Error: input_file not set in context." << std::endl;
+                exit(1);
+            }
+            std::string inputFile = context.get<std::string>("input_file");
+            if (!context.contains("ast")) {
+                std::cerr << "Error: AST not set in context." << std::endl;
+                exit(1);
+            }
+            Node* ast = context.get<Node*>("ast");
+            function* func = generate_bytecode(ast, inputFile);
+            context.set("function", func);
+        }
+    
+        ~BytecodeGenerationPass() override {
+            if (context.contains("function")) {
+                delete context.get<function*>("function");
+            }
+        }
+    };
+
 
 void interpretation_error(std::string message, Node *node, function *func);
 

@@ -9,6 +9,7 @@
 #include <any>
 #include <utility> // std::index_sequence, std::make_index_sequence
 
+#include "helpers.hpp" // includes Value.hpp (vital for the std_lib functions)
 #include "strings.hpp" 
 #include "vectors.hpp" 
 #include "files.hpp" 
