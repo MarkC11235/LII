@@ -25,6 +25,9 @@ void ParsingPass::run() {
     Node* ast = parse(tokens, verbose);
     context.set("ast", ast);
 }
+void ParsingPass::test(){
+    std::cout << "ParsingPass test not implemented" << std::endl;
+}
 
 ParsingPass::~ParsingPass() {
     if (context.contains("ast")) {

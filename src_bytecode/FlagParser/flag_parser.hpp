@@ -104,7 +104,11 @@ class FlagParsingPass : public CompilerPass {
             context.set("args_count", args_count);
             context.set("args", args);
         }
-};
+
+        void test() override {
+            std::cout << "FlagParsingPass test not implemented" << std::endl;
+        }
+    };
 
 
 #endif // FLAG_PARSER_HPP

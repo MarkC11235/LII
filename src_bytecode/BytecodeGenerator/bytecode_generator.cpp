@@ -19,6 +19,10 @@ void BytecodeGenerationPass::run() {
     context.set("function", func);
 }
 
+void BytecodeGenerationPass::test() {
+    std::cout << "BytecodeGenerationPass test not implemented" << std::endl;
+}
+
 BytecodeGenerationPass::~BytecodeGenerationPass() {
     if (context.contains("function")) {
         delete context.get<function*>("function");

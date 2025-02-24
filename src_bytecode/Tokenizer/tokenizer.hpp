@@ -6,7 +6,8 @@
 class TokenizationPass : public CompilerPass {
     public:
         TokenizationPass(CompilerContext& ctx);  
-        void run() override;                     
+        void run() override;
+        void test() override;                     
         ~TokenizationPass() override;            
     };
 

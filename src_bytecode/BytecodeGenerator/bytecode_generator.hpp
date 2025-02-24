@@ -29,6 +29,7 @@ class BytecodeGenerationPass : public CompilerPass {
 public:
     BytecodeGenerationPass(CompilerContext& ctx);
     void run() override;
+    void test() override;
     ~BytecodeGenerationPass() override;
 };
 

@@ -19,6 +19,8 @@ int main(int argc, char *argv[]) {
     compiler.add_pass(new BytecodeGenerationPass(compiler.get_context()));
 
     compiler.run();
+    // compiler.run_tests();
+    // return 0;
 
     // Interpret the bytecode
     auto start = std::chrono::high_resolution_clock::now();

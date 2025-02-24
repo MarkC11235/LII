@@ -5,8 +5,12 @@
 #include <vector>
 #include <algorithm> // Include the algorithm library to use the remove_if function
 #include "../helpers/Token.hpp"
+#include "../helpers/test_framework.hpp"
+
 
 std::vector<Token> read_input(std::string file_path, bool verbose = false, bool include = false); // Forward declaration
+void print_tokens(std::vector<Token> tokens);
+std::vector<Token> read_tokens_file(std::string file_path);
 
 // Class method implementations
 TokenizationPass::TokenizationPass(CompilerContext& ctx) 
@@ -20,6 +24,25 @@ void TokenizationPass::run() {
     bool verbose = context.contains("verboseT") ? context.get<bool>("verboseT") : false;
     std::vector<Token> tokens = read_input(inputFile, verbose);
     context.set("tokens", tokens);
+}
+
+void TokenizationPass::test() {
+    auto error_handler = [](const std::string& file, const std::string& message) {
+        std::cerr << "Error in " << file << ": " << message << std::endl;
+    };
+
+    TestFramework<Token> framework(
+        __FILE__,
+        ".cl",
+        ".tokens",
+        Token::equals,
+        read_tokens_file,
+        [](const std::string& file) { return read_input(file, false); },
+        error_handler,
+        [](const Token& token) { return token.to_string(); }
+    );
+    
+    framework.run_tests("TokenizationPass");
 }
 
 TokenizationPass::~TokenizationPass() {
@@ -374,5 +397,42 @@ std::vector<Token> read_input(std::string file_path, bool verbose, bool include)
         tokens.push_back(Token(TokenType::EOF_TOKEN, "EOF", line_number));
     }
 
+    return tokens;
+}
+
+std::vector<Token> read_tokens_file(std::string file_path){
+    // Open the file
+    std::ifstream File(file_path);
+    if (!File) {
+        std::cout << "Unable to open file " << file_path << std::endl;
+        return std::vector<Token>();
+    }
+
+    // one token per line
+    // number that corresponds to enum, symbol, line number
+    std::string current_line;
+    std::vector<Token> tokens;
+    
+    while (std::getline(File, current_line)) {
+        std::vector<std::string> token_data;
+        std::string current_token = "";
+        for (char c : current_line) {
+            if (c == ',') {
+                token_data.push_back(current_token);
+                current_token = "";
+            } else {
+                current_token += c;
+            }
+        }
+        token_data.push_back(current_token);
+        if (token_data.size() != 3) {
+            std::cout << "Invalid token data in file " << file_path << std::endl;
+            return std::vector<Token>();
+        }
+        TokenType type = string_to_token_type(token_data[0]);
+        tokens.push_back(Token(type, token_data[1], std::stoi(token_data[2])));
+    }
+
+    File.close();
     return tokens;
 }

@@ -6,7 +6,8 @@
 class ParsingPass : public CompilerPass {
     public:
         ParsingPass(CompilerContext& ctx);  
-        void run() override;                     
+        void run() override;            
+        void test() override;         
         ~ParsingPass() override;            
     };
 

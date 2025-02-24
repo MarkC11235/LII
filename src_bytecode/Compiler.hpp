@@ -40,6 +40,7 @@ class CompilerPass {
         CompilerPass(CompilerContext& ctx) : context(ctx) {}
         virtual ~CompilerPass() {} // Virtual destructor
         virtual void run() = 0;
+        virtual void test() = 0;
         static void error(const std::string& message) {
             std::cerr << "CompilerPass Error: " << message << std::endl;
             exit(1);
@@ -65,6 +66,12 @@ class Compiler {
         void run() {
             for (CompilerPass* pass : passes) {
                 pass->run();
+            }
+        }
+
+        void run_tests() {
+            for (CompilerPass* pass : passes) {
+                pass->test();
             }
         }
     

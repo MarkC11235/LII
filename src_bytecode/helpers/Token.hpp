@@ -47,6 +47,7 @@ enum TokenType {
 };
 
 std::string token_type_to_string(TokenType type);
+TokenType string_to_token_type(std::string type);
 
 class Token {
 private:
@@ -59,6 +60,8 @@ public:
     std::string get_value();
     int get_line_number();
     void print();
+    std::string to_string() const;
+    static bool equals(Token token1, Token token2);
 };
 
 #endif // TOKEN_HPP
