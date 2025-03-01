@@ -3,10 +3,10 @@
 function* generate_bytecode(Node* node, std::string file_name);
     
 // BytecodeGenerationPass implementation
-BytecodeGenerationPass::BytecodeGenerationPass(CompilerContext& ctx) 
-    : CompilerPass(ctx) {}
+BytecodeGenerationPass::BytecodeGenerationPass() 
+    : CompilerPass() {}
 
-void BytecodeGenerationPass::run() {
+void BytecodeGenerationPass::run(CompilerContext& context) {
     if (!context.contains("input_file")) {
         CompilerContext::error("input_file not set in context");
     }
@@ -19,14 +19,115 @@ void BytecodeGenerationPass::run() {
     context.set("function", func);
 }
 
-void BytecodeGenerationPass::test() {
-    std::cout << "BytecodeGenerationPass test not implemented" << std::endl;
+void BytecodeGenerationPass::gen_test_file(std::string test_file_name, CompilerContext& context) {
+    // Get the directory where the current file (bytecode_generator.cpp) is located
+    std::string current_file = __FILE__;
+    std::string current_dir = current_file.substr(0, current_file.find_last_of("/\\"));
+    
+    // Create tests directory within the BytecodeGenerator directory
+    std::string test_dir = current_dir + "/tests";
+    std::filesystem::create_directories(test_dir);
+
+    // Check if required data is in the context
+    if (!context.contains("function")) {
+        // CompilerContext::error("Function not found in context");
+        std::cout << "Function not found in context" << std::endl;
+        return;
+    }
+    if (!context.contains("variable_names")) {
+        // CompilerContext::error("Variable names not found in context");
+        std::cout << "Variable names not found in context" << std::endl;
+        return;
+    }
+    if (!context.contains("constants")) {
+        // CompilerContext::error("Constants not found in context");
+        std::cout << "Constants not found in context" << std::endl;
+        return;
+    }
+
+    // Generate the full path for the test file
+    std::string full_path = test_dir + "/" + test_file_name + ".cl_exe";
+    
+    // Get the data from context
+    function* func = context.get<function*>("function");
+    std::vector<std::string> variable_names = context.get<std::vector<std::string>>("variable_names");
+    std::vector<Value> constants = context.get<std::vector<Value>>("constants");
+
+    // Write the bytecode file
+    write_cl_exe(test_file_name + ".cl_exe", test_dir + "/", func, variable_names, constants);
+
+    if (std::filesystem::exists(full_path)) {
+        std::cout << "Test file generated: " << full_path << std::endl;
+    }
 }
 
-BytecodeGenerationPass::~BytecodeGenerationPass() {
-    if (context.contains("function")) {
-        delete context.get<function*>("function");
+CompilerContext& BytecodeGenerationPass::read_test_file(std::string test_file_name) {
+    CompilerContext* context = new CompilerContext();
+    // std::cout << "Reading test file: " << test_file_name << std::endl;
+    cl_exe* exe = read_cl_exe(test_file_name + ".cl_exe");
+    // std::cout << "Read test file: " << test_file_name << std::endl;
+    context->set("function", exe->main);
+    context->set("variable_names", exe->variable_names);
+    context->set("constants", exe->constants);
+    return *context;
+}
+
+
+std::tuple<bool, std::string> BytecodeGenerationPass::compare_out_to_expected(CompilerContext& out, CompilerContext& expected) {
+    // check if function is in the context
+    if (!out.contains("function") || !expected.contains("function")) {
+        return std::make_tuple(false, "Function not found in context");
     }
+    function* out_func = out.get<function*>("function");
+    function* expected_func = expected.get<function*>("function");
+    if (out_func->count != expected_func->count) {
+        return std::make_tuple(false, "Different number of bytes in the function");
+    }
+    for (int i = 0; i < out_func->count; i++) {
+        if (out_func->code[i] != expected_func->code[i]) {
+            return std::make_tuple(false, "Different bytes in the function");
+        }
+    }
+
+    // Compare constants
+    // check if constants are in the context
+    if (!out.contains("constants") || !expected.contains("constants")) {
+        return std::make_tuple(false, "Constants not found in context");
+    }
+    std::vector<Value> out_constants = out.get<std::vector<Value>>("constants");
+    std::vector<Value> expected_constants = expected.get<std::vector<Value>>("constants");
+    if (out_constants.size() != expected_constants.size()) {
+        return std::make_tuple(false, "Different number of constants");
+    }
+    for (int i = 0; i < (int)out_constants.size(); i++) {
+        if (Value::equals(out_constants[i], expected_constants[i]) == false) {
+            return std::make_tuple(false, "Different constants");
+        }
+    }
+
+    // Compare variable names
+    //check if variable names are in the context
+    if (!out.contains("variable_names") || !expected.contains("variable_names")) {
+        return std::make_tuple(false, "Variable names not found in context");
+    }
+
+    std::vector<std::string> out_variable_names = out.get<std::vector<std::string>>("variable_names");
+    std::vector<std::string> expected_variable_names = expected.get<std::vector<std::string>>("variable_names");
+    if (out_variable_names.size() != expected_variable_names.size()) {
+        return std::make_tuple(false, "Different number of variable names");
+    }
+    for (int i = 0; i < (int)out_variable_names.size(); i++) {
+        if (out_variable_names[i] != expected_variable_names[i]) {
+            return std::make_tuple(false, "Different variable names");
+        }
+    }
+
+    return std::make_tuple(true, "");
+}
+
+
+BytecodeGenerationPass::~BytecodeGenerationPass() {
+    // Cleanup implementation if needed
 }
 
 

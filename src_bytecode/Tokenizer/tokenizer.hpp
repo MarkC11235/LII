@@ -5,9 +5,11 @@
 
 class TokenizationPass : public CompilerPass {
     public:
-        TokenizationPass(CompilerContext& ctx);  
-        void run() override;
-        void test() override;                     
+        TokenizationPass();  
+        void run(CompilerContext& context) override;
+        void gen_test_file(std::string test_file_name, CompilerContext& context) override;
+        CompilerContext& read_test_file(std::string test_file_name) override;
+        std::tuple<bool, std::string> compare_out_to_expected(CompilerContext& out, CompilerContext& expected) override;                 
         ~TokenizationPass() override;            
     };
 

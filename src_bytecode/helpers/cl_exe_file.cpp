@@ -16,6 +16,12 @@ cl_exe* read_cl_exe(std::string path){
     std::ifstream file;
     file.open(path);
 
+    // check if the file is open
+    if(!file.is_open()){
+        cl_exe_error("Unable to open file");
+        return nullptr;
+    }
+
     //read the file name
     std::getline(file, exe->name);
 

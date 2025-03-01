@@ -5,6 +5,9 @@
 #include <vector>
 #include <sstream>
 #include <stack>
+#include <map>
+#include <tuple>
+#include <filesystem>
 
 #include "../std_lib/std_lib.hpp"
 #include "../helpers/Token.hpp"
@@ -13,10 +16,10 @@
 
 Node* parse(std::vector<Token> tokens, bool verbose);
 
-ParsingPass::ParsingPass(CompilerContext& ctx)
-    : CompilerPass(ctx) {}
+ParsingPass::ParsingPass()
+    : CompilerPass() {}
 
-void ParsingPass::run() {
+void ParsingPass::run(CompilerContext& context) {
     if (!context.contains("tokens")) {
         CompilerContext::error("ParsingPass requires tokens in context");
     }
@@ -25,14 +28,63 @@ void ParsingPass::run() {
     Node* ast = parse(tokens, verbose);
     context.set("ast", ast);
 }
-void ParsingPass::test(){
-    std::cout << "ParsingPass test not implemented" << std::endl;
+
+void ParsingPass::gen_test_file(std::string test_file_name, CompilerContext& context) {
+    // Get the directory where the current file (parser.cpp) is located
+    std::string current_file = __FILE__;
+    std::string current_dir = current_file.substr(0, current_file.find_last_of("/\\"));
+    
+    // Create tests directory within the Parser directory
+    std::string test_dir = current_dir + "/tests";
+    std::filesystem::create_directories(test_dir);
+
+    // Check if AST is in the context
+    if (!context.contains("ast")) {
+        CompilerContext::error("AST not found in context");
+    }
+
+    // Generate the full path for the test file
+    std::string full_path = test_dir + "/" + test_file_name + ".ast";
+    
+    // Create the test file
+    Node* ast = context.get<Node*>("ast");
+    std::ofstream test_file(full_path);
+    
+    if (!test_file.is_open()) {
+        CompilerContext::error("Could not create test file: " + full_path);
+    }
+
+    // Write AST to the file
+    test_file << ast->to_string();
+    test_file.close();
+
+    if (std::filesystem::exists(full_path)) {
+        std::cout << "Test file generated: " << full_path << std::endl;
+    }
+}
+
+CompilerContext& ParsingPass::read_test_file(std::string test_file_name) {
+    std::cout << "ParsingPass read_test_file not implemented" << std::endl;
+    CompilerContext* context = new CompilerContext();
+    context->set("ast", new Node(NodeType::ERROR_NODE, "ParsingPass read_test_file not implemented", -1));
+    return *context;
+}
+
+std::tuple<bool, std::string> ParsingPass::compare_out_to_expected(CompilerContext& out, CompilerContext& expected) {
+    // check if the ast exists
+    if (!out.contains("ast") || !expected.contains("ast")) {
+        return std::make_tuple(false, "AST not found in context");
+    }
+    Node* out_ast = out.get<Node*>("ast");
+    Node* expected_ast = expected.get<Node*>("ast");
+    if (out_ast->to_string() != expected_ast->to_string()) {
+        return std::make_tuple(false, "Different ASTs");
+    }
+    return std::make_tuple(true, "");
 }
 
 ParsingPass::~ParsingPass() {
-    if (context.contains("ast")) {
-        delete context.get<Node*>("ast");
-    }
+
 }
 
 

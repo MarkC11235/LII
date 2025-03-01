@@ -5,9 +5,11 @@
 
 class ParsingPass : public CompilerPass {
     public:
-        ParsingPass(CompilerContext& ctx);  
-        void run() override;            
-        void test() override;         
+        ParsingPass();
+        void run(CompilerContext& context) override;
+        void gen_test_file(std::string test_file_name, CompilerContext& context) override;
+        CompilerContext& read_test_file(std::string test_file_name) override;
+        std::tuple<bool, std::string> compare_out_to_expected(CompilerContext& out, CompilerContext& expected) override;        
         ~ParsingPass() override;            
     };
 

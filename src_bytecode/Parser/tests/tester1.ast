@@ -1,0 +1,5 @@
+STMT_LIST  
+  STMT  
+    PRINT  
+      EXPR  
+        NUM 5 

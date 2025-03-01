@@ -58,6 +58,8 @@ std::string node_type_to_string(NodeType type){
             return "PRINT";
         case NodeType::FUNCTION_CALL_NODE:
             return "FUNCTION_CALL";
+        case NodeType::ERROR_NODE:
+            return "ERROR";
     }
     return "UNKNOWN";
 }
@@ -132,5 +134,21 @@ void Node::print(int level){
     for(int i = 0; i < int(this->children.size()); i++){
         this->children[i]->print(level + 1);
     }
+}
+
+std::string Node::to_string(int level){
+    std::string str = "";
+    for(int i = 0; i < level; i++){
+        str += "  ";
+    }
+    str += node_type_to_string(this->get_type()) + " ";
+    for(int i = 0; i < int(this->values.size()); i++){
+        str += this->values[i] + " ";
+    }
+    str += "\n";
+    for(int i = 0; i < int(this->children.size()); i++){
+        str += this->children[i]->to_string(level + 1);
+    }
+    return str;
 }
 

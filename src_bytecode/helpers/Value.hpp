@@ -23,7 +23,7 @@ enum Value_Type {
 };
 
 // forward declare Value for the typedef (recursive for map and vector)
-struct Value;
+class Value;
 
 typedef std::variant<
     double,              // NUMBER
@@ -35,13 +35,16 @@ typedef std::variant<
     std::map<std::string, Value> // MAP
 > Value_Content;
 
-struct Value {
+class Value {
+public:
     Value_Type type;
     Value_Content data;
 
     Value();
     Value(Value_Type t, Value_Content d);
     Value(const Value& other);
+
+    static bool equals(Value a, Value b);
 };
 
 Value_Type get_value_type(Value value);

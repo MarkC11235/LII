@@ -38,7 +38,8 @@ enum NodeType {
     LIST_NODE,
     MAP_NODE,
     PRINT_NODE,
-    FUNCTION_CALL_NODE
+    FUNCTION_CALL_NODE,
+    ERROR_NODE
 };
 
 std::string node_type_to_string(NodeType type);
@@ -65,6 +66,7 @@ public:
     Node* get_child(int index);
     int get_line_number();
     void print(int level = 0);
+    std::string to_string(int level = 0);
 };
 
 #endif // NODE_HPP

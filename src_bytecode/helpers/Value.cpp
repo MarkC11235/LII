@@ -12,6 +12,73 @@ Value::Value(const Value& other) {
     data = other.data;
 }
 
+bool Value::equals(Value a, Value b) {
+    if(a.type != b.type) {
+        return false;
+    }
+    switch(a.type) {
+        case NUMBER:
+            return std::get<double>(a.data) == std::get<double>(b.data);
+        case BOOL:
+            return std::get<bool>(a.data) == std::get<bool>(b.data);
+        case STRING:
+            return std::get<std::string>(a.data) == std::get<std::string>(b.data);
+        case VECTOR: {
+            std::vector<Value> vec1 = std::get<std::vector<Value>>(a.data);
+            std::vector<Value> vec2 = std::get<std::vector<Value>>(b.data);
+            if(vec1.size() != vec2.size()) {
+                return false;
+            }
+            for(int i = 0; i < (int)vec1.size(); i++) {
+                if(!Value::equals(vec1[i], vec2[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case FUNCTION:
+            {
+                //check bytes and args  
+                function* func1 = std::get<function*>(a.data);
+                function* func2 = std::get<function*>(b.data);
+                if(func1->count != func2->count) {
+                    return false;
+                }
+                for(int i = 0; i < func1->count; i++) {
+                    if(func1->code[i] != func2->code[i]) {
+                        return false;
+                    }
+                }
+                if(func1->arguments.size() != func2->arguments.size()) {
+                    return false;
+                }
+                for(int i = 0; i < (int)func1->arguments.size(); i++) {
+                    if(func1->arguments[i] != func2->arguments[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        case NULL_VALUE:
+            return true;
+        case MAP: {
+            std::map<std::string, Value> map1 = std::get<std::map<std::string, Value>>(a.data);
+            std::map<std::string, Value> map2 = std::get<std::map<std::string, Value>>(b.data);
+            if(map1.size() != map2.size()) {
+                return false;
+            }
+            for(auto it = map1.begin(); it != map1.end(); it++) {
+                if(!Value::equals(it->second, map2[it->first])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        default:
+            return false;
+    }
+}
+
 Value_Type get_value_type(Value value) {
     return value.type;
 }

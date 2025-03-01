@@ -49,13 +49,17 @@ class CompilerPass {
     public:
         CompilerPass() {}
         virtual ~CompilerPass() {} // Virtual destructor
-        virtual void run(CompilerContext& data) = 0;
-        virtual void gen_test_file(std::string test_file_name, CompilerContext& data) = 0;
+        virtual void run(CompilerContext& context) = 0;
+        virtual void gen_test_file(std::string test_file_name, CompilerContext& context) = 0;
         virtual CompilerContext& read_test_file(std::string test_file_name) = 0;
         virtual std::tuple<bool, std::string> compare_out_to_expected(CompilerContext& out, CompilerContext& expected) = 0;
         static void error(const std::string& message) {
             std::cerr << "CompilerPass Error: " << message << std::endl;
             exit(1);
+        }
+        static std::string get_test_dir(const std::string& current_file) {
+            std::string current_dir = current_file.substr(0, current_file.find_last_of("/\\"));
+            return current_dir + "/tests";
         }
 };
 
@@ -87,20 +91,30 @@ class Compiler {
 
         void gen_test_files(std::string test_file_name) {
             for (CompilerPass* pass : passes) {
+                std::cout << "Running pass: " << typeid(*pass).name() << std::endl;
                 pass->run(get_context());
+                std::cout << "Generating test file for pass: " << typeid(*pass).name() << std::endl;
                 pass->gen_test_file(test_file_name, get_context());
             }
         }
 
         void run_tests(std::string test_file_name) {
             for (CompilerPass* pass : passes) {
+                std::cout << "Running pass: " << typeid(*pass).name() << std::endl;
                 pass->run(get_context());
+                std::cout << "Reading test file for pass: " << typeid(*pass).name() << std::endl;
                 CompilerContext& expected = pass->read_test_file(test_file_name);
+                std::cout << "Comparing out to expected for pass: " << typeid(*pass).name() << std::endl;
                 std::tuple<bool, std::string> result = pass->compare_out_to_expected(get_context(), expected);
                 delete &expected;
                 if (!std::get<0>(result)) {
                     std::cout << "Test failed: " << std::get<1>(result) << std::endl;
                 }
+                else {
+                    std::cout << "Test passed" << std::endl;
+                }
+
+                std::cout << "\n" << std::endl;
             }
         }
     

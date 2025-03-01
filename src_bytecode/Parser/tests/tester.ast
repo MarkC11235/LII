@@ -1,0 +1,70 @@
+STMT_LIST  
+  STMT  
+    ASSIGN let 
+      VAR square 
+      EXPR  
+        FUNCTION  
+          LIST  
+            VAR x 
+          STMT_LIST  
+            STMT  
+              RETURN  
+                EXPR  
+                  OP * 
+                    VAR x 
+                    VAR x 
+            STMT_LIST  
+  STMT_LIST  
+    STMT  
+      PRINT  
+        EXPR  
+          OP ( 
+            VAR square 
+            LIST  
+              EXPR  
+                NUM 5 
+    STMT_LIST  
+      STMT  
+        PRINT  
+          EXPR  
+            OP ( 
+              VAR square 
+              LIST  
+                EXPR  
+                  NUM 10 
+      STMT_LIST  
+        STMT  
+          ASSIGN let 
+            VAR cube 
+            EXPR  
+              FUNCTION  
+                LIST  
+                  VAR x 
+                STMT_LIST  
+                  STMT  
+                    RETURN  
+                      EXPR  
+                        OP * 
+                          OP * 
+                            VAR x 
+                            VAR x 
+                          VAR x 
+                  STMT_LIST  
+        STMT_LIST  
+          STMT  
+            PRINT  
+              EXPR  
+                OP ( 
+                  VAR cube 
+                  LIST  
+                    EXPR  
+                      NUM 5 
+          STMT_LIST  
+            STMT  
+              PRINT  
+                EXPR  
+                  OP ( 
+                    VAR cube 
+                    LIST  
+                      EXPR  
+                        NUM 10 

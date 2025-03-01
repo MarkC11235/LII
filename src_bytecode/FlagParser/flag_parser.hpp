@@ -13,10 +13,10 @@ class FlagParsingPass : public CompilerPass {
         char** argv;
     
     public:
-        FlagParsingPass(CompilerContext& ctx, int argc, char* argv[])
-            : CompilerPass(ctx), argc(argc), argv(argv) {}
+        FlagParsingPass(int argc, char* argv[])
+            : CompilerPass(), argc(argc), argv(argv) {}
     
-        void run() override {
+        void run(CompilerContext& context) override {
             if (argc < 2) {
                 std::cout << "Usage: " << argv[0] << " <input_file.cl> [arg0 arg1 ...] -d -v [-vT -vP -vB -vV] -jit [num] -cs [num]" << std::endl;
                 exit(1);
@@ -105,8 +105,19 @@ class FlagParsingPass : public CompilerPass {
             context.set("args", args);
         }
 
-        void test() override {
-            std::cout << "FlagParsingPass test not implemented" << std::endl;
+        void gen_test_file(std::string test_file_name, CompilerContext& context) override {
+            std::cout << "FlagParsingPass gen_test_file not implemented" << std::endl;
+        }
+
+        CompilerContext& read_test_file(std::string test_file_name) override {
+            std::cout << "FlagParsingPass read_test_file not implemented" << std::endl;
+            CompilerContext* context = new CompilerContext();
+            return *context;
+        }
+
+        std::tuple<bool, std::string> compare_out_to_expected(CompilerContext& out, CompilerContext& expected) override {
+            std::cout << "FlagParsingPass compare_out_to_expected not implemented" << std::endl;
+            return std::make_tuple(true, "");
         }
     };
 

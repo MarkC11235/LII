@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm> // Include the algorithm library to use the remove_if function
+#include <filesystem>
 #include "../helpers/Token.hpp"
 #include "../helpers/test_framework.hpp"
 
@@ -13,10 +14,10 @@ void print_tokens(std::vector<Token> tokens);
 std::vector<Token> read_tokens_file(std::string file_path);
 
 // Class method implementations
-TokenizationPass::TokenizationPass(CompilerContext& ctx) 
-    : CompilerPass(ctx) {}
+TokenizationPass::TokenizationPass() 
+    : CompilerPass() {}
 
-void TokenizationPass::run() {
+void TokenizationPass::run(CompilerContext& context) {
     if (!context.contains("input_file")) {
         CompilerContext::error("No input file provided");
     }
@@ -26,23 +27,67 @@ void TokenizationPass::run() {
     context.set("tokens", tokens);
 }
 
-void TokenizationPass::test() {
-    auto error_handler = [](const std::string& file, const std::string& message) {
-        std::cerr << "Error in " << file << ": " << message << std::endl;
-    };
-
-    TestFramework<Token> framework(
-        __FILE__,
-        ".cl",
-        ".tokens",
-        Token::equals,
-        read_tokens_file,
-        [](const std::string& file) { return read_input(file, false); },
-        error_handler,
-        [](const Token& token) { return token.to_string(); }
-    );
+void TokenizationPass::gen_test_file(std::string test_file_name, CompilerContext& context) {
+    // Get the directory where the current file (tokenizer.cpp) is located
+    std::string current_file = __FILE__;
+    std::string current_dir = current_file.substr(0, current_file.find_last_of("/\\"));
     
-    framework.run_tests("TokenizationPass");
+    // Create tests directory if it doesn't exist
+    std::string test_dir = current_dir + "/tests";
+    std::cout << "Creating test directory: " << test_dir << std::endl;
+    std::filesystem::create_directories(test_dir);
+
+    // Check if tokens are in the context
+    if (!context.contains("tokens")) {
+        CompilerContext::error("Tokens not found in context");
+    }
+
+    // Generate the full path for the test file
+    std::string full_path = test_dir + "/" + test_file_name + ".tokens";
+    
+    std::vector<Token> tokens = context.get<std::vector<Token>>("tokens");
+    std::ofstream test_file(full_path);
+    
+    if (!test_file.is_open()) {
+        CompilerContext::error("Could not create test file: " + full_path);
+    }
+
+    for (Token token : tokens) {
+        test_file << token.to_string() << std::endl;
+    }
+    test_file.close();
+}
+
+CompilerContext& TokenizationPass::read_test_file(std::string test_file_name) {
+    // CompilerContext* context = new CompilerContext();
+    // std::vector<Token> tokens = read_tokens_file(test_file_name);
+    // context->set("tokens", tokens);
+    // return *context;
+    
+    CompilerContext* context = new CompilerContext();
+    std::string current_file = __FILE__;
+    std::string current_dir = CompilerPass::get_test_dir(current_file);
+    std::string test_file_path = current_dir + "/" + test_file_name + ".tokens";
+    std::vector<Token> tokens = read_tokens_file(test_file_path);
+    context->set("tokens", tokens);
+    return *context;
+}
+
+std::tuple<bool, std::string> TokenizationPass::compare_out_to_expected(CompilerContext& out, CompilerContext& expected) {
+    if (!out.contains("tokens") || !expected.contains("tokens")) {
+        return std::make_tuple(false, "Tokens not found in context");
+    }
+    std::vector<Token> out_tokens = out.get<std::vector<Token>>("tokens");
+    std::vector<Token> expected_tokens = expected.get<std::vector<Token>>("tokens");
+    if (out_tokens.size() != expected_tokens.size()) {
+        return std::make_tuple(false, "Different number of tokens;" + std::to_string(out_tokens.size()) + " != " + std::to_string(expected_tokens.size()));
+    }
+    for (int i = 0; i < int(out_tokens.size()); i++) {
+        if (Token::equals(out_tokens[i], expected_tokens[i]) == false) {
+            return std::make_tuple(false, "Different tokens");
+        }
+    }
+    return std::make_tuple(true, "");
 }
 
 TokenizationPass::~TokenizationPass() {
