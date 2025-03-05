@@ -1,24 +1,19 @@
 ./tester
-4
+5
 argc
 argv
-square
-x
+hilbert_matrix
+n
+matrix
 3
-function|function (x) {17, 3, 19, 3, 19, 3, 3, 35, }
-number|5
-number|10
-16
+function|function (n) {17, 3, 19, 3, 21, 19, 3, 21, 16, 1, 22, 3, 22, 3, 17, 4, 19, 4, 35, }
+number|0
+number|3
+10
 16
 0
 17
 2
-16
-1
-19
-2
-38
-41
 16
 2
 19

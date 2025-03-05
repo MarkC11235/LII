@@ -1,42 +1,3 @@
-let pretty_print_matrix = func(augmented){
-    // print "\nMatrix:";
-    let padding = 22;
-    let width = $vector_length(augmented[0]);
-    let temp = "--";
-    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
-        temp = temp + " ";
-    }
-    temp = temp + "--";
-    print temp;
-
-    for (let i = 0; i < $vector_length(augmented); i = i + 1){
-        let temp = "|";
-        for (let j = 0; j < $vector_length(augmented[i]); j = j + 1){
-            let len = $string_length(augmented[i][j] + "");
-            for (let k = 0; k < padding - len; k = k + 1){
-                temp = temp + " ";
-            }
-            if (j == $vector_length(augmented[i]) - 1){
-                temp = temp + augmented[i][j] + " |";
-                print temp;
-            }
-            else{
-                temp = temp + augmented[i][j] + " ";
-            }
-        }
-    }
-
-    temp = "--";
-    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
-        temp = temp + " ";
-    }
-    temp = temp + "--";
-    print temp;
-
-    print "";
-    return 0;
-};
-
 let pretty_print_augmented = func(augmented){
     // print "\nAugmented Matrix:";
     let padding = 22;
@@ -420,3 +381,4 @@ let matrix_vector_multiplication = func(A, b){
 
     return result;
 };
+

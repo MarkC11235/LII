@@ -1,0 +1,335 @@
+let matrix = map {
+    "__type": "matrix",
+    "rows": 0,
+    "cols": 0,
+    "data": [[]]
+};
+
+let create_matrix = func(matrix, rows, cols, data){
+    matrix["rows"] = rows;
+    matrix["cols"] = cols;
+    matrix["data"] = data;
+    return matrix;
+};
+
+define "!" in "matrix" as func(matrix){
+    matrix["rows"] = 0;
+    matrix["cols"] = 0;
+    matrix["data"] = [[]];
+    return matrix;
+};
+
+define "*" in "matrix" as func(m1, m2){
+    if (m1["cols"] != m2["rows"]){
+        print "Error: Incompatible matrix dimensions";
+        return null;
+    }
+
+    let result = !m1;
+    result["rows"] = m1["rows"];
+    result["cols"] = m2["cols"];
+    result["data"] = m1["rows"] * [m2["cols"] * [0]];
+
+    for (let i = 0; i < m1["rows"]; i = i + 1){
+        for (let j = 0; j < m2["cols"]; j = j + 1){
+            for (let k = 0; k < m1["cols"]; k = k + 1){
+                result["data"][i][j] = result["data"][i][j] + m1["data"][i][k] * m2["data"][k][j];
+            }
+        }
+    }
+    
+    return result;
+};
+
+define "+" in "matrix" as func(m1, m2){
+    if (m1["rows"] != m2["rows"] || m1["cols"] != m2["cols"]){
+        print "Error: Incompatible matrix dimensions";
+        return null;
+    }
+
+    let result = !m1;
+    result["rows"] = m1["rows"];
+    result["cols"] = m1["cols"];
+    result["data"] = m1["rows"] * [m1["cols"] * [0]];
+
+    for (let i = 0; i < m1["rows"]; i = i + 1){
+        for (let j = 0; j < m1["cols"]; j = j + 1){
+            result["data"][i][j] = m1["data"][i][j] + m2["data"][i][j];
+        }
+    }
+    
+    return result;
+};
+
+define "-" in "matrix" as func(m1, m2){
+    if (m1["rows"] != m2["rows"] || m1["cols"] != m2["cols"]){
+        print "Error: Incompatible matrix dimensions";
+        return null;
+    }
+
+    let result = !m1;
+    result["rows"] = m1["rows"];
+    result["cols"] = m1["cols"];
+    result["data"] = m1["rows"] * [m1["cols"] * [0]];
+
+    for (let i = 0; i < m1["rows"]; i = i + 1){
+        for (let j = 0; j < m1["cols"]; j = j + 1){
+            result["data"][i][j] = m1["data"][i][j] - m2["data"][i][j];
+        }
+    }
+    
+    return result;
+};
+
+let transpose = func(matrix){
+    let r = matrix["rows"];
+    let c = matrix["cols"];
+
+    let result = !matrix;
+    result["rows"] = c;
+    result["cols"] = r;
+    result["data"] = c * [r * [0]];
+
+    for (let i = 0; i < r; i = i + 1){
+        for (let j = 0; j < c; j = j + 1){
+            result["data"][j][i] = matrix["data"][i][j];
+        }
+    }
+    return result;
+};
+
+let inverse = func(matrix){
+    let r = matrix["rows"];
+    let c = matrix["cols"];
+
+    if (r != c){
+        print "Error: Matrix must be square to find inverse";
+        return null;
+    }
+
+    let A = matrix;
+    let I = !matrix;
+    I["rows"] = r;
+    I["cols"] = c;
+    I["data"] = r * [c * [0]];
+    for (let i = 0; i < r; i = i + 1){
+        I["data"][i][i] = 1;
+    }
+
+    // Helper functions ------------------------------------------
+    let scale_row = func(A, I, row, scale){
+        for (let i = 0; i < A["cols"]; i = i + 1){
+            A["data"][row][i] = A["data"][row][i] * scale;
+        }
+        for (let i = 0; i < I["cols"]; i = i + 1){
+            I["data"][row][i] = I["data"][row][i] * scale;
+        }
+        return [A, I];
+    };
+
+    let add_row = func(A, I, row1, row2, scale){
+        for (let i = 0; i < A["cols"]; i = i + 1){
+            A["data"][row1][i] = A["data"][row1][i] + A["data"][row2][i] * scale;
+        }
+        for (let i = 0; i < I["cols"]; i = i + 1){
+            I["data"][row1][i] = I["data"][row1][i] + I["data"][row2][i] * scale;
+        }
+        return [A, I];
+    };
+    // -----------------------------------------------------------
+
+    // Gaussian Elimination
+    for(let i = 0; i < r; i = i + 1){
+        // Scale A[i][i] to 1
+        if (A["data"][i][i] == 0){
+            print "Error: Division by zero";
+            return null;
+        }
+        let scale = 1 / A["data"][i][i];
+        let temp = scale_row(A, I, i, scale);
+        A = temp[0];
+        I = temp[1];
+
+        // Eliminate all elements in the column
+        for(let j = 0; j < r; j = j + 1){
+            if(j == i){continue;}
+            let scale = -A["data"][j][i];
+            let temp = add_row(A, I, j, i, scale);
+            A = temp[0];
+            I = temp[1];
+        }
+    }
+
+    return I;
+};
+
+let print_matrix = func(matrix){
+    let padding = 22;
+    let width = matrix["cols"];
+    let height = matrix["rows"];
+    let temp = "--";
+    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
+        temp = temp + " ";
+    }
+    temp = temp + "--";
+    print temp;
+
+    for (let i = 0; i < height; i = i + 1){
+        let temp = "|";
+        for (let j = 0; j < width; j = j + 1){
+            let len = $string_length(matrix["data"][i][j] + "");
+            for (let k = 0; k < padding - len; k = k + 1){
+                temp = temp + " ";
+            }
+            if (j == width - 1){
+                temp = temp + matrix["data"][i][j] + " |";
+                print temp;
+            }
+            else{
+                temp = temp + matrix["data"][i][j] + " ";
+            }
+        }
+    }
+
+    temp = "--";
+    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
+        temp = temp + " ";
+    }
+    temp = temp + "--";
+    print temp;
+
+    print "";
+    return 0;
+};
+
+let hilbert_matrix = func(matrix, n) {
+    matrix["rows"] = n;
+    matrix["cols"] = n;
+    matrix["data"] = n * [n * [0]];
+    for (let i = 0; i < n; i = i + 1){
+        for (let j = 0; j < n; j = j + 1){
+            // matrix["data"][i][j] = 1 / (i + j - 1); // if we are using 1-based indexing
+            matrix["data"][i][j] = 1 / (i + j + 1); // because we are using 0-based indexing
+        }
+    }
+    return matrix;
+};
+
+let solve_system = func(A, b){
+    let n = A["rows"];
+
+    // Helper functions ------------------------------------------
+    let scale_row = func(A, b, row, scale){
+        for (let i = 0; i < A["cols"]; i = i + 1){
+            A["data"][row][i] = A["data"][row][i] * scale;
+        }
+        b["data"][row][0] = b["data"][row][0] * scale;
+        return [A, b];
+    };
+
+    let add_row = func(A, b, row1, row2, scale){
+        for (let i = 0; i < A["cols"]; i = i + 1){
+            A["data"][row1][i] = A["data"][row1][i] + A["data"][row2][i] * scale;
+        }
+        b["data"][row1][0] = b["data"][row1][0] + b["data"][row2][0] * scale;
+        return [A, b];
+    };
+    // -----------------------------------------------------------
+
+    // Gaussian Elimination
+    for(let i = 0; i < n; i = i + 1){
+        // Scale A[i][i] to 1
+        if (A["data"][i][i] == 0){
+            print "Error: Division by zero";
+            return null;
+        }
+        let scale = 1 / A["data"][i][i];
+        let temp = scale_row(A, b, i, scale);
+        A = temp[0];
+        b = temp[1];
+
+        // Eliminate all elements in the column
+        for(let j = 0; j < n; j = j + 1){
+            if(j == i){continue;}
+            let scale = -A["data"][j][i];
+            let temp = add_row(A, b, j, i, scale);
+            A = temp[0];
+            b = temp[1];
+        }
+    }
+
+    return b;
+};
+
+let matrix_to_vector = func(matrix){
+    if(matrix["cols"] == 1){
+        let vector = matrix["rows"] * [0];
+        for(let i = 0; i < matrix["rows"]; i = i + 1){
+            vector[i] = matrix["data"][i][0];
+        }
+        return vector;
+    }
+    else if(matrix["rows"] == 1){
+        return matrix["data"][0];
+    }
+    else{
+        print "Error: Invalid matrix dimensions to convert to vector";
+        return null;
+    }
+    return null; // should never reach here
+};
+
+let norm = func(vector, type){
+    let abs = func(x){if (x < 0){return -x;} return x;};
+    let n = $vector_length(vector);
+    
+    if(type == "1"){
+        let sum = 0;
+        for(let i = 0; i < n; i = i + 1){
+            sum = sum + abs(vector[i]);
+        }
+        return sum;
+    }
+    if(type == "2"){
+        let sum = 0;
+        for(let i = 0; i < n; i = i + 1){
+            sum = sum + vector[i] * vector[i];
+        }
+        return $sqrt(sum);
+    }
+    if(type == "inf"){
+        let max = abs(vector[0]);
+        for(let i = 1; i < n; i = i + 1){
+            if(abs(vector[i]) > max){
+                max = abs(vector[i]);
+            }
+        }
+        return max;
+    }
+
+    print "Error: Invalid norm type";
+    return -1;
+};
+
+let matrix_norm = func(matrix, type){
+    let abs = func(x){if (x < 0){return -x;} return x;};
+    let r = matrix["rows"];
+    let c = matrix["cols"];
+
+    if(type == "inf"){ // max abs row sum
+        let max = 0;
+        for(let i = 0; i < r; i = i + 1){
+            let sum = 0;
+            for(let j = 0; j < c; j = j + 1){
+                sum = sum + abs(matrix["data"][i][j]);
+            }
+            if(sum > max){
+                max = sum;
+            }
+        }
+        return max;
+    }
+
+    print "Error: Invalid norm type";
+    return -1;
+};

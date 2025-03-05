@@ -19,3 +19,110 @@ Issue: if you don't put a function witht correct number of args for a define ope
 ------------------------------------------------------------------------------------------------------------------
 
 Improve Error Messages
+
+
+------------------------------------------------------------------------------------------------------------------
+
+add define "print" in "__type" as func(x){
+    print x;
+};
+
+allows you to define how a type is printed
+
+let matrix = map {
+    "__type": "matrix",
+    "rows": 0,
+    "cols": 0,
+    "data": [[]]
+};
+
+define "print" in "matrix" as func(m){
+    let r = m["rows"];
+    let c = m["cols"];
+    for (let i = 0; i < r; i = i + 1){
+        let row = "";
+        for (let j = 0; j < c; j = j + 1){
+            row = row + m["data"][i][j] + " ";
+        }
+        print row;
+    }
+    return 0;
+};
+
+essentially a to_string method for a type, would also work when concatenating a type to a string
+
+------------------------------------------------------------------------------------------------------------------
+
+also overload "(" so that a function call on the type will call a specific function on the type
+
+ex:
+
+let matrix = map {
+    "__type": "matrix",
+    "rows": 0,
+    "cols": 0,
+    "data": [[]]
+};
+
+define "(" in "matrix" as func(r, c, data){
+    return map {
+        "__type": "matrix",
+        "rows": r,
+        "cols": c,
+        "data": data
+    };
+};
+
+let m = matrix(2, 2, [[1, 2], [3, 4]]);'
+
+OR as a dipatch function
+
+let matrix = map {
+    "__type": "matrix",
+    "rows": 0,
+    "cols": 0,
+    "data": [[]]
+};
+
+// args is an array of arguments
+define "(" in "matrix" as func("func_name", args){
+    let funcs = map{
+        "init": func(args){
+            // args -- 0: r, 1: c, 2: data
+            return map {
+                "__type": "matrix",
+                "rows": args[0],
+                "cols": args[1],
+                "data": args[2]
+            };
+        },
+        "AT": func(args){
+            // args -- 0: i, 1: j
+            return args[0]["data"][args[1]][args[2]];
+        },
+        "SET": func(args){
+            // args -- 0: i, 1: j, 2: value
+            args[0]["data"][args[1]][args[2]] = args[2];
+            return return args[0];
+        }
+    };
+
+    return funcs[func_name](args);
+};
+
+
+
+
+Overload "[]" as well, not really sure where it would be useful to overload "[]", but to be consistent
+
+------------------------------------------------------------------------------------------------------------------
+
+
+allow for 
+
+let a, b = function_call();
+where function_call returns a vector of length 2
+
+or 
+
+let a, b = [1, 2];
