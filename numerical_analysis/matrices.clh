@@ -164,7 +164,7 @@ let inverse = func(matrix){
 };
 
 let print_matrix = func(matrix){
-    let padding = 22;
+    let padding = 23;
     let width = matrix["cols"];
     let height = matrix["rows"];
     let temp = "--";

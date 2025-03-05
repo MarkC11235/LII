@@ -126,3 +126,9 @@ where function_call returns a vector of length 2
 or 
 
 let a, b = [1, 2];
+
+
+------------------------------------------------------------------------------------------------------------------
+
+issue: this causes an error, expected literal for the expression 10^-14
+let tol = 10^-14;
