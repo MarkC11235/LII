@@ -83,7 +83,7 @@ class Compiler {
             passes.push_back(pass);
         }
     
-        void run(std::string file_name = "") {
+        void run() {
             for (CompilerPass* pass : passes) {
                 pass->run(get_context());
             }
@@ -118,9 +118,9 @@ class Compiler {
             }
         }
     
-        void run_time(std::string file_name = "") {
+        void run_time() {
             auto start = std::chrono::high_resolution_clock::now();
-            run(file_name);
+            run();
             auto end = std::chrono::high_resolution_clock::now();
             std::cout << "Compilation took "
                       << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()

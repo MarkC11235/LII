@@ -13,17 +13,33 @@
 int main(int argc, char *argv[]) {
     Compiler compiler;
 
-    compiler.add_pass(new FlagParsingPass(argc, argv));
+    // Parse flags
+    std::cout << "Parsing flags" << std::endl;
+    Parse_Flags(compiler.get_context(), argc, argv);
+
+    std::cout << "Adding passes" << std::endl;
+    // compiler.add_pass(new FlagParsingPass(argc, argv));
     compiler.add_pass(new TokenizationPass());
     compiler.add_pass(new ParsingPass());
     compiler.add_pass(new BytecodeGenerationPass());
 
-    compiler.gen_test_files("tester1");
-    std::cout << "\n\n" << std::endl;
 
-    // compiler.run();
-    compiler.run_tests("tester1");
-    // return 0;
+    std::cout << "Running compiler" << std::endl;
+    // look at flags to see in what mode to run the compiler
+    std::string input_file = compiler.get_context().get<std::string>("input_file");
+    if (compiler.get_context().get<bool>("gen_tests")) {
+        compiler.gen_test_files(input_file);
+    }
+    else if (compiler.get_context().get<bool>("run_tests")) {
+        compiler.run_tests(input_file);
+    }
+    else if(compiler.get_context().get<bool>("time")) {
+        compiler.run_time();
+    }
+    else {
+        compiler.run();
+    }
+
 
     // // Interpret the bytecode
     // auto start = std::chrono::high_resolution_clock::now();
