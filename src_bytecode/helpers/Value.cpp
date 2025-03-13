@@ -263,10 +263,5 @@ void print_value(Value value, bool verbose) {
     if(verbose) {
         std::cout << "Type: " << get_value_type_string(value) << " | ";
     }
-    if(value.type == Value_Type::FUNCTION) {
-        std::cout << "Function: \n";
-        display_bytecode(VALUE_AS_FUNCTION(value));
-        return;
-    }
     std::cout << VALUE_AS_STRING(value);
 }

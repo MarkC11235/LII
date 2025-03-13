@@ -1,19 +1,23 @@
 tester
-3
+6
 argc
 argv
+pprint
+f
+res5
 x
 2
-number|5
-number|1
-10
+function|function (f) {17, 3, 19, 3, 41, 19, 3, 35, }
+function|function (x) {17, 5, 19, 5, 35, }
+11
 16
 0
 17
 2
-19
-2
 16
 1
-0
-41
+19
+2
+38
+17
+4

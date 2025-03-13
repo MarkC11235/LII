@@ -1,32 +1,3 @@
-# for i in $(find $2 -type f -name '*.cl'); do 
-# 	echo "Running test $i"; 
-# 	$1 $i > ${i}.temp; 
-# 	diff -b -w ${i}.temp ${i}.out && echo -e "\033[0;32mTest Passed\033[0m" || echo -e "\033[0;31mTest Failed\033[0m"; 
-# 	echo "-----------------------------------"; 
-# done
-
-########################################################
-
-# success_count=0
-# fail_count=0
-
-# for i in $(find $2 -type f -name '*.cl'); do 
-#     $1 $i $3 > ${i}.temp; 
-#     if diff -b -w ${i}.temp ${i}.out > /dev/null; then
-#         success_count=$((success_count + 1))
-#     else
-#         echo "\033[0;31mTest $i Failed\033[0m"
-#         diff -b -w ${i}.temp ${i}.out
-#         echo "-----------------------------------"; 
-#         fail_count=$((fail_count + 1))
-#     fi
-# done
-
-# echo "\033[0;32mTotal Successes: $success_count\033[0m"
-# echo "\033[0;31mTotal Failures: $fail_count\033[0m"
-
-########################################################
-
 success_count=0
 fail_count=0
 
@@ -45,18 +16,38 @@ show_progress() {
 }
 
 for i in $test_files; do 
-    $1 $i $3 $4 > ${i}.temp; 
-    if diff -b -w ${i}.temp ${i}.out > /dev/null; then
+    # Get the base name without extension
+    base_name="${i%.*}"
+    
+    # Step 1: Compile .cl to .cl_exe
+    ./liic $i $3 $4
+    
+    # Check if compilation succeeded
+    if [ ! -f "${base_name}.cl_exe" ]; then
+        echo -e "\033[0;31mCompilation failed for $i\033[0m"
+        fail_count=$((fail_count + 1))
+        continue
+    fi
+    
+    # Step 2: Run the compiled file through VM
+    ./liivm "${base_name}.cl_exe" > "${i}.temp"
+    
+    # Compare output with expected
+    if diff -b -w "${i}.temp" "${i}.out" > /dev/null; then
         success_count=$((success_count + 1))
     else
         echo -e "\033[0;31mTest $i Failed\033[0m"
-        diff -b -w ${i}.temp ${i}.out
-        echo "-----------------------------------"; 
+        diff -b -w "${i}.temp" "${i}.out"
+        echo "-----------------------------------"
         fail_count=$((fail_count + 1))
     fi
+    
+    # Cleanup the temporary executable
+    rm -f "${base_name}.cl_exe"
+    
     current_test=$((current_test + 1))
     show_progress
 done
 
-echo "\033[0;32mTotal Successes: $success_count\033[0m"
-echo "\033[0;31mTotal Failures: $fail_count\033[0m"
+echo -e "\033[0;32mTotal Successes: $success_count\033[0m"
+echo -e "\033[0;31mTotal Failures: $fail_count\033[0m"

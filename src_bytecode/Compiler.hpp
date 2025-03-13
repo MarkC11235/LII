@@ -84,12 +84,14 @@ class Compiler {
         }
     
         void run() {
+            // std::cout << "Compiling..." << std::endl;
             for (CompilerPass* pass : passes) {
                 pass->run(get_context());
             }
         }
 
         void gen_test_files(std::string test_file_name) {
+            std::cout << "Generating test files..." << std::endl;
             for (CompilerPass* pass : passes) {
                 std::cout << "Running pass: " << typeid(*pass).name() << std::endl;
                 pass->run(get_context());
@@ -99,6 +101,7 @@ class Compiler {
         }
 
         void run_tests(std::string test_file_name) {
+            std::cout << "Running tests..." << std::endl;
             for (CompilerPass* pass : passes) {
                 std::cout << "Running pass: " << typeid(*pass).name() << std::endl;
                 pass->run(get_context());
@@ -119,6 +122,7 @@ class Compiler {
         }
     
         void run_time() {
+            std::cout << "Compiling " << std::endl;
             auto start = std::chrono::high_resolution_clock::now();
             run();
             auto end = std::chrono::high_resolution_clock::now();

@@ -2,9 +2,6 @@
 hello
 [1, 2, 3]
 {"vec1":[1,2,3],"vec2":[4,5,6]}
-Function: 
-0: OP_LOAD          Index: 15          Value: 1
-2: OP_RETURN
-
+function () {16, 15, 35, }
 true
 null
