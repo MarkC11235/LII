@@ -19,6 +19,7 @@ COMMON_SRCS = $(wildcard $(SRC_DIR)/helpers/*.cpp) \
               $(wildcard $(SRC_DIR)/std_lib/*.cpp) \
               $(wildcard $(SRC_DIR)/std_lib/*/*.cpp) \
 			  $(wildcard $(SRC_DIR)/CLEXEGenerator/*.cpp) \
+			  $(wildcard $(SRC_DIR)/DummyOptimizer/*.cpp) \
 
 # Specific source files for each executable
 COMPILER_SRCS = $(SRC_DIR)/compiler.cpp $(COMMON_SRCS)

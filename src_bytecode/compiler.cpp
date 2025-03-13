@@ -8,6 +8,9 @@
 #include "./Tokenizer/tokenizer.hpp"
 #include "./Parser/parser.hpp"
 #include "./BytecodeGenerator/bytecode_generator.hpp"
+
+#include "./DummyOptimizer/dummy_optimizer.hpp"
+
 #include "./CLEXEGenerator/cl_exe_generator.hpp"
 
 int main(int argc, char *argv[]) {
@@ -19,7 +22,9 @@ int main(int argc, char *argv[]) {
     compiler.add_pass(new TokenizationPass());
     compiler.add_pass(new ParsingPass());
     compiler.add_pass(new BytecodeGenerationPass());
-    // compiler.add_pass(new OptimizationPass());
+    if (compiler.get_context().get<bool>("01")){
+        compiler.add_pass(new DummyOptimizerPass());
+    }
     compiler.add_pass(new CLEXEGenerationPass());
 
 
