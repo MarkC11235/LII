@@ -599,3 +599,12 @@ The `STD_LIB_FUNCTIONS_DEFINITIONS` vector contains the definitions of all stand
 ### Matrix Operations
 - **matrix_multiply**: `std::vector<Value> matrix_multiply(std::vector<Value>, std::vector<Value>)`
   - Multiplies two matrices together.
+
+
+
+## **Version History**
+
+### Version 1.0.0
+- Hash: 422453b6faf2f7a5409904e811ec3271e4806603
+- Date: 3/13/2025
+- Compiler infrastructure rework complete

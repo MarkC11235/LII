@@ -5,7 +5,7 @@ let matrix = map {
     "data": [[]]
 };
 
-define "*" on "matrix" as func(m1, m2){
+define "*" in "matrix" as func(m1, m2){
     let r = m1["rows"];
     let c = m1["cols"]; 
 
@@ -23,11 +23,23 @@ define "*" on "matrix" as func(m1, m2){
     }
     
     return result;
-}
+};
 
 let hilbert_matrix = func(matrix, n) {
-    
+    let matrix = map {
+        "__type": "matrix",
+        "rows": n,
+        "cols": n,
+        "data": n * [n * [0]]
+    };
+
+    for (let i = 0; i < n; i = i + 1){
+        for (let j = 0; j < n; j = j + 1){
+            matrix["data"][i][j] = 1 / (i + j + 1);
+        }
+    }
+
     return matrix;
 };
 
-print hilbert_matrix(3);
+print hilbert_matrix(matrix, 3);
