@@ -132,3 +132,8 @@ let a, b = [1, 2];
 
 issue: this causes an error, expected literal for the expression 10^-14
 let tol = 10^-14;
+------------------------------------------------------------------------------------------------------------------
+
+// TODO: ADD 
+//           exit expr ; // exit the program completely and prints the value of expr
+// TODO: ADD bitwise operators (&, |, ^, ~, <<, >>)

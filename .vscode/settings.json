@@ -68,7 +68,8 @@
         "codecvt": "cpp",
         "cinttypes": "cpp",
         "cstring": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "filesystem": "cpp"
     },
     "makefile.configureOnOpen": false
 }
