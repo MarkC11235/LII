@@ -3,8 +3,8 @@ tester
 argc
 argv
 2
-string|Hello!
-string|World!
+string|Hello
+string|World
 6
 16
 0

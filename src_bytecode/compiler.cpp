@@ -19,12 +19,20 @@ int main(int argc, char *argv[]) {
     // Parse flags
     Parse_Flags(compiler.get_context(), argc, argv);
 
+    // Tokens
     compiler.add_pass(new TokenizationPass());
+    
+    // AST
     compiler.add_pass(new ParsingPass());
+    
+    // Bytecode
     compiler.add_pass(new BytecodeGenerationPass());
-    if (compiler.get_context().get<bool>("01")){
+    
+    if (compiler.get_context().get<bool>("0!")){
         compiler.add_pass(new DummyOptimizerPass());
     }
+
+    // CLEXE
     compiler.add_pass(new CLEXEGenerationPass());
 
 
