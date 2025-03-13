@@ -9,7 +9,7 @@
 #include "../helpers/test_framework.hpp"
 
 
-std::vector<Token> read_input(std::string file_path, bool verbose = false, bool include = false); // Forward declaration
+std::vector<Token> read_input(std::string file_path, bool include = false); // Forward declaration
 void print_tokens(std::vector<Token> tokens);
 std::vector<Token> read_tokens_file(std::string file_path);
 
@@ -22,9 +22,12 @@ void TokenizationPass::run(CompilerContext& context) {
         CompilerContext::error("No input file provided");
     }
     std::string inputFile = context.get<std::string>("input_file");
-    bool verbose = context.contains("verboseT") ? context.get<bool>("verboseT") : false;
-    std::vector<Token> tokens = read_input(inputFile, verbose);
+    std::vector<Token> tokens = read_input(inputFile, false);
     context.set("tokens", tokens);
+    bool verbose = context.contains("verboseT") ? context.get<bool>("verboseT") : false;
+    if (verbose) {
+        print_tokens(tokens);
+    }
 }
 
 void TokenizationPass::gen_test_file(std::string test_file_name, CompilerContext& context) {
@@ -389,7 +392,7 @@ std::vector<Token> analyze(std::string input, int line_number){
 Takes in the current vector of tokens whenever an include token is found (#"file_name.clh")
 Tokenizes the included file and returns a new vector of tokens with the included file's tokens inserted in place of the include token
 */
-std::vector<Token> includes(std::vector<Token> tokens, std::string file_path, bool verbose = false){
+std::vector<Token> includes(std::vector<Token> tokens, std::string file_path){
     std::vector<Token> new_tokens;
     for(int i = 0; i < int(tokens.size()); i++){
         if(tokens[i].get_type() == TokenType::INCLUDE_TOKEN){
@@ -397,7 +400,7 @@ std::vector<Token> includes(std::vector<Token> tokens, std::string file_path, bo
             // std::vector<Token> include_tokens = read_input("./" + include_file, verbose, true);
             //get directory of the file 
             std::string directory = file_path.substr(0, file_path.find_last_of("/\\"));
-            std::vector<Token> include_tokens = read_input(directory + "/" + include_file, verbose, true);
+            std::vector<Token> include_tokens = read_input(directory + "/" + include_file, true);
             new_tokens.insert(new_tokens.end(), include_tokens.begin(), include_tokens.end());
         }
         else{
@@ -410,7 +413,7 @@ std::vector<Token> includes(std::vector<Token> tokens, std::string file_path, bo
 /*
 Takes in a file path and returns a vector of tokens
 */
-std::vector<Token> read_input(std::string file_path, bool verbose, bool include){
+std::vector<Token> read_input(std::string file_path, bool include){
     // Open the file
     std::ifstream File(file_path); 
     if (!File) {
@@ -435,7 +438,7 @@ std::vector<Token> read_input(std::string file_path, bool verbose, bool include)
     File.close();
 
     // Recursively include files
-    tokens = includes(tokens, file_path, verbose);
+    tokens = includes(tokens, file_path);
 
     // Add an EOF token to the end of the file
     if(include == false){

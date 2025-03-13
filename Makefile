@@ -17,7 +17,8 @@ COMMON_SRCS = $(wildcard $(SRC_DIR)/helpers/*.cpp) \
               $(wildcard $(SRC_DIR)/BytecodeGenerator/*.cpp) \
               $(wildcard $(SRC_DIR)/FlagParser/*.cpp) \
               $(wildcard $(SRC_DIR)/std_lib/*.cpp) \
-              $(wildcard $(SRC_DIR)/std_lib/*/*.cpp)
+              $(wildcard $(SRC_DIR)/std_lib/*/*.cpp) \
+			  $(wildcard $(SRC_DIR)/CLEXEGenerator/*.cpp) \
 
 # Specific source files for each executable
 COMPILER_SRCS = $(SRC_DIR)/compiler.cpp $(COMMON_SRCS)

@@ -1,7 +1,5 @@
-let pprint = func(f){
-    print f;
-    return f;
-};
+let x = [1, 2, 3, 4, 5];
+let y = [6, 7, 8, 9, 10];
 
-let res5 = pprint(func(x){return x;});
-// print func(){return 1;};
+let z = [x[0] + y[0], x[1] + y[1], x[2] + y[2], x[3] + y[3], x[4] + y[4]];
+print z;

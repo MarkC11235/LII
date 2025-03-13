@@ -8,19 +8,19 @@
 #include "./Tokenizer/tokenizer.hpp"
 #include "./Parser/parser.hpp"
 #include "./BytecodeGenerator/bytecode_generator.hpp"
-#include "./VM/virtual_machine.hpp"
+#include "./CLEXEGenerator/cl_exe_generator.hpp"
 
 int main(int argc, char *argv[]) {
     Compiler compiler;
 
     // Parse flags
-    // std::cout << "Parsing flags" << std::endl;
     Parse_Flags(compiler.get_context(), argc, argv);
 
-    // std::cout << "Defining passes" << std::endl;
     compiler.add_pass(new TokenizationPass());
     compiler.add_pass(new ParsingPass());
     compiler.add_pass(new BytecodeGenerationPass());
+    // compiler.add_pass(new OptimizationPass());
+    compiler.add_pass(new CLEXEGenerationPass());
 
 
     // look at flags to see in what mode to run the compiler

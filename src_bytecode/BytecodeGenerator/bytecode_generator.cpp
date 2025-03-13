@@ -1,6 +1,6 @@
 #include "bytecode_generator.hpp"
 
-function* generate_bytecode(Node* node, std::string file_name);
+void generate_bytecode(Node* node, CompilerContext& context);
     
 // BytecodeGenerationPass implementation
 BytecodeGenerationPass::BytecodeGenerationPass() 
@@ -15,8 +15,19 @@ void BytecodeGenerationPass::run(CompilerContext& context) {
         CompilerContext::error("AST not set in context");
     }
     Node* ast = context.get<Node*>("ast");
-    function* func = generate_bytecode(ast, inputFile);
-    context.set("function", func);
+    generate_bytecode(ast, context);
+
+    if(context.contains("verboseB")){
+        if(context.get<bool>("verboseB")){
+            std::cout << "Bytecode:" << std::endl;
+            display_bytecode(context.get<function*>("function"));
+            std::cout << "Constants:" << std::endl;
+            display_constants();
+            std::cout << "Variables:" << std::endl;
+            display_variables();
+        }
+
+    }
 }
 
 void BytecodeGenerationPass::gen_test_file(std::string test_file_name, CompilerContext& context) {
@@ -1443,7 +1454,7 @@ void interpret(Node *node, function *func)
 Generates the bytecode for the given AST
 Writes the bytecode to a cl_exe file with the given name
 */
-function *generate_bytecode(Node *ast, std::string name)
+void generate_bytecode(Node *ast, CompilerContext& context)
 {
     function *func = create_function(1000);
 
@@ -1452,9 +1463,11 @@ function *generate_bytecode(Node *ast, std::string name)
 
     interpret(ast, func);
 
-    write_cl_exe(name, "./", func, variable_names, constants);
+    context.set("function", func);
+    context.set("variable_names", variable_names);
+    context.set("constants", constants);
 
-    return func;
+    // write_cl_exe(name, "./", func, variable_names, constants);
 }
 
 // -------------------------------------------------------------------
