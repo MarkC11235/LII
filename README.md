@@ -10,8 +10,13 @@ To Use:
 
 1. Clone this repository
 2. Navigate to the folder
-3. Run the command 'make build_bytecode' which will output the lii executable file
-4. OPTIONAL: add the excutable file to your path to use it from anywhere
+3. Run the command 'make build' which will output the liic and liivm executable files
+4. OPTIONAL: add lii to your path to use it from anywhere
+  - lii is a script that combines liic and liivm to compile and run a .cl file
+  - to pass liic flags prefix them with -c, to pass liivm flags prefix them with -i
+  - example: lii tester.cl -c -v -O! -i -v
+  - Added the lii, liic, and liivm executables to the /usr/local/bin directory
+    - inside of lii change the calls to liic and liivm to just the executable name
 5. Run the command 'lii your-file.cl'
 
 ### **Requirements**
