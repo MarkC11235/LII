@@ -11,7 +11,7 @@ void Parse_Flags(CompilerContext &context, int argc, char *argv[])
 {
     if (argc < 2)
     {
-        std::cout << "Usage: " << argv[0] << " <input_file.cl> -v [-vT -vP -vB ] -gen_tests -run_tests -t -0!" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input_file.cl> -v [-vT -vP -vB ] -gen_tests -run_tests -t -O!" << std::endl;
         exit(1);
     }
 
@@ -63,7 +63,7 @@ void Parse_Flags(CompilerContext &context, int argc, char *argv[])
         else if(std::string(argv[i]) == "-run_tests") {
             run_tests = true;
         }
-        else if(std::string(argv[i]) == "-0!") {
+        else if(std::string(argv[i]) == "-O!") {
             optdummy = true;
         }
     }
@@ -85,7 +85,7 @@ void Parse_Flags(CompilerContext &context, int argc, char *argv[])
     context.set("jit", jit);
     context.set("gen_tests", gen_tests);
     context.set("run_tests", run_tests);
-    context.set("0!", optdummy);
+    context.set("O!", optdummy);
 }
 
 #endif // FLAG_PARSER_HPP

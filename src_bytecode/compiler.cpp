@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     // Bytecode
     compiler.add_pass(new BytecodeGenerationPass());
     
-    if (compiler.get_context().get<bool>("0!")){
+    if (compiler.get_context().get<bool>("O!")){
         compiler.add_pass(new DummyOptimizerPass());
     }
 

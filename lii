@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Check if a file argument was provided
+if [ $# -eq 0 ]; then
+    echo "Usage: ./lii <filename.cl> [-c compiler_flags...] [-i vm_flags...]"
+    exit 1
+fi
+
+# Get the input file and remove .cl extension if present
+INPUT_FILE="$1"
+BASE_NAME="${INPUT_FILE%.cl}"
+shift  # Remove input file from args
+
+# Initialize flags arrays
+COMPILER_FLAGS=()
+VM_FLAGS=()
+CURRENT_FLAGS=()  # Reference to current flag array
+
+# Parse remaining arguments for compiler and VM flags
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -c)
+            CURRENT_FLAGS=("COMPILER_FLAGS")
+            shift
+            ;;
+        -i)
+            CURRENT_FLAGS=("VM_FLAGS")
+            shift
+            ;;
+        *)
+            if [ "${CURRENT_FLAGS}" = "COMPILER_FLAGS" ]; then
+                COMPILER_FLAGS+=("$1")
+            elif [ "${CURRENT_FLAGS}" = "VM_FLAGS" ]; then
+                VM_FLAGS+=("$1")
+            else
+                echo "Error: flags must follow -c or -i"
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Step 1: Compile the .cl file to .cl_exe
+./liic "$INPUT_FILE" "${COMPILER_FLAGS[@]}"
+
+# Check if compilation succeeded
+if [ ! -f "${BASE_NAME}.cl_exe" ]; then
+    echo -e "\033[0;31mCompilation failed for $INPUT_FILE\033[0m"
+    exit 1
+fi
+
+# Step 2: Run the compiled file through VM
+./liivm "${BASE_NAME}.cl_exe" "${VM_FLAGS[@]}"
+
+# Exit with the VM's exit code
+exit $?
