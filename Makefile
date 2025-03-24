@@ -1,6 +1,6 @@
 CC = clang++-16
 CXXFLAGS = -Wall -std=c++17 -I$(SRC_DIR)
-LDFLAGS = -lSDL2
+LDFLAGS = -lSDL2 -lSDL2_ttf
 INPUT_FILE = tester.cl
 CL_EXE_FILE = $(INPUT_FILE:.cl=.cl_exe)
 
@@ -9,6 +9,19 @@ COMPILER_EXE = ./liic
 VM_EXE = ./liivm
 
 SRC_DIR = ./src_bytecode
+
+
+# Check if font file exists, otherwise use system font
+FONT_FILE = $(shell if [ -f "./resources/fonts/Swansealtalic-AwqD.ttf" ]; then \
+              echo "./resources/fonts/Swansealtalic-AwqD.ttf"; \
+            else \
+              echo "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"; \
+            fi)
+EMBEDDED_FONT_CPP = ./src_bytecode/std_lib/graphics/embedded_font.cpp
+
+$(EMBEDDED_FONT_CPP): $(FONT_FILE)
+	@mkdir -p $(dir $@)
+	python3 tools/ttf_to_cpp.py $< $@
 
 # Common source files
 COMMON_SRCS = $(wildcard $(SRC_DIR)/helpers/*.cpp) \
@@ -45,7 +58,7 @@ $(VM_EXE): $(VM_OBJS)
 	@$(CC) -o $(VM_EXE) $(VM_OBJS) $(LDFLAGS)
 	@echo "VM executable created: $(VM_EXE)"
 
-build: clean $(COMPILER_EXE) $(VM_EXE)
+build: clean $(COMPILER_EXE) $(VM_EXE) $(EMBEDDED_FONT_CPP)
 
 clean:
 	@rm -f $(COMPILER_OBJS) $(VM_OBJS) $(COMPILER_EXE) $(VM_EXE)

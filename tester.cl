@@ -1,45 +1,49 @@
-let matrix = map {
-    "__type": "matrix",
-    "rows": 0,
-    "cols": 0,
-    "data": [[]]
-};
-
-define "*" in "matrix" as func(m1, m2){
-    let r = m1["rows"];
-    let c = m1["cols"]; 
-
-    let result = m1;
-    result["data"] = r * [c * [0]];
-    result["rows"] = r;
-    result["cols"] = c;
-
-    for (let i = 0; i < r; i = i + 1){
-        for (let j = 0; j < c; j = j + 1){
-            for (let k = 0; k < c; k = k + 1){
-                result["data"][i][j] = result["data"][i][j] + m1["data"][i][k] * m2["data"][k][j];
-            }
+let handle_events = func(events) {
+    for (let i = 0; i < $vector_length(events); i = i + 1) {
+        let event = events[i];
+        if (event == "quit") {
+            let res = $close_graphics();
+            let res = $exit_program("Quit event");
+            return -1; // will never be reached
+        }
+        if (event == "keydown") {
+            return 1;
         }
     }
-    
-    return result;
+    return 0;
 };
 
-let hilbert_matrix = func(matrix, n) {
-    let matrix = map {
-        "__type": "matrix",
-        "rows": n,
-        "cols": n,
-        "data": n * [n * [0]]
-    };
+let rect = map{
+    "x" : 0,
+    "y" : 0,
+    "w" : 200,
+    "h" : 200
+};
 
-    for (let i = 0; i < n; i = i + 1){
-        for (let j = 0; j < n; j = j + 1){
-            matrix["data"][i][j] = 1 / (i + j + 1);
-        }
+let res = $init_graphics("Test", 800, 600);
+if (res != 0) {
+    let res = $exit_program("Error, $init_graphics(), code: " + res);
+}
+
+for(;;) {
+    let events = $get_events();
+    let res = handle_events(events);
+
+    if (res == 1) {
+        rect = map{
+            "x" : rect["x"] + 10,
+            "y" : rect["y"] + 10,
+            "w" : rect["w"],
+            "h" : rect["h"]
+        };
     }
 
-    return matrix;
-};
+    let res = $clear_screen();
+    let res = $draw_rect(rect["x"], rect["y"], rect["w"], rect["h"]);
+    let res = $draw_text("Hello, World!", 10, 10, 18);
+    let res = $update_screen();
+    let res = $wait(1 / 60); // 60 fps
+}
 
-print hilbert_matrix(matrix, 3);
+
+
