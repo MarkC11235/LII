@@ -281,32 +281,32 @@
         SDL_SetRenderDrawColor(ren, 64, 64, 64, 255); // Dark gray for grid
 
         for (int i = x + grid_spacing; i < x + width; i += grid_spacing) {
-        draw_line(i, y, i, y + height);
+            draw_line(i, y, i, y + height);
         }
         for (int i = y + grid_spacing; i < y + height; i += grid_spacing) {
-        draw_line(x, i, x + width, i);
+            draw_line(x, i, x + width, i);
         }
 
         // Scale points to fit graph area
         std::vector<SDL_Point> scaled_points;
         for (const auto& point : points) {
-        double px = VALUE_AS_NUMBER(VALUE_AS_VECTOR(point)[0]);
-        double py = VALUE_AS_NUMBER(VALUE_AS_VECTOR(point)[1]);
-        
-        // Scale to graph dimensions
-        int sx = x + (int)((px - min_x) / (max_x - min_x) * width);
-        int sy = y + height - (int)((py - min_y) / (max_y - min_y) * height);
-        
-        scaled_points.push_back({sx, sy});
+            double px = VALUE_AS_NUMBER(VALUE_AS_VECTOR(point)[0]);
+            double py = VALUE_AS_NUMBER(VALUE_AS_VECTOR(point)[1]);
+            
+            // Scale to graph dimensions
+            int sx = x + (int)((px - min_x) / (max_x - min_x) * width);
+            int sy = y + height - (int)((py - min_y) / (max_y - min_y) * height);
+            
+            scaled_points.push_back({sx, sy});
         }
 
         // Draw points and lines
         for (size_t i = 0; i < scaled_points.size(); i++) {
-        draw_circle(scaled_points[i].x, scaled_points[i].y, 3);
-        if (i < scaled_points.size() - 1) {
-            draw_line(scaled_points[i].x, scaled_points[i].y,
-                    scaled_points[i + 1].x, scaled_points[i + 1].y);
-        }
+            draw_circle(scaled_points[i].x, scaled_points[i].y, 3);
+            if (i < scaled_points.size() - 1) {
+                draw_line(scaled_points[i].x, scaled_points[i].y,
+                        scaled_points[i + 1].x, scaled_points[i + 1].y);
+            }
         }
 
         return 0;

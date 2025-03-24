@@ -10,19 +10,6 @@ VM_EXE = ./liivm
 
 SRC_DIR = ./src_bytecode
 
-
-# Check if font file exists, otherwise use system font
-FONT_FILE = $(shell if [ -f "./resources/fonts/Swansealtalic-AwqD.ttf" ]; then \
-              echo "./resources/fonts/Swansealtalic-AwqD.ttf"; \
-            else \
-              echo "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"; \
-            fi)
-EMBEDDED_FONT_CPP = ./src_bytecode/std_lib/graphics/embedded_font.cpp
-
-$(EMBEDDED_FONT_CPP): $(FONT_FILE)
-	@mkdir -p $(dir $@)
-	python3 tools/ttf_to_cpp.py $< $@
-
 # Common source files
 COMMON_SRCS = $(wildcard $(SRC_DIR)/helpers/*.cpp) \
               $(wildcard $(SRC_DIR)/Tokenizer/*.cpp) \
@@ -45,6 +32,13 @@ VM_OBJS = $(VM_SRCS:.cpp=.o)
 # Default target builds both executables
 all: build run
 
+# Use absolute paths for font files
+FONT_FILE=./resources/fonts/SwanseaItalic-AwqD.ttf
+EMBEDDED_FONT_CPP = ./src_bytecode/std_lib/graphics/embedded_font.cpp
+
+$(EMBEDDED_FONT_CPP):
+	python3 tools/ttf_to_cpp.py $(FONT_FILE) $(EMBEDDED_FONT_CPP)
+
 %.o: %.cpp # compiles all .cpp files into .o files for each file in SRCS, then they are linked together to form the executable
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
@@ -58,10 +52,10 @@ $(VM_EXE): $(VM_OBJS)
 	@$(CC) -o $(VM_EXE) $(VM_OBJS) $(LDFLAGS)
 	@echo "VM executable created: $(VM_EXE)"
 
-build: clean $(COMPILER_EXE) $(VM_EXE) $(EMBEDDED_FONT_CPP)
+build: clean $(COMPILER_EXE) $(VM_EXE) $(EMBEDDED_FONT_CPP) 
 
 clean:
-	@rm -f $(COMPILER_OBJS) $(VM_OBJS) $(COMPILER_EXE) $(VM_EXE)
+	@rm -f $(COMPILER_OBJS) $(VM_OBJS) $(COMPILER_EXE) $(VM_EXE) $(EMBEDDED_FONT_CPP)
 	@rm -f tests/*.temp
 	@rm -f tests_2/*.temp
 	@rm -f jit_functions/*

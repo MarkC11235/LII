@@ -1,12 +1,12 @@
 let handle_events = func(events) {
     for (let i = 0; i < $vector_length(events); i = i + 1) {
         let event = events[i];
-        if (event == "quit") {
+        if (event["type"] == "quit") {
             let res = $close_graphics();
             let res = $exit_program("Quit event");
             return -1; // will never be reached
         }
-        if (event == "keydown") {
+        if (event["type"] == "keydown") {
             return 1;
         }
     }
