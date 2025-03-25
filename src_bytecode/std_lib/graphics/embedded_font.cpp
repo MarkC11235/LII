@@ -1,4 +1,3 @@
-// Auto-generated file from ttf_to_cpp.py
 #include "embedded_font.hpp"
 
 const unsigned char embedded_font[] = {

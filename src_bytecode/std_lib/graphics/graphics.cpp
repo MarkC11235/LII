@@ -14,6 +14,9 @@
 
     TTF_Font* font = nullptr;
 
+    int width = 800;
+    int height = 600;
+
     /*
     Event thread to handle SDL events.
     Pushes events to the event queue that can be processed by the main thread.
@@ -57,6 +60,10 @@
     Sets up the event thread to handle events.
     */
     int init_graphics(std::string title, int width, int height) {
+        // Set the width and height for the global variables
+        ::width = width;
+        ::height = height;
+
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
             return 1;
@@ -270,42 +277,43 @@
         return 0;
     }
 
-    int graph(std::vector<Value> points, int x, int y, int width, int height,
-        double min_x, double max_x, double min_y, double max_y) {
-        // Draw axes
-        draw_line(x, y + height, x + width, y + height); // x-axis
-        draw_line(x, y, x, y + height); // y-axis
+    /*
+    Creates grid lines and labels for a graph.
+    Then loops through the lines and draws them on the graph.
+    a line is two vectors of doubles where one is the x values and the other is the y values
+    */
+   int graph(std::vector<Value> lines, double min_x, double max_x, double min_y, double max_y,
+    std::string title, std::string x_label, std::string y_label) {
 
-        // Draw grid lines
-        int grid_spacing = 50;
-        SDL_SetRenderDrawColor(ren, 64, 64, 64, 255); // Dark gray for grid
-
-        for (int i = x + grid_spacing; i < x + width; i += grid_spacing) {
-            draw_line(i, y, i, y + height);
+        // Clear the screen
+        clear_screen();
+        // Set the color to white
+        change_color(255, 255, 255);
+        // Draw the axes
+        draw_line(0, height / 2, width, height / 2); // X-axis
+        draw_line(width / 2, 0, width / 2, height); // Y-axis
+        // Draw the labels
+        draw_text(title, width / 2 - 50, 10, 24);
+        draw_text(x_label, width - 100, height / 2 + 10, 16);
+        draw_text(y_label, width / 2 + 10, height - 50, 16);
+        // Draw the grid lines
+        for (int i = 0; i < 10; i++) {
+            int x = (int)((i / 10.0) * width);
+            draw_line(x, 0, x, height); // Vertical lines
+            int y = (int)((i / 10.0) * height);
+            draw_line(0, y, width, y); // Horizontal lines
         }
-        for (int i = y + grid_spacing; i < y + height; i += grid_spacing) {
-            draw_line(x, i, x + width, i);
-        }
-
-        // Scale points to fit graph area
-        std::vector<SDL_Point> scaled_points;
-        for (const auto& point : points) {
-            double px = VALUE_AS_NUMBER(VALUE_AS_VECTOR(point)[0]);
-            double py = VALUE_AS_NUMBER(VALUE_AS_VECTOR(point)[1]);
-            
-            // Scale to graph dimensions
-            int sx = x + (int)((px - min_x) / (max_x - min_x) * width);
-            int sy = y + height - (int)((py - min_y) / (max_y - min_y) * height);
-            
-            scaled_points.push_back({sx, sy});
-        }
-
-        // Draw points and lines
-        for (size_t i = 0; i < scaled_points.size(); i++) {
-            draw_circle(scaled_points[i].x, scaled_points[i].y, 3);
-            if (i < scaled_points.size() - 1) {
-                draw_line(scaled_points[i].x, scaled_points[i].y,
-                        scaled_points[i + 1].x, scaled_points[i + 1].y);
+        // Draw the lines
+        for (int i = 0; i < (int)lines.size(); i++) {
+            std::vector<Value> line = VALUE_AS_VECTOR(lines[i]);
+            std::vector<Value> x_values = VALUE_AS_VECTOR(line[0]);
+            std::vector<Value> y_values = VALUE_AS_VECTOR(line[1]);
+            for (int j = 0; j < (int)x_values.size() - 1; j++) {
+                double x1 = ((VALUE_AS_NUMBER(x_values[j]) - min_x) / (max_x - min_x)) * width;
+                double y1 = height - ((VALUE_AS_NUMBER(y_values[j]) - min_y) / (max_y - min_y)) * height;
+                double x2 = ((VALUE_AS_NUMBER(x_values[j + 1]) - min_x) / (max_x - min_x)) * width;
+                double y2 = height - ((VALUE_AS_NUMBER(y_values[j + 1]) - min_y) / (max_y - min_y)) * height;
+                draw_line((int)x1, (int)y1, (int)x2, (int)y2);
             }
         }
 

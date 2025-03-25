@@ -10,34 +10,45 @@ VM_EXE = ./liivm
 
 SRC_DIR = ./src_bytecode
 
-# Common source files
-COMMON_SRCS = $(wildcard $(SRC_DIR)/helpers/*.cpp) \
+# Remove embedded font from COMMON_SRCS by filtering it out
+COMMON_SRCS = $(filter-out $(EMBEDDED_FONT_CPP), \
+			  $(wildcard $(SRC_DIR)/helpers/*.cpp) \
               $(wildcard $(SRC_DIR)/Tokenizer/*.cpp) \
               $(wildcard $(SRC_DIR)/Parser/*.cpp) \
               $(wildcard $(SRC_DIR)/BytecodeGenerator/*.cpp) \
               $(wildcard $(SRC_DIR)/FlagParser/*.cpp) \
               $(wildcard $(SRC_DIR)/std_lib/*.cpp) \
               $(wildcard $(SRC_DIR)/std_lib/*/*.cpp) \
-			  $(wildcard $(SRC_DIR)/CLEXEGenerator/*.cpp) \
-			  $(wildcard $(SRC_DIR)/DummyOptimizer/*.cpp) \
+              $(wildcard $(SRC_DIR)/CLEXEGenerator/*.cpp) \
+              $(wildcard $(SRC_DIR)/DummyOptimizer/*.cpp))
 
 # Specific source files for each executable
 COMPILER_SRCS = $(SRC_DIR)/compiler.cpp $(COMMON_SRCS)
 VM_SRCS = $(SRC_DIR)/vm.cpp $(COMMON_SRCS)
 
 # Object files
-COMPILER_OBJS = $(COMPILER_SRCS:.cpp=.o)
-VM_OBJS = $(VM_SRCS:.cpp=.o)
+EMBEDDED_FONT_OBJ = $(EMBEDDED_FONT_CPP:.cpp=.o)
+COMPILER_OBJS = $(COMPILER_SRCS:.cpp=.o) $(EMBEDDED_FONT_OBJ)
+VM_OBJS = $(VM_SRCS:.cpp=.o) $(EMBEDDED_FONT_OBJ)
 
 # Default target builds both executables
 all: build run
 
-# Use absolute paths for font files
-FONT_FILE=./resources/fonts/SwanseaItalic-AwqD.ttf
+# Font setup
+FONT_FILE = ./resources/fonts/SwanseaItalic-AwqD.ttf
+EMBEDDED_FONT_HPP = ./src_bytecode/std_lib/graphics/embedded_font.hpp
 EMBEDDED_FONT_CPP = ./src_bytecode/std_lib/graphics/embedded_font.cpp
 
-$(EMBEDDED_FONT_CPP):
-	python3 tools/ttf_to_cpp.py $(FONT_FILE) $(EMBEDDED_FONT_CPP)
+# Generate both header and source files for embedded font
+$(EMBEDDED_FONT_CPP) $(EMBEDDED_FONT_HPP): 
+	@echo "Generating embedded font files..."
+	@mkdir -p $(dir $@)
+	python3 tools/ttf_to_cpp.py $(FONT_FILE) $(EMBEDDED_FONT_CPP) $(EMBEDDED_FONT_HPP)
+
+# Add specific rule for embedded font object
+$(EMBEDDED_FONT_OBJ): $(EMBEDDED_FONT_CPP) $(EMBEDDED_FONT_HPP)
+	@echo "Compiling embedded font..."
+	$(CC) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.cpp # compiles all .cpp files into .o files for each file in SRCS, then they are linked together to form the executable
 	$(CC) $(CXXFLAGS) -c $< -o $@
@@ -52,13 +63,17 @@ $(VM_EXE): $(VM_OBJS)
 	@$(CC) -o $(VM_EXE) $(VM_OBJS) $(LDFLAGS)
 	@echo "VM executable created: $(VM_EXE)"
 
-build: clean $(COMPILER_EXE) $(VM_EXE) $(EMBEDDED_FONT_CPP) 
+build: clean $(EMBEDDED_FONT_OBJ) $(COMPILER_EXE) $(VM_EXE) 
+	@echo "Build completed."
 
 clean:
-	@rm -f $(COMPILER_OBJS) $(VM_OBJS) $(COMPILER_EXE) $(VM_EXE) $(EMBEDDED_FONT_CPP)
+	@rm -f $(COMPILER_OBJS) $(VM_OBJS) $(COMPILER_EXE) $(VM_EXE) 
+	@rm -f $(EMBEDDED_FONT_CPP) $(EMBEDDED_FONT_HPP) $(EMBEDDED_FONT_OBJ)
 	@rm -f tests/*.temp
 	@rm -f tests_2/*.temp
 	@rm -f jit_functions/*
+	@rm -f *.cl_exe
+	@echo "Cleaned up object files and executables"
 
 # Updated run commands for separate executables
 run_compiler:

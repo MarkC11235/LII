@@ -37,7 +37,8 @@ for(;;) {
 
     let res = $clear_screen();
     // let res = $draw_rect(rect["x"], rect["y"], rect["w"], rect["h"]);
-    let res = $draw_text("Hello, World!", 10, 10, 20);
+    // let res = $draw_text("Hello, World!", 10, 10, 20);
+    let res = $graph([[0, 5, 10, 15, 20], [0, 1, 4, 9, 16]], 0, 25, 0, 25, "TEST", "X", "Y");
     let res = $update_screen();
     let res = $wait(1 / 60); // 60 fps
 }

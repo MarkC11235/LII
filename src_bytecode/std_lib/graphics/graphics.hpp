@@ -34,8 +34,8 @@
     int draw_circle(int x, int y, int r);
     int draw_lines(std::vector<Value> points);
     int draw_text(std::string text, int x, int y, int size);
-    int graph(std::vector<Value> points, int x, int y, int width, int height,
-        double min_x, double max_x, double min_y, double max_y);
+    int graph(std::vector<Value> lines, double min_x, double max_x, double min_y, double max_y,
+        std::string title, std::string x_label, std::string y_label);
 #else
     // SDL2 is not available, provide declarations for stub functions
     int init_graphics(std::string title, int width, int height);
