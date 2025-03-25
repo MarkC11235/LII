@@ -1,0 +1,27 @@
+let start_graphics = func(
+    title,
+    width,
+    height,
+    draw_func,
+    handle_events_func
+){
+    let res = $init_graphics(title, width, height);
+    if (res != 0) {
+        let res = $exit_program("Error, $init_graphics(), code: " + res);
+    }
+    for(;;) {
+        let events = $get_events();
+        let res = handle_events_func(events);
+        if (res != 0) {
+            let res = $close_graphics();
+            let res = $exit_program("Quit event");
+            return -1; // will never be reached
+        }
+
+        let res = $clear_screen();
+        let res = draw_func();
+        let res = $update_screen();
+        let res = $wait(1 / 60); // 60 fps
+    }
+    return 0;
+};

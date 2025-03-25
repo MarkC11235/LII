@@ -76,7 +76,7 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"draw_circle", make_std_lib_function(draw_circle), "int", {"int", "int", "int"}},
     {"draw_lines", make_std_lib_function(draw_lines), "int", {"std::vector<Value>"}},
     {"draw_text", make_std_lib_function(draw_text), "int", {"std::string", "int", "int", "int"}},
-    {"graph", make_std_lib_function(graph), "int", {"std::vector<Value>", "double", "double", "double", "double", "std::string", "std::string", "std::string"}},
+    {"graph", make_std_lib_function(graph), "int", {"std::vector<Value>", "std::vector<Value>", "double", "double", "double", "double", "std::string", "std::string", "std::string"}},
 
     // misc functions
     {"exit_program", make_std_lib_function(exit_program), "int", {"std::string"}},

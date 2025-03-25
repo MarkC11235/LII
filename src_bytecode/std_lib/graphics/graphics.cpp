@@ -277,43 +277,155 @@
         return 0;
     }
 
+    int draw_rotated_text(std::string text, int x, int y, int size, double angle) {
+        TTF_SetFontSize(font, size);
+        
+        SDL_Color color = {255, 255, 255, 255};
+        SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), color);
+        if (!surface) return 1;
+        
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(ren, surface);
+        SDL_FreeSurface(surface);
+        if (!texture) return 1;
+        
+        SDL_Rect dest = {x, y, 0, 0};
+        SDL_QueryTexture(texture, NULL, NULL, &dest.w, &dest.h);
+        
+        // Set rotation center to middle of text
+        SDL_Point center = {dest.w / 2, dest.h / 2};
+        dest.x -= center.x;
+        dest.y -= center.y;
+        
+        SDL_RenderCopyEx(ren, texture, NULL, &dest, angle, &center, SDL_FLIP_NONE);
+        SDL_DestroyTexture(texture);
+        
+        return 0;
+    }
+
     /*
     Creates grid lines and labels for a graph.
     Then loops through the lines and draws them on the graph.
     a line is two vectors of doubles where one is the x values and the other is the y values
     */
-   int graph(std::vector<Value> lines, double min_x, double max_x, double min_y, double max_y,
+   int graph(std::vector<Value> x_vals, std::vector<Value> y_vals, double min_x, double max_x, double min_y, double max_y,
     std::string title, std::string x_label, std::string y_label) {
 
-        // Clear the screen
+        // Calculate layout based on window dimensions
+        const float MARGIN_RATIO = 0.15f;
+        const int MARGIN = std::min(width, height) * MARGIN_RATIO;
+        const int GRAPH_WIDTH = width - 2 * MARGIN;
+        const int GRAPH_HEIGHT = height - 2 * MARGIN;
+        const int GRID_SPACING = std::min(GRAPH_WIDTH, GRAPH_HEIGHT) / 10;
+        const int LABEL_FONT_SIZE = std::min(width, height) * 0.02;
+        const int TITLE_FONT_SIZE = LABEL_FONT_SIZE * 1.5;
+        const int POINT_RADIUS = std::min(width, height) * 0.005;
+
+        // Clear and set up background
         clear_screen();
-        // Set the color to white
-        change_color(255, 255, 255);
-        // Draw the axes
-        draw_line(0, height / 2, width, height / 2); // X-axis
-        draw_line(width / 2, 0, width / 2, height); // Y-axis
-        // Draw the labels
-        draw_text(title, width / 2 - 50, 10, 24);
-        draw_text(x_label, width - 100, height / 2 + 10, 16);
-        draw_text(y_label, width / 2 + 10, height - 50, 16);
-        // Draw the grid lines
-        for (int i = 0; i < 10; i++) {
-            int x = (int)((i / 10.0) * width);
-            draw_line(x, 0, x, height); // Vertical lines
-            int y = (int)((i / 10.0) * height);
-            draw_line(0, y, width, y); // Horizontal lines
+
+        // Draw border and background
+        change_color(64, 64, 64);
+        draw_rect(MARGIN-2, MARGIN-2, GRAPH_WIDTH+4, GRAPH_HEIGHT+4);
+        change_color(0, 0, 0);
+        draw_rect(MARGIN, MARGIN, GRAPH_WIDTH, GRAPH_HEIGHT);
+
+        // Draw grid lines and labels
+        const int num_x_lines = GRAPH_WIDTH / GRID_SPACING;
+        const int num_y_lines = GRAPH_HEIGHT / GRID_SPACING;
+
+        // X grid lines and labels
+        for (int i = 0; i <= num_x_lines; i++) {
+            int x = MARGIN + i * GRID_SPACING;
+            change_color(32, 32, 32);
+            draw_line(x, MARGIN, x, height - MARGIN);
+            
+            double value = min_x + (i * (max_x - min_x) / num_x_lines);
+            std::string label = std::to_string(int(value));
+            change_color(200, 200, 200);
+            draw_text(label, x - LABEL_FONT_SIZE/2, height - MARGIN + LABEL_FONT_SIZE/2, LABEL_FONT_SIZE);
         }
-        // Draw the lines
-        for (int i = 0; i < (int)lines.size(); i++) {
-            std::vector<Value> line = VALUE_AS_VECTOR(lines[i]);
-            std::vector<Value> x_values = VALUE_AS_VECTOR(line[0]);
-            std::vector<Value> y_values = VALUE_AS_VECTOR(line[1]);
-            for (int j = 0; j < (int)x_values.size() - 1; j++) {
-                double x1 = ((VALUE_AS_NUMBER(x_values[j]) - min_x) / (max_x - min_x)) * width;
-                double y1 = height - ((VALUE_AS_NUMBER(y_values[j]) - min_y) / (max_y - min_y)) * height;
-                double x2 = ((VALUE_AS_NUMBER(x_values[j + 1]) - min_x) / (max_x - min_x)) * width;
-                double y2 = height - ((VALUE_AS_NUMBER(y_values[j + 1]) - min_y) / (max_y - min_y)) * height;
-                draw_line((int)x1, (int)y1, (int)x2, (int)y2);
+
+        // Y grid lines and labels
+        for (int i = 0; i <= num_y_lines; i++) {
+            int y = MARGIN + i * GRID_SPACING;
+            change_color(32, 32, 32);
+            draw_line(MARGIN, y, width - MARGIN, y);
+            
+            double value = max_y - (i * (max_y - min_y) / num_y_lines);
+            std::string label = std::to_string(int(value));
+            change_color(200, 200, 200);
+            draw_text(label, MARGIN - LABEL_FONT_SIZE*3, y - LABEL_FONT_SIZE/2, LABEL_FONT_SIZE);
+        }
+
+        // Draw title and labels
+        change_color(255, 255, 255);
+        int title_x = width/2 - title.length()*TITLE_FONT_SIZE/4;
+        int title_y = MARGIN/3;
+        draw_text(title, title_x, title_y, TITLE_FONT_SIZE);
+
+        int x_label_x = width/2 - x_label.length()*LABEL_FONT_SIZE/4;
+        int x_label_y = height - MARGIN/3;
+        draw_text(x_label, x_label_x, x_label_y, LABEL_FONT_SIZE);
+
+        // Draw rotated y label
+        int y_label_x = MARGIN/3;
+        int y_label_y = height/2 + y_label.length()*LABEL_FONT_SIZE/4;
+        draw_rotated_text(y_label, y_label_x, y_label_y, LABEL_FONT_SIZE, 270);
+
+        // Handle multiple data series
+        std::vector<std::vector<Value>> x_series;
+        std::vector<std::vector<Value>> y_series;
+
+        // Check if we have multiple series or single series
+        if (x_vals.empty() || y_vals.empty()) return 1;
+
+        if (x_vals[0].type == Value_Type::VECTOR) {
+            // Multiple series
+            for (const auto& x : x_vals) {
+                x_series.push_back(VALUE_AS_VECTOR(x));
+            }
+            for (const auto& y : y_vals) {
+                y_series.push_back(VALUE_AS_VECTOR(y));
+            }
+        } else {
+            // Single series
+            x_series.push_back(x_vals);
+            y_series.push_back(y_vals);
+        }
+
+        // Draw data series
+        const std::vector<SDL_Color> colors = {
+            {255, 255, 255, 255},  // White
+            {255, 100, 100, 255},  // Red
+            {100, 255, 100, 255},  // Green
+            {100, 100, 255, 255},  // Blue
+            {255, 255, 100, 255}   // Yellow
+        };
+
+        for (size_t series = 0; series < x_series.size(); series++) {
+            const auto& x_values = x_series[series];
+            const auto& y_values = y_series[series];
+            
+            // Set color for this series
+            SDL_Color color = colors[series % colors.size()];
+            change_color(color.r, color.g, color.b);
+
+            // Draw lines and points
+            for (size_t i = 0; i < x_values.size() - 1; i++) {
+                int x1 = MARGIN + (VALUE_AS_NUMBER(x_values[i]) - min_x) * GRAPH_WIDTH / (max_x - min_x);
+                int y1 = height - MARGIN - (VALUE_AS_NUMBER(y_values[i]) - min_y) * GRAPH_HEIGHT / (max_y - min_y);
+                int x2 = MARGIN + (VALUE_AS_NUMBER(x_values[i + 1]) - min_x) * GRAPH_WIDTH / (max_x - min_x);
+                int y2 = height - MARGIN - (VALUE_AS_NUMBER(y_values[i + 1]) - min_y) * GRAPH_HEIGHT / (max_y - min_y);
+                
+                draw_line(x1, y1, x2, y2);
+                draw_circle(x1, y1, POINT_RADIUS);
+            }
+
+            // Draw final point
+            if (!x_values.empty()) {
+                int last_x = MARGIN + (VALUE_AS_NUMBER(x_values.back()) - min_x) * GRAPH_WIDTH / (max_x - min_x);
+                int last_y = height - MARGIN - (VALUE_AS_NUMBER(y_values.back()) - min_y) * GRAPH_HEIGHT / (max_y - min_y);
+                draw_circle(last_x, last_y, POINT_RADIUS);
             }
         }
 
