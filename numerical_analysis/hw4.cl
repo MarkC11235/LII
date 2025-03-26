@@ -58,29 +58,70 @@
 // }
 
 
-// 2)
+// 3)
 
-// let euler_method = func(f, t_0, y_0, t_end, N){
-//     let h = (t_end - t_0) / N;
-//     let t = t_0;
-//     let y = y_0;
+// a)
+let euler_method = func(f, t_0, y_0, t_end, N){
+    let h = (t_end - t_0) / N;
+    let t = t_0;
+    let y = y_0;
 
-//     for(let i = 0; i < N; i = i + 1){
-//         y = y + h * f(t, y);
-//         t = t + h;
-//     }
+    for(let i = 0; i < N; i = i + 1){
+        y = y + h * f(t, y);
+        t = t + h;
+    }
 
-//     return y;
-// };
+    return y;
+};
 
-// let f = func(t, y){
-//     return y^2 + 1 / t^2;
-// }
+// b, c)
 
-// let N_vals = [10, 100, 1000, 10000];
+let f = func(t, y){
+    return y^2 + 1 / t^2;
+};
+
+let y_exact = func(t){
+    return 1 / (2*t) * (3^(1/2) * $tan(3^(1/2)/2 * $ln($abs(t))) - 1);
+};
+
+let N_vals = [10, 100, 1000, 10000];
+
+let t_0 = 1;
+let y_0 = -1/2;
+let t_end = 2;
 
 
-print $sin(1);
-print $cos(1);
-print $tan(1);
+print "t: [1, 2]";
+print "y(1) = -1/2";
+print "Exact solution: y(2) = " + y_exact(t_end);
+print "";
+
+let y_approx = [];
+foreach(let i:n in N_vals){
+    let y = euler_method(f, t_0, y_0, t_end, n);
+    y_approx = $vector_push(y_approx, y);
+    print "N = " + n + ", y = " + y;
+    print "";
+}
+
+// d)
+
+// getting the step size
+let x = N_vals;
+foreach(let i:n in x){
+    x[i] = $ln(1 / n);
+}
+
+let y_error = $vector_length(x) * [0];
+foreach(let i:y in y_approx){
+    y_error[i] = $ln($abs(y - y_exact(t_end)));
+}
+
+print "logarithm of error vs. logarithm of step size";
+
+foreach(let i:n in x){
+    print "x = " + x[i] + ", y = " + y_error[i];
+}
+
+
 
