@@ -3,17 +3,16 @@
 // 1)
 
 //  f = [
-//      x_1^3 - 2x_2 - 2
-//      x_1^3 - 5x_3^2 + 7
-//      x_2*x_3^2 - 1
+//      x_1^3 - 2x_2 - 2   = 0
+//      x_1^3 - 5x_3^2 + 7 = 0
+//      x_2*x_3^2 - 1      = 0
 //      ]
 
 // J = [
-//      3x_1^2,  -2,     0
-//      3x_1^2,  0,      -10x_3
-//      0,       x_3^2,  2x_2*x_3
+//      3x_1^2,  -2    , 0
+//      3x_1^2,  0     , -10x_3
+//      0     ,  x_3^2 , 2x_2*x_3
 //      ]
-
 
 // let f = func(create_matrix, matrix, x){
 //     return create_matrix(matrix, 3, 1, [
@@ -54,7 +53,7 @@
 //     print "Iteration: " + (i + 1) + " -------------------------------------------";
 //     print "x = "; 
 //     let res = print_matrix(x);
-//     print "Infinity norm of f(x) = " + matrix_norm(f_val, "inf");
+//     print "Infinity norm of x - x_exact = " + matrix_norm(x - x_exact, "inf");
 // }
 
 
@@ -100,28 +99,28 @@ let y_approx = [];
 foreach(let i:n in N_vals){
     let y = euler_method(f, t_0, y_0, t_end, n);
     y_approx = $vector_push(y_approx, y);
-    print "N = " + n + ", y = " + y;
+    print "N = " + n + ", y(2) = " + y;
     print "";
 }
 
 // d)
 
-// getting the step size
-let x = N_vals;
-foreach(let i:n in x){
-    x[i] = $ln(1 / n);
-}
+// // getting the step size
+// let x = N_vals;
+// foreach(let i:n in x){
+//     x[i] = $ln(1 / n);
+// }
 
-let y_error = $vector_length(x) * [0];
-foreach(let i:y in y_approx){
-    y_error[i] = $ln($abs(y - y_exact(t_end)));
-}
+// let y_error = $vector_length(x) * [0];
+// foreach(let i:y in y_approx){
+//     y_error[i] = $ln($abs(y - y_exact(t_end)));
+// }
 
-print "logarithm of error vs. logarithm of step size";
+// print "logarithm of error vs. logarithm of step size";
 
-foreach(let i:n in x){
-    print "x = " + x[i] + ", y = " + y_error[i];
-}
+// foreach(let i:n in x){
+//     print "x = " + x[i] + ", y = " + y_error[i];
+// }
 
 
 
