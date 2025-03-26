@@ -6,10 +6,22 @@
 #include <vector>
 #include <string>
 
-int random_int(int min, int max);
+namespace math {
 
-double math_sqrt(double value);
+    int random_int(int min, int max);
 
-double math_pow(double base, double exponent);
+    double math_sqrt(double value);
+    double math_pow(double base, double exponent);
+
+    double abs(double value);
+
+    double ln(double value);
+    double log_base_n(double value, double base);
+
+    double sin(double value);
+    double cos(double value);
+    double tan(double value);
+
+}
 
 #endif // MATH_HPP

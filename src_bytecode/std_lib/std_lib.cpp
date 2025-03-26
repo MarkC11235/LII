@@ -97,9 +97,15 @@ const std::vector<STD_LIB_FUNCTION_INFO> STD_LIB_FUNCTIONS_DEFINITIONS = {
     {"matrix_multiply", make_std_lib_function(matrix_multiply), "std::vector<Value>", {"std::vector<Value>", "std::vector<Value>"}},
 
     // Math 
-    {"random_int", make_std_lib_function(random_int), "int", {"int", "int"}},
-    {"sqrt", make_std_lib_function(math_sqrt), "double", {"double"}},
-    {"pow", make_std_lib_function(math_pow), "double", {"double", "double"}},
+    {"random_int", make_std_lib_function(math::random_int), "int", {"int", "int"}},
+    {"sqrt", make_std_lib_function(math::math_sqrt), "double", {"double"}},
+    {"pow", make_std_lib_function(math::math_pow), "double", {"double", "double"}},
+    {"abs", make_std_lib_function(math::abs), "double", {"double"}},
+    {"ln", make_std_lib_function(math::ln), "double", {"double"}},
+    {"log_base_n", make_std_lib_function(math::log_base_n), "double", {"double", "double"}},
+    {"sin", make_std_lib_function(math::sin), "double", {"double"}},
+    {"cos", make_std_lib_function(math::cos), "double", {"double"}},
+    {"tan", make_std_lib_function(math::tan), "double", {"double"}}
 };
 
 /*
