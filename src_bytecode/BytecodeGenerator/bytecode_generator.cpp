@@ -272,6 +272,37 @@ void display_bytecode(function *func)
             }
             std::cout << "Assignment type: " << assignment_type << std::endl;
             std::cout << "          ";
+            int var_type = (int)func->code[++i];
+            std::string var_type_str;
+            switch (var_type)
+            {
+            case 0:
+                var_type_str = "number";
+                break;
+            case 1:
+                var_type_str = "string";
+                break;
+            case 2:
+                var_type_str = "bool";
+                break;
+            case 3:
+                var_type_str = "null";
+                break;
+            case 4:
+                var_type_str = "vector";
+                break;
+            case 5:
+                var_type_str = "map";
+                break;
+            case 6:
+                var_type_str = "func";
+                break;
+            default:
+                var_type_str = "unknown";
+                break;
+            }
+            std::cout << "Variable type: " << var_type_str << std::endl;
+            std::cout << "          ";
             std::cout << "Index: " << (int)func->code[++i];
             std::cout << "          ";
             std::cout << "Name: " << variable_names[(int)func->code[i]] << std::endl;
@@ -987,6 +1018,7 @@ void interpret_assign(Node *node, function *func)
     }
 
     std::string assign_type = node->get_value(0); // let, const, global
+    std::string variable_type = node->get_value(1); // number, string, bool, null, vector, map, function
     Node *var = node->get_child(0);
     std::string var_name = var->get_value();
     Node *value = node->get_child(1);
@@ -1022,6 +1054,42 @@ void interpret_assign(Node *node, function *func)
         interpretation_error("Invalid assign type", node, func);
     }
     WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
+
+    int var_type = -1;
+    if (variable_type == "number")
+    {
+        var_type = 0;
+    }
+    else if (variable_type == "string")
+    {
+        var_type = 1;
+    }
+    else if (variable_type == "bool")
+    {
+        var_type = 2;
+    }
+    else if (variable_type == "null")
+    {
+        var_type = 3;
+    }
+    else if (variable_type == "vector")
+    {
+        var_type = 4;
+    }
+    else if (variable_type == "map")
+    {
+        var_type = 5;
+    }
+    else if (variable_type == "func")
+    {
+        var_type = 6;
+    }
+    else
+    {
+        interpretation_error("Invalid variable type: " + variable_type, node, func);
+    }
+    WRITE_BYTE(var_type, func); // 0 = number, 1 = string, 2 = bool, 3 = null, 4 = vector, 5 = map, 6 = function
+
     WRITE_BYTE(get_variable_index(var_name), func);
 }
 

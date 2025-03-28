@@ -111,6 +111,14 @@ enum OpCode{
                     0: let
                     1: const
                     2: global
+                Type of the variable is the next byte -> 
+                    0: number
+                    1: string
+                    2: bool
+                    3: null
+                    4: vector
+                    5: map
+                    6: function
                 Index of the variable name in the variable names array is the next byte
     */
     OP_STORE_VAR, 
