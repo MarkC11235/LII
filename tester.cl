@@ -1,6 +1,3 @@
-let func x = func(){
-    global number x = 5; // This will throw an error because global cannot be assigned outside of main
-    return x;
-};
+#"./numerical_analysis/matrices.clh"
 
-print x();
+print create_matrix(matrix, 2, 2, [[1, 2], [3, 4]]);
