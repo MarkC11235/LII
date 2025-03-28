@@ -8,6 +8,7 @@ enum TokenType {
     PRINT_TOKEN,
     LET_TOKEN,
     CONST_TOKEN,
+    GLOBAL_TOKEN,
     ASSIGNMENT_TOKEN,
     DEFINE_TOKEN,
     AS_TOKEN,

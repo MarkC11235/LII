@@ -8,6 +8,8 @@ std::string token_type_to_string(TokenType type) {
             return "LET";
         case TokenType::CONST_TOKEN:
             return "CONST";
+        case TokenType::GLOBAL_TOKEN:
+            return "GLOBAL";
         case TokenType::ASSIGNMENT_TOKEN:
             return "ASSIGNMENT";
         case TokenType::DEFINE_TOKEN:
@@ -91,6 +93,8 @@ TokenType string_to_token_type(std::string type) {
         return TokenType::LET_TOKEN;
     } else if(type == "CONST") {
         return TokenType::CONST_TOKEN;
+    } else if(type == "GLOBAL") {
+        return TokenType::GLOBAL_TOKEN;
     } else if(type == "ASSIGNMENT") {
         return TokenType::ASSIGNMENT_TOKEN;
     } else if(type == "DEFINE") {

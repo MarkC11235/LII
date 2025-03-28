@@ -367,6 +367,9 @@ std::vector<Token> analyze(std::string input, int line_number){
                     else if(identifier == "const"){
                         tokens.push_back(Token(TokenType::CONST_TOKEN, "const", line_number));
                     }
+                    else if(identifier == "global"){
+                        tokens.push_back(Token(TokenType::GLOBAL_TOKEN, "global", line_number));
+                    }
                     else if(identifier == "break"){
                         tokens.push_back(Token(TokenType::BREAK_TOKEN, "break", line_number));
                     }
