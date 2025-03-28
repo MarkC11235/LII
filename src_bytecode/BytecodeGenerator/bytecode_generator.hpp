@@ -56,7 +56,7 @@ inline void WRITE_VAR_NAME(const std::string& name);
 int get_variable_index(const std::string& name);
 void WRITE_VAR_NAME_IF_NOT_EXISTS(const std::string& name);
 std::string get_variable_name(int index);
-function* create_function(int capacity);
+function* create_function(int capacity, std::string name = "");
 
 // Interpretation function declarations
 void interpret(Node* node, function* func);

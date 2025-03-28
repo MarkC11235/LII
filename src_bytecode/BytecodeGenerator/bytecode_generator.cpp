@@ -543,12 +543,14 @@ std::string get_variable_name(int index)
 Creates a new function
 Capacity is the initial size of the code array
 */
-function *create_function(int capacity)
+function *create_function(int capacity, std::string name /* = "" */)
 {
     function *func = new function;
     func->code = new CODE_SIZE[capacity];
     func->count = 0;
     func->capacity = capacity;
+
+    func->name = name;
 
     return func;
 }
@@ -1010,6 +1012,9 @@ void interpret_assign(Node *node, function *func)
     }
     else if (assign_type == "global")
     {
+        if(func->name != "main"){
+            interpretation_error("Global variables can only be defined in the main function", node, func);
+        }
         type = 2;
     }
     else
@@ -1502,7 +1507,7 @@ Writes the bytecode to a cl_exe file with the given name
 */
 void generate_bytecode(Node *ast, CompilerContext& context)
 {
-    function *func = create_function(1000);
+    function *func = create_function(1000, "main");
 
     WRITE_VAR_NAME_IF_NOT_EXISTS("argc");
     WRITE_VAR_NAME_IF_NOT_EXISTS("argv");
