@@ -19,8 +19,8 @@ struct function_frame
     int end_of_function;
     int current_instruction;
 
-    // the tuple holds the value and if the varibale is let or const (globals don't get put here)
-    std::vector<std::map<std::string, std::tuple<Value, std::string>>> variables; // Variables in the current function
+    // the tuple holds the value and if the varibale is let or const (globals don't get put here) also the type of the variable (number, string, etc.)
+    std::vector<std::map<std::string, std::tuple<Value, std::string, std::string>>> variables; // Variables in the current function
 };
 
 struct VM; // Forward declaration
@@ -50,7 +50,7 @@ struct VM
     std::vector<function_frame *> function_frames;
 
     // global variable map
-    std::map<std::string, Value> global_variables;
+    std::map<std::string, std::tuple<Value, std::string, std::string>> global_variables;
 
     // bool jit;
     // int calls_to_jit;
@@ -93,7 +93,7 @@ function_frame *create_function_frame(function *func)
     frame->ip = func->code;
     frame->end_of_function = func->count;
     frame->current_instruction = 0;
-    frame->variables.push_back(std::map<std::string, std::tuple<Value, std::string>>());
+    frame->variables.push_back(std::map<std::string, std::tuple<Value, std::string, std::string>>());
 
     return frame;
 }
@@ -254,7 +254,7 @@ void print_stack(VM* vm)
 Creates a new variable in the current scope of the function frame
 Will overwrite the variable if one with the same name already exists
 */
-void set_variable(VM* vm, const std::string &name, Value value, std::string assignment_type)
+void set_variable(VM* vm, const std::string &name, Value value, std::string assignment_type, std::string variable_type)
 {
     function_frame *frame = get_current_function_frame(vm);
     // frame->variables[frame->current_scope][name] = value;
@@ -269,7 +269,7 @@ void set_variable(VM* vm, const std::string &name, Value value, std::string assi
         if(vm->global_variables.find(name) != vm->global_variables.end()){
             vm_error("Global variable " + name + " already exists and cannot be overwritten");
         }
-        vm->global_variables[name] = value;
+        vm->global_variables[name] = std::make_tuple(value, "global", variable_type);
     }
 
     // const 
@@ -278,13 +278,13 @@ void set_variable(VM* vm, const std::string &name, Value value, std::string assi
         if (frame->variables[frame->current_scope].find(name) != frame->variables[frame->current_scope].end()){
             vm_error("Variable " + name + " already exists in the current scope and cannot be overwritten");
         }
-        frame->variables[frame->current_scope][name] = std::make_tuple(value, "const");
+        frame->variables[frame->current_scope][name] = std::make_tuple(value, "const", variable_type);
     }
 
     // let
     else if(assignment_type == "let"){
         // add the variable to the current scope allowing overwriting
-        frame->variables[frame->current_scope][name] = std::make_tuple(value, "let");
+        frame->variables[frame->current_scope][name] = std::make_tuple(value, "let", variable_type);
     }
 
     else{
@@ -321,7 +321,13 @@ void update_variable(VM* vm, const std::string &name, Value value)
                 vm_error("Cannot update const variable " + name);
             }
 
-            frame->variables[i][name] = std::make_tuple(value, "let");
+            // frame->variables[i][name] = std::make_tuple(value, "let");
+            // check if it is hte same type
+            std::string variable_type = std::get<2>(frame->variables[i][name]);
+            if(variable_type != get_value_type_string(value)){
+                vm_error("Cannot update variable " + name + " of type " + variable_type + " with value of type " + get_value_type_string(value));
+            }
+            frame->variables[i][name] = std::make_tuple(value, "let", variable_type);
             return;
         }
     }
@@ -354,7 +360,8 @@ Value get_variable(VM* vm, const std::string &name)
     // check if the variable is global
     if (vm->global_variables.find(name) != vm->global_variables.end())
     {
-        return vm->global_variables[name];
+        // return vm->global_variables[name];
+        return std::get<0>(vm->global_variables[name]); // return the value only
     }
 
     vm_error("get_variable: Variable " + name + " not found");
@@ -383,7 +390,8 @@ Value get_function_variable(VM* vm, const std::string &name)
     // check if the variable is global
     if (vm->global_variables.find(name) != vm->global_variables.end())
     {
-        return vm->global_variables[name];
+        // return vm->global_variables[name];
+        return std::get<0>(vm->global_variables[name]); // return the value only
     }
 
     vm_error("get_function_variable: Variable " + name + " not found");

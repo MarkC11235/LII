@@ -31,13 +31,13 @@ void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 
     // vm.calls_to_jit = calls_to_jit;
 
     // Add argc and argv to the main function as variables
-    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count}, "global");
+    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count}, "global", "number");
     std::vector<Value> argv;
     for (std::string arg : args)
     {
         argv.push_back({Value_Type::STRING, arg});
     }
-    set_variable(&vm, "argv", {Value_Type::VECTOR, argv}, "global");
+    set_variable(&vm, "argv", {Value_Type::VECTOR, argv}, "global", "vector");
 }
 // -------------------------------------------------------------------
 
@@ -452,8 +452,40 @@ void vm_loop(bool verbose)
         {
             assignment_type = "global";
         }
-        set_variable(&vm, vm.variable_names[get_ip(&vm)[2]], pop(&vm), assignment_type);
-        increase_ip(&vm, 2);
+
+        int v_type = get_ip(&vm)[2];
+        std::string variable_type = "unknown"; 
+        if (v_type == 0)
+        {
+            variable_type = "number";
+        }
+        else if (v_type == 1)
+        {
+            variable_type = "string";
+        }
+        else if (v_type == 2)
+        {
+            variable_type = "bool";
+        }
+        else if (v_type == 3)
+        {
+            variable_type = "null";
+        }
+        else if (v_type == 4)
+        {
+            variable_type = "vector";
+        }
+        else if (v_type == 5)
+        {
+            variable_type = "map";
+        }
+        else if (v_type == 6)
+        {
+            variable_type = "func";
+        }
+
+        set_variable(&vm, vm.variable_names[get_ip(&vm)[3]], pop(&vm), assignment_type, variable_type);
+        increase_ip(&vm, 3);
         break;
     }
     case OpCode::OP_UPDATE_VAR:
@@ -875,7 +907,7 @@ void vm_loop(bool verbose)
     // Scope operations
     case OpCode::OP_INC_SCOPE:
         get_current_function_frame(&vm)->current_scope++;
-        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, std::tuple<Value, std::string>>());
+        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, std::tuple<Value, std::string, std::string>>());
         break;
     case OpCode::OP_DEC_SCOPE:
         get_current_function_frame(&vm)->current_scope--;
@@ -943,12 +975,12 @@ void display_debug_info()
 
     std::cout << "\tCurrent Function: " << ff->func->name << std::endl;
     std::cout << "\tFunction Variables (outermost to innermost scope): " << std::endl;
-    std::vector<std::map<std::string, std::tuple<Value, std::string>>> variables = ff->variables;
+    std::vector<std::map<std::string, std::tuple<Value, std::string, std::string>>> variables = ff->variables;
     for(int i = 0; i < (int)variables.size(); i++)
     {
         std::cout << "\t\tScope: " << i << std::endl;
         // std::map<std::string, Value> scope_variables = variables[i];
-        std::map<std::string, std::tuple<Value, std::string>> scope_variables = variables[i];
+        std::map<std::string, std::tuple<Value, std::string, std::string>> scope_variables = variables[i];
         for(const auto& pair : scope_variables)
         {
             // std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second) << std::endl;
