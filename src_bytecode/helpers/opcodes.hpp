@@ -107,6 +107,10 @@ enum OpCode{
     OP_LOAD,
     /*
     * OP_STORE_VAR: Store a value from the stack to the variables map
+                Type of the assignment is the next byte -> 
+                    0: let
+                    1: const
+                    2: global
                 Index of the variable name in the variable names array is the next byte
     */
     OP_STORE_VAR, 

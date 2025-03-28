@@ -250,12 +250,33 @@ void display_bytecode(function *func)
             std::cout << "Value: " << VALUE_AS_STRING(constants[(int)func->code[i]]) << std::endl;
             break;
         case OpCode::OP_STORE_VAR:
+        {
             std::cout << "OP_STORE_VAR";
+            std::cout << "          ";
+            int type = (int)func->code[++i];
+            std::string assignment_type;
+            switch (type)
+            {
+            case 0:
+                assignment_type = "let";
+                break;
+            case 1:
+                assignment_type = "const";
+                break;
+            case 2:
+                assignment_type = "global";
+                break;
+            default:
+                assignment_type = "unknown";
+                break;
+            }
+            std::cout << "Assignment type: " << assignment_type << std::endl;
             std::cout << "          ";
             std::cout << "Index: " << (int)func->code[++i];
             std::cout << "          ";
             std::cout << "Name: " << variable_names[(int)func->code[i]] << std::endl;
             break;
+        }
         case OpCode::OP_UPDATE_VAR:
             std::cout << "OP_UPDATE_VAR";
             std::cout << "          ";
@@ -961,6 +982,7 @@ void interpret_assign(Node *node, function *func)
         interpretation_error("Assign doesn't start with ASSIGN Node", node, func);
     }
 
+    std::string assign_type = node->get_value(0); // let, const, global
     Node *var = node->get_child(0);
     std::string var_name = var->get_value();
     Node *value = node->get_child(1);
@@ -975,6 +997,24 @@ void interpret_assign(Node *node, function *func)
     evaluate(value, func);
 
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
+    int type = -1;
+    if (assign_type == "let")
+    {
+        type = 0;
+    }
+    else if (assign_type == "const")
+    {
+        type = 1;
+    }
+    else if (assign_type == "global")
+    {
+        type = 2;
+    }
+    else
+    {
+        interpretation_error("Invalid assign type", node, func);
+    }
+    WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
     WRITE_BYTE(get_variable_index(var_name), func);
 }
 
