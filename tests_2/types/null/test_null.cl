@@ -1,3 +1,3 @@
-let x = null;
+let null x = null;
 
 print x;

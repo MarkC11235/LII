@@ -1,8 +1,8 @@
-let a = func(){
-    let p = func(){
+let func a = func(){
+    let func p = func(){
         return 1;
     };
-    let q = func(){
+    let func q = func(){
         return 2;
     };
 

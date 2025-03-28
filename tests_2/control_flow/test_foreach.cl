@@ -1,4 +1,4 @@
-let alphabet = map{
+let map alphabet = map{
     "a": 1,
     "b": 2,
     "c": 3
@@ -10,7 +10,7 @@ foreach(let key:value in alphabet) {
 print alphabet;
 
 
-let vec = [4, 5, 6];
+let vector vec = [4, 5, 6];
 foreach(let index:element in vec) {
     print index + " : " + element;
     vec[index] = element + 1;

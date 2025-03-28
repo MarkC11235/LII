@@ -1,10 +1,10 @@
-let d = map {
+let map d = map {
     "__type": "dummy",
     "name": "dumdum_mc_stupidhead"
 };
 
-let d1 = d;
-let d2 = d;
+let map d1 = d;
+let map d2 = d;
 
 print d1 + d2;
 

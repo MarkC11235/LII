@@ -1,6 +1,6 @@
-let vec = [1, 2, 3, 4, 5];
+let vector vec = [1, 2, 3, 4, 5];
 
-let vec1 = $vector_push(vec, vec);
+let vector vec1 = $vector_push(vec, vec);
 vec = $vector_push(vec, vec1);
 print vec;
 

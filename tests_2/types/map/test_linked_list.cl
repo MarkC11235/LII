@@ -1,13 +1,13 @@
-let Node = map {
+let map Node = map {
     "value" : 0,
     "next" : -1
 };
 
-let head = Node;
+let map head = Node;
 print head;
 
-for (let i = 0; i < 10; i = i + 1) {
-    let node = Node;
+for (let number i = 0; i < 10; i = i + 1) {
+    let map node = Node;
     node["value"] = i;
     node["next"] = head;
     head = node;
@@ -16,6 +16,6 @@ for (let i = 0; i < 10; i = i + 1) {
 print head["next"]["value"];
 head["next"]["value"] = 10;
 
-for (let i = head; i["next"] != -1; i = i["next"]) {
+for (let map i = head; i["next"] != -1; i = i["next"]) {
     print i["value"];
 }

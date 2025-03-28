@@ -1,11 +1,11 @@
 print func(a, b){return a + b;}(1, 2); // 3
 
-let arr = [[1, 2], [func(x){return x^2;}, 4]];
+let vector arr = [[1, 2], [func(x){return x^2;}, 4]];
 print arr[0][1]; // 2
 print arr[1][0](3); // 9
 
-let f = func(){
-    let g = func(y){
+let func f = func(){
+    let func g = func(y){
         return y;
     };
     return g;
@@ -13,8 +13,8 @@ let f = func(){
 
 print f()(5); // 5
 
-let matrix_builder = func(){
-    let matrix = [[1, 2], [3, 4]];
+let func matrix_builder = func(){
+    let vector matrix = [[1, 2], [3, 4]];
     return matrix;
 };
 

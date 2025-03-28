@@ -797,7 +797,7 @@ void parse_assignment(std::vector<Token>& tokens, Node* current){
     std::string type_identifier = "";
     switch(token.get_type()){
         case TokenType::IDENTIFIER_TOKEN:
-            type_identifier = token.get_value(); // number, string, bool, vector
+            type_identifier = token.get_value(); // number, string, bool, vector, any
             break;
         case TokenType::NULL_TOKEN:
             type_identifier = "null";

@@ -113,7 +113,7 @@ std::string get_value_type_string(Value value) {
         case VECTOR:
             return "vector";
         case FUNCTION:
-            return "function";
+            return "func";
         case NULL_VALUE:
             return "null";
         case MAP:

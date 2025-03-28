@@ -254,13 +254,55 @@ void print_stack(VM* vm)
 Creates a new variable in the current scope of the function frame
 Will overwrite the variable if one with the same name already exists
 */
-void set_variable(VM* vm, const std::string &name, Value value, std::string assignment_type, std::string variable_type)
+void set_variable(VM* vm, const std::string &name, Value value, int assignment_type, int variable_type)
 {
     function_frame *frame = get_current_function_frame(vm);
     // frame->variables[frame->current_scope][name] = value;
 
+    // convert variable type to string
+    std::string variable_type_string = "";
+    switch (variable_type)
+    {
+        case 0:
+            variable_type_string = "any";
+            break;
+        case 1:
+            variable_type_string = "number";
+            break;
+        case 2:
+            variable_type_string = "string";
+            break;
+        case 3:
+            variable_type_string = "bool";
+            break;
+        case 4:
+            variable_type_string = "null";
+            break;
+        case 5:
+            variable_type_string = "vector";
+            break;
+        case 6: 
+            variable_type_string = "map";
+            break;
+        case 7:
+            variable_type_string = "func";
+            break;
+        default:    
+            vm_error("Invalid variable type: " + std::to_string(variable_type));
+            break;
+    }
+
+    // std::cout << "Variable name: " << name << std::endl;
+    // std::cout << "Value type code: " << (int)value.type << std::endl;
+    // std::cout << "Value data type: " << value.data.index() << std::endl;
+    // check if the variable and value are the same type
+    if(variable_type_string != get_value_type_string(value) && variable_type_string != "any"){
+        vm_error("set_variable(): Cannot set variable " + name + " of type " + variable_type_string + " with value of type " + get_value_type_string(value));
+    }
+
+
     // global 
-    if(assignment_type == "global"){
+    if(assignment_type == 2){ // global
         // check if we are in the main function
         if(vm->function_frames.size() != 1){
             vm_error("Cannot set global variable outside of main function");
@@ -269,26 +311,26 @@ void set_variable(VM* vm, const std::string &name, Value value, std::string assi
         if(vm->global_variables.find(name) != vm->global_variables.end()){
             vm_error("Global variable " + name + " already exists and cannot be overwritten");
         }
-        vm->global_variables[name] = std::make_tuple(value, "global", variable_type);
+        vm->global_variables[name] = std::make_tuple(value, "global", variable_type_string);
     }
 
     // const 
-    else if(assignment_type == "const"){
+    else if(assignment_type == 1){ // const
         // check if the variable already exists in the most inner scope
         if (frame->variables[frame->current_scope].find(name) != frame->variables[frame->current_scope].end()){
             vm_error("Variable " + name + " already exists in the current scope and cannot be overwritten");
         }
-        frame->variables[frame->current_scope][name] = std::make_tuple(value, "const", variable_type);
+        frame->variables[frame->current_scope][name] = std::make_tuple(value, "const", variable_type_string);
     }
 
     // let
-    else if(assignment_type == "let"){
+    else if(assignment_type == 0){ // let
         // add the variable to the current scope allowing overwriting
-        frame->variables[frame->current_scope][name] = std::make_tuple(value, "let", variable_type);
+        frame->variables[frame->current_scope][name] = std::make_tuple(value, "let", variable_type_string);
     }
 
     else{
-        vm_error("Invalid assignment type: " + assignment_type);
+        vm_error("Invalid assignment type: " + std::to_string(assignment_type));
     }
 }
 
@@ -324,7 +366,7 @@ void update_variable(VM* vm, const std::string &name, Value value)
             // frame->variables[i][name] = std::make_tuple(value, "let");
             // check if it is hte same type
             std::string variable_type = std::get<2>(frame->variables[i][name]);
-            if(variable_type != get_value_type_string(value)){
+            if(variable_type != get_value_type_string(value) && variable_type != "any"){
                 vm_error("Cannot update variable " + name + " of type " + variable_type + " with value of type " + get_value_type_string(value));
             }
             frame->variables[i][name] = std::make_tuple(value, "let", variable_type);

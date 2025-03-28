@@ -1,27 +1,27 @@
-let function_reciever = func(function){
+let func function_reciever = func(function){
     return function();
 };
 
-let one = func(){
+let func one = func(){
     return 1;
 };
 
-let two = func(){
+let func two = func(){
     return 2;
 };
 
 print function_reciever(one); // 1
 print function_reciever(two); // 2
 
-let op = func(operation, x, y){
+let func op = func(operation, x, y){
     return operation(x, y);
 };
 
-let add = func(x, y){
+let func add = func(x, y){
     return x + y;
 };
 
-let sub = func(x, y){
+let func sub = func(x, y){
     return x - y;
 };
 

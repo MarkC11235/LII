@@ -31,13 +31,13 @@ void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 
     // vm.calls_to_jit = calls_to_jit;
 
     // Add argc and argv to the main function as variables
-    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count}, "global", "number");
+    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count}, 2, 1); // global, number
     std::vector<Value> argv;
     for (std::string arg : args)
     {
         argv.push_back({Value_Type::STRING, arg});
     }
-    set_variable(&vm, "argv", {Value_Type::VECTOR, argv}, "global", "vector");
+    set_variable(&vm, "argv", {Value_Type::VECTOR, argv}, 2, 5); // global, vector
 }
 // -------------------------------------------------------------------
 
@@ -438,53 +438,14 @@ void vm_loop(bool verbose)
         break;
     case OpCode::OP_STORE_VAR:
     {
-        int type = get_ip(&vm)[1];
-        std::string assignment_type = "unknown";
-        if (type == 0)
-        {
-            assignment_type = "let";
-        }
-        else if (type == 1)
-        {
-            assignment_type = "const";
-        }
-        else if (type == 2)
-        {
-            assignment_type = "global";
-        }
+        int assignment_type = get_ip(&vm)[1];
+        int variable_type = get_ip(&vm)[2];
+        Value value = pop(&vm);
+        // std::cout << "Value: ";
+        // print_value(value);
+        // std::cout << std::endl;
 
-        int v_type = get_ip(&vm)[2];
-        std::string variable_type = "unknown"; 
-        if (v_type == 0)
-        {
-            variable_type = "number";
-        }
-        else if (v_type == 1)
-        {
-            variable_type = "string";
-        }
-        else if (v_type == 2)
-        {
-            variable_type = "bool";
-        }
-        else if (v_type == 3)
-        {
-            variable_type = "null";
-        }
-        else if (v_type == 4)
-        {
-            variable_type = "vector";
-        }
-        else if (v_type == 5)
-        {
-            variable_type = "map";
-        }
-        else if (v_type == 6)
-        {
-            variable_type = "func";
-        }
-
-        set_variable(&vm, vm.variable_names[get_ip(&vm)[3]], pop(&vm), assignment_type, variable_type);
+        set_variable(&vm, vm.variable_names[get_ip(&vm)[3]], value, assignment_type, variable_type);
         increase_ip(&vm, 3);
         break;
     }

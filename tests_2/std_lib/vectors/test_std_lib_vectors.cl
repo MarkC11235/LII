@@ -1,6 +1,6 @@
 // Vector functions
 
-let vec = [1, 2, 3, 4, 5];
+let vector vec = [1, 2, 3, 4, 5];
 print $vector_length(vec); // Output: 5
 
 vec = $vector_push(vec, 6);

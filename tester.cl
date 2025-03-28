@@ -1,25 +1,6 @@
-// let number x = 5;
-// let string s = "hello";
-// let bool b = true;
-// let null n = null;
-// let vector v = [1, 2, 3];
-// let map m = map{
-//     "a": 1,
-//     "b": 2
-// };
-// let func f = func(){
-//     return 42;
-// };
+let func x = func(){
+    global number x = 5; // This will throw an error because global cannot be assigned outside of main
+    return x;
+};
 
-// print x;
-// print s;
-// print b;
-// print n;
-// print v;
-// print m;
-// print f();
-
-
-let number x = 5;
-x = 10; // this works
-x = "hello"; // error: type mismatch
+print x();

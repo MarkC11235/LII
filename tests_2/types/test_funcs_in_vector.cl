@@ -1,4 +1,4 @@
-let func_vec = [
+let vector func_vec = [
     func (a, b) {
         return a + b;
     },
@@ -13,10 +13,10 @@ let func_vec = [
     }
 ];
 
-let a = 10;
-let b = 20;
+let number a = 10;
+let number b = 20;
 
-for (let i = 0; i < 4; i = i + 1) {
-    let f = func_vec[i];
+for (let number i = 0; i < 4; i = i + 1) {
+    let func f = func_vec[i];
     print f(a, b);
 }

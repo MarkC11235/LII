@@ -1,13 +1,13 @@
-let a = func(){
-    let x = func(){
+let func a = func(){
+    let func x = func(){
         return 1;
     };
 
     return x();
 };
 
-let b = func(){
-    let x = func(){
+let func b = func(){
+    let func x = func(){
         return 2;
     };
 

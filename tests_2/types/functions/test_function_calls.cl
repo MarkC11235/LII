@@ -1,14 +1,14 @@
-let add = func(x, y){
+let func add = func(x, y){
     return x + y;
 };
 
-let sub = func(x, y){
+let func sub = func(x, y){
     return x - y;
 };
 
-let result = add(2, 3);
+let number result = add(2, 3);
 print result;
-let result = sub(2, 3);
+let number result = sub(2, 3);
 print result;
 
 return 0;

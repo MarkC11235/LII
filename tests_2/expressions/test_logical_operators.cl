@@ -1,5 +1,5 @@
-let x = true;
-let y = false;
+let bool x = true;
+let bool y = false;
 
 print x && !y || x; // true
 print x || y; // true

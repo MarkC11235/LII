@@ -1,4 +1,4 @@
-for(let cond = 0; cond < 5; cond = cond + 1){
+for(let number cond = 0; cond < 5; cond = cond + 1){
     if(cond == 1){
         print "cond is 1";
     }

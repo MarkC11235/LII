@@ -1,6 +1,6 @@
-global x = 5;
+global number x = 5;
 
-let f = func(){
+let func f = func(){
     x = 10; // This will throw an error because global cannot be reassigned
     return x;
 };

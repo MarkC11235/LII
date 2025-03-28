@@ -78,7 +78,7 @@ cl_exe* read_cl_exe(std::string path){
                 }
             }
             constant = Value(Value_Type::STRING, new_value);
-        } else if(type == "function"){ 
+        } else if(type == "func"){ 
             value = value.substr(value.find("(") + 1);
             function* func = new function;
             std::vector<std::string> arguments;

@@ -277,24 +277,27 @@ void display_bytecode(function *func)
             switch (var_type)
             {
             case 0:
-                var_type_str = "number";
+                var_type_str = "any";
                 break;
             case 1:
-                var_type_str = "string";
+                var_type_str = "number";
                 break;
             case 2:
-                var_type_str = "bool";
+                var_type_str = "string";
                 break;
             case 3:
-                var_type_str = "null";
+                var_type_str = "bool";
                 break;
             case 4:
-                var_type_str = "vector";
+                var_type_str = "null";
                 break;
             case 5:
-                var_type_str = "map";
+                var_type_str = "vector";
                 break;
             case 6:
+                var_type_str = "map";
+                break;
+            case 7:
                 var_type_str = "func";
                 break;
             default:
@@ -967,6 +970,8 @@ void interpret_function(Node *node, function *func)
         WRITE_BYTE(OpCode::OP_STORE_VAR, new_func);
         int type = 0; // let
         WRITE_BYTE(type, new_func); // 0 = let, 1 = const, 2 = global
+        int var_type = 0; // any
+        WRITE_BYTE(var_type, new_func); // 0 = any, 1 = number, 2 = string, 3 = bool, 4 = null, 5 = vector, 6 = map, 7 = function
         WRITE_BYTE(get_variable_index(new_func->arguments[i]), new_func);
     }
 
@@ -1055,40 +1060,45 @@ void interpret_assign(Node *node, function *func)
     }
     WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
 
-    int var_type = -1;
-    if (variable_type == "number")
+    int var_type;
+    if (variable_type == "any")
     {
         var_type = 0;
     }
-    else if (variable_type == "string")
+    else if (variable_type == "number")
     {
         var_type = 1;
     }
-    else if (variable_type == "bool")
+    else if (variable_type == "string")
     {
         var_type = 2;
     }
-    else if (variable_type == "null")
+    else if (variable_type == "bool")
     {
         var_type = 3;
     }
-    else if (variable_type == "vector")
+    else if (variable_type == "null")
     {
         var_type = 4;
     }
-    else if (variable_type == "map")
+    else if (variable_type == "vector")
     {
         var_type = 5;
     }
-    else if (variable_type == "func")
+    else if (variable_type == "map")
     {
         var_type = 6;
     }
+    else if (variable_type == "func")
+    {
+        var_type = 7;
+    }
     else
     {
+        var_type = -1;
         interpretation_error("Invalid variable type: " + variable_type, node, func);
     }
-    WRITE_BYTE(var_type, func); // 0 = number, 1 = string, 2 = bool, 3 = null, 4 = vector, 5 = map, 6 = function
+    WRITE_BYTE(var_type, func); // 0 = any, 1 = number, 2 = string, 3 = bool, 4 = null, 5 = vector, 6 = map, 7 = function
 
     WRITE_BYTE(get_variable_index(var_name), func);
 }
@@ -1370,10 +1380,12 @@ void interpret_foreach(Node *node, function *func)
     // assign pair to identifiers
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
     WRITE_BYTE(0, func); // 0 = let
+    WRITE_BYTE(0, func); // 0 = any
     WRITE_BYTE(get_variable_index(key_name), func);
 
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
     WRITE_BYTE(0, func); // 0 = let
+    WRITE_BYTE(0, func); // 0 = any
     WRITE_BYTE(get_variable_index(value_name), func);
 
     // interpret the statement list
