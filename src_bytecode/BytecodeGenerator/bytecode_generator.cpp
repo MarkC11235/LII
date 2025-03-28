@@ -932,6 +932,8 @@ void interpret_function(Node *node, function *func)
     for (int i = new_func->arguments.size() - 1; i >= 0; i--)
     { // reverse loop to keep the order of the arguments
         WRITE_BYTE(OpCode::OP_STORE_VAR, new_func);
+        int type = 0; // let
+        WRITE_BYTE(type, new_func); // 0 = let, 1 = const, 2 = global
         WRITE_BYTE(get_variable_index(new_func->arguments[i]), new_func);
     }
 
@@ -1294,9 +1296,13 @@ void interpret_foreach(Node *node, function *func)
 
     // assign pair to identifiers
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
+    int type = 0; // let
+    WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
     WRITE_BYTE(get_variable_index(key_name), func);
 
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
+    type = 0; // let
+    WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
     WRITE_BYTE(get_variable_index(value_name), func);
 
     // interpret the statement list

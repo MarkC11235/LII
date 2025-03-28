@@ -19,7 +19,8 @@ struct function_frame
     int end_of_function;
     int current_instruction;
 
-    std::vector<std::map<std::string, Value>> variables; // Variables in the current function
+    // the tuple holds the value and if the varibale is let or const (globals don't get put here)
+    std::vector<std::map<std::string, std::tuple<Value, std::string>>> variables; // Variables in the current function
 };
 
 struct VM; // Forward declaration
@@ -47,6 +48,9 @@ struct VM
     std::vector<std::string> variable_names;
 
     std::vector<function_frame *> function_frames;
+
+    // global variable map
+    std::map<std::string, Value> global_variables;
 
     // bool jit;
     // int calls_to_jit;
@@ -89,7 +93,7 @@ function_frame *create_function_frame(function *func)
     frame->ip = func->code;
     frame->end_of_function = func->count;
     frame->current_instruction = 0;
-    frame->variables.push_back(std::map<std::string, Value>());
+    frame->variables.push_back(std::map<std::string, std::tuple<Value, std::string>>());
 
     return frame;
 }
@@ -250,10 +254,42 @@ void print_stack(VM* vm)
 Creates a new variable in the current scope of the function frame
 Will overwrite the variable if one with the same name already exists
 */
-void set_variable(VM* vm, const std::string &name, Value value)
+void set_variable(VM* vm, const std::string &name, Value value, std::string assignment_type)
 {
     function_frame *frame = get_current_function_frame(vm);
-    frame->variables[frame->current_scope][name] = value;
+    // frame->variables[frame->current_scope][name] = value;
+
+    // global 
+    if(assignment_type == "global"){
+        // check if we are in the main function
+        if(vm->function_frames.size() != 1){
+            vm_error("Cannot set global variable outside of main function");
+        }
+        // check if the variable already exists
+        if(vm->global_variables.find(name) != vm->global_variables.end()){
+            vm_error("Global variable " + name + " already exists and cannot be overwritten");
+        }
+        vm->global_variables[name] = value;
+    }
+
+    // const 
+    else if(assignment_type == "const"){
+        // check if the variable already exists in the most inner scope
+        if (frame->variables[frame->current_scope].find(name) != frame->variables[frame->current_scope].end()){
+            vm_error("Variable " + name + " already exists in the current scope and cannot be overwritten");
+        }
+        frame->variables[frame->current_scope][name] = std::make_tuple(value, "const");
+    }
+
+    // let
+    else if(assignment_type == "let"){
+        // add the variable to the current scope allowing overwriting
+        frame->variables[frame->current_scope][name] = std::make_tuple(value, "let");
+    }
+
+    else{
+        vm_error("Invalid assignment type: " + assignment_type);
+    }
 }
 
 /*
@@ -265,12 +301,37 @@ void update_variable(VM* vm, const std::string &name, Value value)
     function_frame *frame = get_current_function_frame(vm);
     for (int i = frame->current_scope; i >= 0; i--)
     {
+        // std::cout << "Checking scope " << i << std::endl;
+        // std::cout << "Variable name: " << name << std::endl;
+        // //print out the variables in the scope
+        // for(auto it = frame->variables[i].begin(); it != frame->variables[i].end(); it++){
+        //     std::cout << "Variable: " << it->first << std::endl;
+        // }
+        // std::cout << "------------------------" << std::endl;
+
+
         if (frame->variables[i].find(name) != frame->variables[i].end())
         {
-            frame->variables[i][name] = value;
+            // frame->variables[i][name] = value;
+            // return;
+
+            // check if the variable is const
+            if (std::get<1>(frame->variables[i][name]) == "const")
+            {
+                vm_error("Cannot update const variable " + name);
+            }
+
+            frame->variables[i][name] = std::make_tuple(value, "let");
             return;
         }
     }
+
+    // check if the variable is global
+    if (vm->global_variables.find(name) != vm->global_variables.end())
+    {
+        vm_error("Cannot update global variable " + name);
+    }
+
     vm_error("update variable: Variable " + name + " not found");
 }
 
@@ -285,14 +346,22 @@ Value get_variable(VM* vm, const std::string &name)
     {
         if (frame->variables[i].find(name) != frame->variables[i].end())
         {
-            return frame->variables[i][name];
+            // return frame->variables[i][name];
+            return std::get<0>(frame->variables[i][name]); // return the value only
         }
     }
+
+    // check if the variable is global
+    if (vm->global_variables.find(name) != vm->global_variables.end())
+    {
+        return vm->global_variables[name];
+    }
+
     vm_error("get_variable: Variable " + name + " not found");
     return Value(); // To avoid warning, but this line will never be reached because of vm_error
 }
 
-/// DON'T THINK THIS IS BEING USED ANYMORE
+/// DON'T THINK THIS IS BEING USED ANYMORE (still added stuff for const and global just in case)
 /*
 Will look for the variable in the current function frame and all parent frames
 Looks for the variable in the closest scope, so climbs out of ifs, loops, etc. and also the closest function frame
@@ -305,10 +374,18 @@ Value get_function_variable(VM* vm, const std::string &name)
         {
             if (frame->variables[i].find(name) != frame->variables[i].end())
             {
-                return frame->variables[i][name];
+                // return frame->variables[i][name];
+                return std::get<0>(frame->variables[i][name]); // return the value only
             }
         }
     }
+
+    // check if the variable is global
+    if (vm->global_variables.find(name) != vm->global_variables.end())
+    {
+        return vm->global_variables[name];
+    }
+
     vm_error("get_function_variable: Variable " + name + " not found");
     return Value(); // To avoid warning, but this line will never be reached because of vm_error
 }

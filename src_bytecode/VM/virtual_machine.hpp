@@ -31,13 +31,13 @@ void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 
     // vm.calls_to_jit = calls_to_jit;
 
     // Add argc and argv to the main function as variables
-    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count});
+    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count}, "global");
     std::vector<Value> argv;
     for (std::string arg : args)
     {
         argv.push_back({Value_Type::STRING, arg});
     }
-    set_variable(&vm, "argv", {Value_Type::VECTOR, argv});
+    set_variable(&vm, "argv", {Value_Type::VECTOR, argv}, "global");
 }
 // -------------------------------------------------------------------
 
@@ -437,9 +437,25 @@ void vm_loop(bool verbose)
         increase_ip(&vm, 1);
         break;
     case OpCode::OP_STORE_VAR:
-        set_variable(&vm, vm.variable_names[get_ip(&vm)[1]], pop(&vm));
-        increase_ip(&vm, 1);
+    {
+        int type = get_ip(&vm)[1];
+        std::string assignment_type = "unknown";
+        if (type == 0)
+        {
+            assignment_type = "let";
+        }
+        else if (type == 1)
+        {
+            assignment_type = "const";
+        }
+        else if (type == 2)
+        {
+            assignment_type = "global";
+        }
+        set_variable(&vm, vm.variable_names[get_ip(&vm)[2]], pop(&vm), assignment_type);
+        increase_ip(&vm, 2);
         break;
+    }
     case OpCode::OP_UPDATE_VAR:
         update_variable(&vm, vm.variable_names[get_ip(&vm)[1]], pop(&vm));
         increase_ip(&vm, 1);
@@ -859,7 +875,7 @@ void vm_loop(bool verbose)
     // Scope operations
     case OpCode::OP_INC_SCOPE:
         get_current_function_frame(&vm)->current_scope++;
-        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, Value>());
+        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, std::tuple<Value, std::string>>());
         break;
     case OpCode::OP_DEC_SCOPE:
         get_current_function_frame(&vm)->current_scope--;
@@ -927,14 +943,16 @@ void display_debug_info()
 
     std::cout << "\tCurrent Function: " << ff->func->name << std::endl;
     std::cout << "\tFunction Variables (outermost to innermost scope): " << std::endl;
-    std::vector<std::map<std::string, Value>> variables = ff->variables;
+    std::vector<std::map<std::string, std::tuple<Value, std::string>>> variables = ff->variables;
     for(int i = 0; i < (int)variables.size(); i++)
     {
         std::cout << "\t\tScope: " << i << std::endl;
-        std::map<std::string, Value> scope_variables = variables[i];
+        // std::map<std::string, Value> scope_variables = variables[i];
+        std::map<std::string, std::tuple<Value, std::string>> scope_variables = variables[i];
         for(const auto& pair : scope_variables)
         {
-            std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second) << std::endl;
+            // std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second) << std::endl;
+            std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(std::get<0>(pair.second)) << std::endl;
         }
     }
 
