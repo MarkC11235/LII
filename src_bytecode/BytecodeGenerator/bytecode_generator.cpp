@@ -1301,13 +1301,11 @@ void interpret_foreach(Node *node, function *func)
 
     // assign pair to identifiers
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
-    int type = 0; // let
-    WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
+    WRITE_BYTE(0, func); // 0 = let
     WRITE_BYTE(get_variable_index(key_name), func);
 
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
-    type = 0; // let
-    WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
+    WRITE_BYTE(0, func); // 0 = let
     WRITE_BYTE(get_variable_index(value_name), func);
 
     // interpret the statement list
