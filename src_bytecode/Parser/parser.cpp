@@ -201,7 +201,7 @@ void parse_expr(std::vector<Token>& tokens, Node* current, bool nested);
 void parse_function_call(std::vector<Token>& tokens, Node* current);
 void parse_std_lib_call(std::vector<Token>& tokens, Node* current);
 void parse_function(std::vector<Token>& tokens, Node* current);
-void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const = false);
+void parse_assignment(std::vector<Token>& tokens, Node* current);
 void parse_if(std::vector<Token>& tokens, Node* current);
 void parse_return(std::vector<Token>& tokens, Node* current);
 void parse_list(std::vector<Token>& tokens, Node* current);
@@ -779,12 +779,23 @@ void parse_map(std::vector<Token>& tokens, Node* map_node){
 /*
 Parses an assignment; Ex: let a = 5;
 */
-void parse_assignment(std::vector<Token>& tokens, Node* current, bool is_const /* = false */){
-    std::string keyword = is_const ? "const" : "let";
-    Node* assign = new Node(NodeType::ASSIGN_NODE, keyword, peek(tokens).get_line_number());
+void parse_assignment(std::vector<Token>& tokens, Node* current){
+    std::string type = "";
+    Token token = pop(tokens);
+    if(token.get_type() == TokenType::LET_TOKEN){
+        type = "let";
+    } else if(token.get_type() == TokenType::CONST_TOKEN){
+        type = "const";
+    } else if(token.get_type() == TokenType::GLOBAL_TOKEN){
+        type = "global";
+    } else {
+        parsing_error("Syntax error: expected 'let', 'const' or 'global'", token);
+    }
+
+    Node* assign = new Node(NodeType::ASSIGN_NODE, type, peek(tokens).get_line_number());
     current->add_child(assign);
 
-    Token token = pop(tokens);
+    token = pop(tokens);
     if(token.get_type() != TokenType::IDENTIFIER_TOKEN){ 
         parsing_error("Syntax error: expected identifier", token);
     } 
@@ -995,7 +1006,7 @@ void parse_for(std::vector<Token>& tokens, Node* current){
 
     // Parse the initialization 
     if(peek(tokens).get_type() != TokenType::SEMICOLON_TOKEN){ // Check if there is an initialization
-        pop(tokens); // Skip the let keyword(usally done in the parse_stmt function)
+        // pop(tokens); // Skip the let keyword(usally done in the parse_stmt function)
         parse_assignment(tokens, for_node);
     }
     else{
@@ -1176,10 +1187,10 @@ void parse_stmt(std::vector<Token>& tokens, Node* current){
             parse_return(tokens, current);
             break;
         case TokenType::LET_TOKEN:
-            parse_assignment(tokens, current);
-            break;
         case TokenType::CONST_TOKEN:
-            parse_assignment(tokens, current, true);
+        case TokenType::GLOBAL_TOKEN:
+            place_token_back(tokens, token);
+            parse_assignment(tokens, current);
             break;
         case TokenType::DEFINE_TOKEN:
             parse_define(tokens, current);
