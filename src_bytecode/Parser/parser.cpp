@@ -780,19 +780,42 @@ void parse_map(std::vector<Token>& tokens, Node* map_node){
 Parses an assignment; Ex: let a = 5;
 */
 void parse_assignment(std::vector<Token>& tokens, Node* current){
-    std::string type = "";
+    std::string assignment_type = "";
     Token token = pop(tokens);
     if(token.get_type() == TokenType::LET_TOKEN){
-        type = "let";
+        assignment_type = "let";
     } else if(token.get_type() == TokenType::CONST_TOKEN){
-        type = "const";
+        assignment_type = "const";
     } else if(token.get_type() == TokenType::GLOBAL_TOKEN){
-        type = "global";
+        assignment_type = "global";
     } else {
         parsing_error("Syntax error: expected 'let', 'const' or 'global'", token);
     }
 
-    Node* assign = new Node(NodeType::ASSIGN_NODE, type, peek(tokens).get_line_number());
+    // get the variable type
+    token = pop(tokens);
+    std::string type_identifier = "";
+    switch(token.get_type()){
+        case TokenType::IDENTIFIER_TOKEN:
+            type_identifier = token.get_value(); // number, string, bool, vector
+            break;
+        case TokenType::NULL_TOKEN:
+            type_identifier = "null";
+            break;
+        case TokenType::FUNC_TOKEN:
+            type_identifier = "func";
+            break;
+        case TokenType::MAP_TOKEN:
+            type_identifier = "map";
+            break;
+        default:
+        parsing_error("Syntax error: expected type identifier", token);
+    }
+
+    // Node* assign = new Node(NodeType::ASSIGN_NODE, assignment_type, peek(tokens).get_line_number());
+    // current->add_child(assign);
+    
+    Node* assign = new Node(NodeType::ASSIGN_NODE, std::vector<std::string>{assignment_type, type_identifier}, peek(tokens).get_line_number());
     current->add_child(assign);
 
     token = pop(tokens);
