@@ -777,51 +777,67 @@ void parse_map(std::vector<Token>& tokens, Node* map_node){
 }
 
 /*
-Parses an assignment; Ex: let a = 5;
+Parses an assignment; Ex: let a = 5; or let number = 10;
+Can also handle const and global assignments
 */
 void parse_assignment(std::vector<Token>& tokens, Node* current){
     std::string assignment_type = "";
-    Token token = pop(tokens);
-    if(token.get_type() == TokenType::LET_TOKEN){
+    Token ass_token = pop(tokens);
+    if(ass_token.get_type() == TokenType::LET_TOKEN){
         assignment_type = "let";
-    } else if(token.get_type() == TokenType::CONST_TOKEN){
+    } else if(ass_token.get_type() == TokenType::CONST_TOKEN){
         assignment_type = "const";
-    } else if(token.get_type() == TokenType::GLOBAL_TOKEN){
+    } else if(ass_token.get_type() == TokenType::GLOBAL_TOKEN){
         assignment_type = "global";
     } else {
-        parsing_error("Syntax error: expected 'let', 'const' or 'global'", token);
+        parsing_error("Syntax error: expected 'let', 'const' or 'global'", ass_token);
     }
-
-    // get the variable type
-    token = pop(tokens);
-    std::string type_identifier = "";
-    switch(token.get_type()){
-        case TokenType::IDENTIFIER_TOKEN:
-            type_identifier = token.get_value(); // number, string, bool, vector, any
-            break;
-        case TokenType::NULL_TOKEN:
-            type_identifier = "null";
-            break;
-        case TokenType::FUNC_TOKEN:
-            type_identifier = "func";
-            break;
-        case TokenType::MAP_TOKEN:
-            type_identifier = "map";
-            break;
-        default:
-        parsing_error("Syntax error: expected type identifier", token);
-    }
-
-    // Node* assign = new Node(NodeType::ASSIGN_NODE, assignment_type, peek(tokens).get_line_number());
-    // current->add_child(assign);
     
-    Node* assign = new Node(NodeType::ASSIGN_NODE, std::vector<std::string>{assignment_type, type_identifier}, peek(tokens).get_line_number());
+    // Assume we have a type identifier first
+    bool has_type_identifier = true;
+    std::string type_identifier = "any"; // Default
+    
+    // Pop the first token (potential type or variable name)
+    Token token = pop(tokens);
+    
+    // Check if it could be a type identifier
+    if(token.get_type() == TokenType::IDENTIFIER_TOKEN || 
+       token.get_type() == TokenType::NULL_TOKEN ||
+       token.get_type() == TokenType::FUNC_TOKEN || 
+       token.get_type() == TokenType::MAP_TOKEN) {
+        
+        // Store the potential type
+        if(token.get_type() == TokenType::IDENTIFIER_TOKEN) {
+            type_identifier = token.get_value();
+        } else if(token.get_type() == TokenType::NULL_TOKEN) {
+            type_identifier = "null";
+        } else if(token.get_type() == TokenType::FUNC_TOKEN) {
+            type_identifier = "func";
+        } else if(token.get_type() == TokenType::MAP_TOKEN) {
+            type_identifier = "map";
+        }
+        
+        // Look ahead to see if next token is an identifier (variable name)
+        Token second_token = peek(tokens);
+        if(second_token.get_type() != TokenType::IDENTIFIER_TOKEN) {
+            // Not a type+variable pattern, must be just a variable
+            has_type_identifier = false;
+            type_identifier = "any"; // Default to 'any' if not a type identifier
+        }
+    } else {
+        parsing_error("Syntax error: expected identifier or type", token);
+    }
+    
+    // Create the node with assignment info
+    Node* assign = new Node(NodeType::ASSIGN_NODE, 
+                           std::vector<std::string>{assignment_type, type_identifier}, 
+                           ass_token.get_line_number());
     current->add_child(assign);
 
-    token = pop(tokens);
-    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){ 
-        parsing_error("Syntax error: expected identifier", token);
-    } 
+    if(has_type_identifier){
+        token = pop(tokens);
+    }
+
     Node* var = new Node(NodeType::VAR_NODE, token.get_value(), token.get_line_number()); 
     assign->add_child(var);
 
