@@ -19,6 +19,7 @@
 #include "../helpers/cl_exe_file.hpp"
 #include "../helpers/opcodes.hpp"
 #include "../helpers/operators.hpp"
+#include "../helpers/variables.hpp"
 
 // Forward declarations
 function* generate_bytecode(Node* node, std::string file_name);
