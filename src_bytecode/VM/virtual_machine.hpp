@@ -441,10 +441,6 @@ void vm_loop(bool verbose)
         int assignment_type = get_ip(&vm)[1];
         int variable_type = get_ip(&vm)[2];
         Value value = pop(&vm);
-        // std::cout << "Value: ";
-        // print_value(value);
-        // std::cout << std::endl;
-
         set_variable(&vm, vm.variable_names[get_ip(&vm)[3]], value, assignment_type, variable_type);
         increase_ip(&vm, 3);
         break;
@@ -868,7 +864,8 @@ void vm_loop(bool verbose)
     // Scope operations
     case OpCode::OP_INC_SCOPE:
         get_current_function_frame(&vm)->current_scope++;
-        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, std::tuple<Value, std::string, std::string>>());
+        // get_current_function_frame(&vm)->variables.push_back(std::map<std::string, std::tuple<Value, std::string, std::string>>());
+        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, Variable>());
         break;
     case OpCode::OP_DEC_SCOPE:
         get_current_function_frame(&vm)->current_scope--;
@@ -936,16 +933,18 @@ void display_debug_info()
 
     std::cout << "\tCurrent Function: " << ff->func->name << std::endl;
     std::cout << "\tFunction Variables (outermost to innermost scope): " << std::endl;
-    std::vector<std::map<std::string, std::tuple<Value, std::string, std::string>>> variables = ff->variables;
+    // std::vector<std::map<std::string, std::tuple<Value, std::string, std::string>>> variables = ff->variables;
+    std::vector<std::map<std::string, Variable>> variables = ff->variables; // changed to use the new Variable struct
     for(int i = 0; i < (int)variables.size(); i++)
     {
         std::cout << "\t\tScope: " << i << std::endl;
         // std::map<std::string, Value> scope_variables = variables[i];
-        std::map<std::string, std::tuple<Value, std::string, std::string>> scope_variables = variables[i];
+        // std::map<std::string, std::tuple<Value, std::string, std::string>> scope_variables = variables[i];
+        std::map<std::string, Variable> scope_variables = variables[i]; // changed to use the new Variable struct
         for(const auto& pair : scope_variables)
         {
             // std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second) << std::endl;
-            std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(std::get<0>(pair.second)) << std::endl;
+            std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second.get_value()) << std::endl;
         }
     }
 

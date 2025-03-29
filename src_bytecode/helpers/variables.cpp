@@ -28,7 +28,7 @@ int Variable::get_type() {
     return type; // Return the type of the variable (e.g., number, string, etc.)
 }
 
-Value Variable::get_value() {
+Value Variable::get_value() const {
     return value; // Return the current value of the variable
 }
 
