@@ -1183,28 +1183,87 @@ void parse_define(std::vector<Token>& tokens, Node* current){
     Node* define_node = new Node(NodeType::DEFINE_NODE, "", peek(tokens).get_line_number());
     current->add_child(define_node);
 
-    // parse expr (op)
-    parse_value(tokens, define_node);
-
-    // check for in keyword
+    // expect Opening parenthesis
     Token token = pop(tokens);
-    if(token.get_type() != TokenType::IN_TOKEN){
-        parsing_error("Syntax error: expected 'in'", token);
+    if(token.get_value() != "("){
+        parsing_error("Syntax error: expected '('", token);
     }
 
-    // parse expr (type)
-    parse_value(tokens, define_node);
-
-    // check for the as keyword
+    // Parse the string and see if it is type or op
     token = pop(tokens);
-    if(token.get_type() != TokenType::AS_TOKEN){
-        parsing_error("Syntax error: expected 'as'", token);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
     }
 
-    // parse expr
-    parse_value(tokens, define_node);
+    // make sure identifier is either type or op
+    std::string identifier = token.get_value();
+    if(identifier != "op" && identifier != "type"){
+        parsing_error("Syntax error: expected 'op' or 'type'", token);
+    }
+    define_node->add_value(identifier);
 
-    // check for semicolon
+    // expect comma
+    token = pop(tokens);
+    if(token.get_type() != TokenType::COMMA_TOKEN){
+        parsing_error("Syntax error: expected ','", token);
+    }
+
+    // Parse the expression (op symbol or type name)
+    parse_value(tokens, define_node);
+    
+    // expect ','
+    token = pop(tokens);
+    if(token.get_type() != TokenType::COMMA_TOKEN){
+        parsing_error("Syntax error: expected ','", token);
+    }
+
+    if(identifier == "type"){
+        // Parse the expression (default type value)
+        parse_value(tokens, define_node);
+
+        // expect ','
+        token = pop(tokens);
+        if(token.get_type() != TokenType::COMMA_TOKEN){
+            parsing_error("Syntax error: expected ','", token);
+        }
+
+        // Parse value (will expect it to be a function later than this point because I want it to be able to come out of an expression)
+        // (constructor for type)
+        parse_value(tokens, define_node);
+    } 
+    else if(identifier == "op"){
+        // type 1 value
+        parse_value(tokens, define_node);
+
+        // expect ','
+        token = pop(tokens);
+        if(token.get_type() != TokenType::COMMA_TOKEN){
+            parsing_error("Syntax error: expected ','", token);
+        }
+
+        // either type 2 or function (for unary operators)
+        parse_value(tokens, define_node);
+
+        std::string bin_or_un = "unary";
+        // check if next is comma or closting parenthesis
+        token = peek(tokens);
+        if(token.get_type() == TokenType::COMMA_TOKEN){
+            pop(tokens);
+            // Parse value (this will be a binary operator)
+            parse_value(tokens, define_node);
+            bin_or_un = "binary";
+        }
+
+        define_node->add_value(bin_or_un); // to help the bytecode generator
+    }
+
+    // expect closing parenthesis
+    token = pop(tokens);
+    if(token.get_type() != TokenType::CLOSEPAR_TOKEN){
+        parsing_error("Syntax error: expected ')'", token);
+    }
+    
+    // expect semicolon
     token = pop(tokens);
     if(token.get_type() != TokenType::SEMICOLON_TOKEN){
         parsing_error("Syntax error: expected ';'", token);

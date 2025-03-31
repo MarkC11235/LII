@@ -1,1 +1,22 @@
-ERROR: Custom type dummy does not have operator +
+Syntax error: expected '('
+Token: * at line 6
+STMT_LIST  
+  STMT  
+    ASSIGN let map 
+      VAR d 
+      EXPR  
+        MAP  
+          LIST  
+            ASSIGN inner_map 
+              EXPR  
+                STRING __type 
+              EXPR  
+                STRING dummy 
+            ASSIGN inner_map 
+              EXPR  
+                STRING name 
+              EXPR  
+                STRING dumdum_mc_stupidhead 
+  STMT_LIST  
+    STMT  
+      DEFINE  

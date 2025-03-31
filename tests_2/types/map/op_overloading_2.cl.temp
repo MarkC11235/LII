@@ -1,3 +1,95 @@
-{"__type":"set","data":[2,3],"set_insert":"function (a, b) {17, 0, 0, 4, 17, 0, 0, 3, 39, 16, 4, 17, 0, 1, 5, 19, 5, 19, 3, 16, 5, 29, 42, 12, 13, 37, 55, 19, 3, 16, 6, 29, 19, 5, 29, 19, 4, 10, 37, 46, 39, 19, 3, 35, 40, 36, 46, 19, 5, 16, 7, 0, 18, 5, 36, 14, 40, 19, 3, 16, 8, 19, 3, 16, 9, 29, 19, 4, 42, 13, 31, 18, 3, 19, 3, 35, }"}
-{"__type":"set","data":[1,2,3,4],"set_insert":"function (a, b) {17, 0, 0, 4, 17, 0, 0, 3, 39, 16, 4, 17, 0, 1, 5, 19, 5, 19, 3, 16, 5, 29, 42, 12, 13, 37, 55, 19, 3, 16, 6, 29, 19, 5, 29, 19, 4, 10, 37, 46, 39, 19, 3, 35, 40, 36, 46, 19, 5, 16, 7, 0, 18, 5, 36, 14, 40, 19, 3, 16, 8, 19, 3, 16, 9, 29, 19, 4, 42, 13, 31, 18, 3, 19, 3, 35, }"}
-{"__type":"set","data":[],"set_insert":"function (a, b) {17, 0, 0, 4, 17, 0, 0, 3, 39, 16, 4, 17, 0, 1, 5, 19, 5, 19, 3, 16, 5, 29, 42, 12, 13, 37, 55, 19, 3, 16, 6, 29, 19, 5, 29, 19, 4, 10, 37, 46, 39, 19, 3, 35, 40, 36, 46, 19, 5, 16, 7, 0, 18, 5, 36, 14, 40, 19, 3, 16, 8, 19, 3, 16, 9, 29, 19, 4, 42, 13, 31, 18, 3, 19, 3, 35, }"}
+Syntax error: expected '('
+Token: ! at line 15
+STMT_LIST  
+  STMT  
+    ASSIGN let map 
+      VAR set 
+      EXPR  
+        MAP  
+          LIST  
+            ASSIGN inner_map 
+              EXPR  
+                STRING __type 
+              EXPR  
+                STRING set 
+            ASSIGN inner_map 
+              EXPR  
+                STRING set_insert 
+              EXPR  
+                FUNCTION  
+                  LIST  
+                    VAR a 
+                    VAR b 
+                  STMT_LIST  
+                    STMT  
+                      FOR  
+                        ASSIGN let number 
+                          VAR i 
+                          EXPR  
+                            NUM 0 
+                        EXPR  
+                          OP < 
+                            VAR i 
+                            STD_LIB_CALL $ vector_length 
+                              LIST  
+                                EXPR  
+                                  OP [ 
+                                    VAR a 
+                                    EXPR  
+                                      STRING data 
+                        UPDATE  
+                          VAR i 
+                          EXPR  
+                            OP + 
+                              VAR i 
+                              NUM 1 
+                        STMT_LIST  
+                          STMT  
+                            IF  
+                              EXPR  
+                                OP == 
+                                  OP [ 
+                                    OP [ 
+                                      VAR a 
+                                      EXPR  
+                                        STRING data 
+                                    EXPR  
+                                      VAR i 
+                                  VAR b 
+                              STMT_LIST  
+                                STMT  
+                                  RETURN  
+                                    EXPR  
+                                      VAR a 
+                                STMT_LIST  
+                          STMT_LIST  
+                    STMT_LIST  
+                      STMT  
+                        UPDATE  
+                          VAR a 
+                            EXPR  
+                              STRING data 
+                          EXPR  
+                            STD_LIB_CALL $ vector_push 
+                              LIST  
+                                EXPR  
+                                  OP [ 
+                                    VAR a 
+                                    EXPR  
+                                      STRING data 
+                                EXPR  
+                                  VAR b 
+                      STMT_LIST  
+                        STMT  
+                          RETURN  
+                            EXPR  
+                              VAR a 
+                        STMT_LIST  
+            ASSIGN inner_map 
+              EXPR  
+                STRING data 
+              EXPR  
+                LIST  
+  STMT_LIST  
+    STMT  
+      DEFINE  

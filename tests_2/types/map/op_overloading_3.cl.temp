@@ -1,12 +1,27 @@
-{"__type":"fraction","denominator":6,"numerator":5}
-{"__type":"fraction","denominator":6,"numerator":1}
-{"__type":"fraction","denominator":6,"numerator":1}
-{"__type":"fraction","denominator":2,"numerator":3}
-{"__type":"fraction","denominator":10,"numerator":5}
-{"__type":"fraction","denominator":2,"numerator":1}
-false
-true
-true
-true
-false
-false
+Syntax error: expected '('
+Token: ! at line 8
+STMT_LIST  
+  STMT  
+    ASSIGN let map 
+      VAR fraction 
+      EXPR  
+        MAP  
+          LIST  
+            ASSIGN inner_map 
+              EXPR  
+                STRING __type 
+              EXPR  
+                STRING fraction 
+            ASSIGN inner_map 
+              EXPR  
+                STRING numerator 
+              EXPR  
+                NUM 0 
+            ASSIGN inner_map 
+              EXPR  
+                STRING denominator 
+              EXPR  
+                NUM 1 
+  STMT_LIST  
+    STMT  
+      DEFINE  

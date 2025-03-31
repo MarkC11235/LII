@@ -1,4 +1,42 @@
-A + B = {"__type":"matrix","cols":3,"data":[7,7,7,7,7,7],"rows":2}
-A - B = {"__type":"matrix","cols":3,"data":[-5,-3,-1,1,3,5],"rows":2}
-A * C = {"__type":"matrix","cols":2,"data":[22,28,49,64],"rows":2}
-(A + B) * C = {"__type":"matrix","cols":2,"data":[63,84,63,84],"rows":2}
+Syntax error: expected '('
+Token: + at line 10
+STMT_LIST  
+  STMT  
+    ASSIGN global func 
+      VAR create_matrix 
+      EXPR  
+        FUNCTION  
+          LIST  
+            VAR rows 
+            VAR cols 
+            VAR data 
+          STMT_LIST  
+            STMT  
+              RETURN  
+                EXPR  
+                  MAP  
+                    LIST  
+                      ASSIGN inner_map 
+                        EXPR  
+                          STRING __type 
+                        EXPR  
+                          STRING matrix 
+                      ASSIGN inner_map 
+                        EXPR  
+                          STRING rows 
+                        EXPR  
+                          VAR rows 
+                      ASSIGN inner_map 
+                        EXPR  
+                          STRING cols 
+                        EXPR  
+                          VAR cols 
+                      ASSIGN inner_map 
+                        EXPR  
+                          STRING data 
+                        EXPR  
+                          VAR data 
+            STMT_LIST  
+  STMT_LIST  
+    STMT  
+      DEFINE  
