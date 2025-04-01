@@ -63,6 +63,9 @@ $(VM_EXE): $(VM_OBJS)
 	@$(CC) -o $(VM_EXE) $(VM_OBJS) $(LDFLAGS)
 	@echo "VM executable created: $(VM_EXE)"
 
+# build: clean $(EMBEDDED_FONT_OBJ) $(COMPILER_EXE) $(VM_EXE) 
+# 	@echo "Build completed."
+
 build: clean $(EMBEDDED_FONT_OBJ) $(COMPILER_EXE) $(VM_EXE) 
 	@echo "Build completed."
 

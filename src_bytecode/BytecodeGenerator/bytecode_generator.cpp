@@ -176,12 +176,7 @@ std::vector<Value> constants;
 /*
 This array stores the names of the variables
 */
-std::vector<std::string> variable_names; 
-
-/*
-This stores all the type names (built in and custom)
-*/
-std::vector<std::string> type_names = {
+std::vector<std::string> variable_names = {
     "any",
     "number",
     "string",
@@ -288,7 +283,7 @@ void display_bytecode(function *func)
             std::cout << "Name: " << variable_names[(int)func->code[i]] << std::endl;
             break;
         case OpCode::OP_LOAD_VAR:
-            std::cout << "OP_LOAD_VAR";
+            std::cout << "OP_LOAD_VAR" << std::endl;
             std::cout << "          ";
             std::cout << "Index: " << (int)func->code[++i];
             std::cout << "          ";
@@ -523,23 +518,17 @@ int get_variable_index(const std::string &name)
 
 void WRITE_TYPE_NAME(const std::string &name)
 {
-    // check if the type name already exists
-    for (int i = 0; i < (int)type_names.size(); i++)
-    {
-        if (type_names[i] == name)
-        {
-            // error
-            interpretation_error("Type name already exists: " + name, nullptr, nullptr);
-        }
-    }
-    type_names.push_back(name);
+    // write to variable_type_map
+    variable_type_map.insert({variable_type_map.size(), name});
+    // write to variable_names
+    variable_names.push_back(name);
 }
 
 int get_type_index(const std::string &name)
 {
-    for (int i = 0; i < (int)type_names.size(); i++)
+    for (int i = 0; i < (int)variable_type_map.size(); i++)
     {
-        if (type_names[i] == name)
+        if (variable_type_map[i] == name)
         {
             return i;
         }
@@ -549,9 +538,10 @@ int get_type_index(const std::string &name)
 
 bool is_valid_type(const std::string &name)
 {
-    for (int i = 0; i < (int)type_names.size(); i++)
+    // check if the type is in the variable_type_map
+    for (int i = 0; i < (int)variable_type_map.size(); i++)
     {
-        if (type_names[i] == name)
+        if (variable_type_map[i] == name)
         {
             return true;
         }
@@ -713,12 +703,17 @@ void choose_expr_operand(Node *node, function *func)
     case NodeType::VAR_NODE:
         if (node->get_children().size() == 0)
         { // Variable access
+            
             WRITE_BYTE(OpCode::OP_LOAD_VAR, func);
             if (get_variable_index(opStr) == -1)
             {
-                interpretation_error("Variable not found", node, func);
+                if(get_type_index(opStr) == -1){
+                    interpretation_error("Variable not found", node, func);
+                }
+                WRITE_BYTE(get_type_index(opStr), func);
+                break;
             }
-            WRITE_BYTE(get_variable_index(node->get_value()), func);
+            WRITE_BYTE(get_variable_index(opStr), func);
         }
         else
         {
@@ -1031,33 +1026,34 @@ void interpret_assign(Node *node, function *func)
     {
         interpretation_error("Assign doesn't start with ASSIGN Node", node, func);
     }
-
+    
     std::string assign_type = node->get_value(0); // let, const, global
     std::string variable_type = node->get_value(1); // number, string, bool, null, vector, map, function
+    // std::cout << "Assigning variable: " << assign_type << " " << variable_type << std::endl;
     Node *var = node->get_child(0);
     std::string var_name = var->get_value();
     Node *value = node->get_child(1);
-
+    
     if (var->get_type() != NodeType::VAR_NODE)
     {
         interpretation_error("Assign doesn't have a VAR Node as the first child", node, func);
     }
-
+    
     WRITE_VAR_NAME_IF_NOT_EXISTS(var_name);
     
     evaluate(value, func);
-
+    
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
     int type = (int)Variable::string_to_declaration_type(assign_type); // Convert the string to the corresponding declaration type
     WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
-
+    
     int var_type = (int)Variable::string_to_type(variable_type); // Convert the string to the corresponding variable type
     if (var_type == -1)
     {
         interpretation_error("Invalid variable type: " + variable_type, node, func);
     }
     WRITE_BYTE(var_type, func); // 0 = any, 1 = number, 2 = string, 3 = bool, 4 = null, 5 = vector, 6 = map, 7 = function
-
+    
     WRITE_BYTE(get_variable_index(var_name), func);
 }
 
@@ -1405,29 +1401,28 @@ void interpret_type_define(Node *node, function *func)
 
     evaluate(node->get_child(2), func); // Type constructor
     evaluate(node->get_child(1), func); // Default value
+
     // write type name to the types array
     WRITE_TYPE_NAME(node->get_child(0)->get_value()); // Add the type name to the types array
     WRITE_BYTE(OpCode::OP_LOAD, func); // push type name to stack
-    WRITE_BYTE(type_names.size() - 1, func); // push the index of the type name to the stack
+    WRITE_BYTE(variable_names.size() - 1, func); // push the index of the type name to the stack
     WRITE_BYTE(OpCode::OP_DEFINE_TYPE, func); // define the type
 }
 
 void interpret_op_define(Node *node, function *func)
 {    
     // get the left operand
-    Node *l_child = node->get_child(0);
+    Node *l_child = node->get_child(1)->get_child(0);
     // expect a variable
     if (l_child->get_type() != NodeType::VAR_NODE)
     {
         interpretation_error("Left operand is not a variable", node, func);
     }
-
-    std::string opStr = node->get_value(0);
     
-    if(is_binary_operator(opStr)){
-        evaluate(node->get_child(2), func);
+    if(node->get_children().size() == 4){
+        evaluate(node->get_child(3), func);
         // get the right operand
-        Node *r_child = node->get_child(1);
+        Node *r_child = node->get_child(2)->get_child(0);
         // expect a variable
         if (r_child->get_type() != NodeType::VAR_NODE)
         {
@@ -1462,8 +1457,8 @@ void interpret_op_define(Node *node, function *func)
 
 
     }
-    else if(is_unary_operator(opStr)){
-        evaluate(node->get_child(1), func);
+    else if(node->get_children().size() == 3){
+        evaluate(node->get_child(2), func);
 
         // check if the type is a valid type
         std::string type_name = l_child->get_value();
@@ -1481,9 +1476,11 @@ void interpret_op_define(Node *node, function *func)
         interpretation_error("Invalid operator type (must be binary or unary)", node, func);
     }
 
-    evaluate(node->get_child(3), func); // Function body
-    WRITE_BYTE(OpCode::OP_DEFINE_OP_FOR_TYPES, func); // define the operator
+    // push the operator to the stack
+    
 
+    WRITE_BYTE(OpCode::OP_DEFINE_OP_FOR_TYPES, func); // define the operator
+    
 }
 
 
@@ -1529,6 +1526,7 @@ void interpret_stmt(Node *node, function *func)
     if (node->get_type() == NodeType::STMT_NODE)
     {
         Node *child = node->get_child(0);
+        // child->print(0);
         switch (child->get_type())
         {
         case NodeType::EXPR_NODE:
@@ -1631,10 +1629,11 @@ void generate_bytecode(Node *ast, CompilerContext& context)
     WRITE_VAR_NAME_IF_NOT_EXISTS("argv");
 
     interpret(ast, func);
-
+    
     context.set("function", func);
     context.set("variable_names", variable_names);
     context.set("constants", constants);
+    context.set("types", variable_type_map);
 
     // write_cl_exe(name, "./", func, variable_names, constants);
 }
