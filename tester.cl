@@ -1,7 +1,7 @@
 // It looks like define is a function call, but it is actually a statement in the language and can be used as a top-level (is alone on a line) statement
 
 // telling compiler we are defining a type, type name, default value of the type, and a function to create an instance of the type
-define (type, "point", map {"x": 0, "y": 0}, func(x, y) {
+define (type, point, map {"x": 0, "y": 0}, func(x, y) {
     return map {
         "x": x,
         "y": y
@@ -14,11 +14,11 @@ define (type, "point", map {"x": 0, "y": 0}, func(x, y) {
 
 
 // telling the compiler we are defining an operation between two types, op symbol, type 1, type 2, and a function to perform the operation
-define (op, "+", "point", "point", func(p1, p2) {
+define (op, "+", point, point, func(p1, p2) {
     return point(p1["x"] + p2["x"], p1["y"] + p2["y"]);
 });
 
-define (op, "u-", "point", func(p) {
+define (op, "u-", point, func(p) {
     return point(-p["x"], -p["y"]);
 });
 

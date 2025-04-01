@@ -128,7 +128,10 @@ void Node::print(int level){
     }
     std::cout << node_type_to_string(this->get_type()) << " ";
     for(int i = 0; i < int(this->values.size()); i++){
-        std::cout << this->values[i] << " ";
+        std::cout << this->values[i]; 
+        if(i < int(this->values.size()) - 1){
+            std::cout << ", ";
+        }
     }
     std::cout << std::endl;
     for(int i = 0; i < int(this->children.size()); i++){

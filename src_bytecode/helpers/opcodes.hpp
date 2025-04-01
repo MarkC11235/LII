@@ -172,12 +172,27 @@ enum OpCode{
 
     // CUSTOM_TYPES
     /*
-    * OP_DEFINE_OP_FOR_TYPE: Define a custom operation for a custom type
+    // * OP_DEFINE_OP_FOR_TYPE: Define a custom operation for a custom type
+    //             The operation (str) is on the stack
+    //             The type (str) is the next stack value
+    //             The function is the next stack value
+    // */
+    // OP_DEFINE_OP_FOR_TYPE,
+    /*
+    * OP_DEFINE_TYPE: Define a custom type
+                The type (str) is on the stack
+                The default value (any) is the next stack value
+                The constructor function (function) is the next stack value
+    */
+    OP_DEFINE_TYPE,
+    /*
+    * OP_DEFINE_OP_FOR_TYPES: Define a custom operation for a custom type
                 The operation (str) is on the stack
                 The type (str) is the next stack value
-                The function is the next stack value
+                The 2nd type (str) is the next stack value (depends on op type)
+                The function (function) is the next stack value
     */
-    OP_DEFINE_OP_FOR_TYPE,
+    OP_DEFINE_OP_FOR_TYPES,
     /*
     * OP_CREATE_MAP: Make an empty map and push it onto the stack
     */

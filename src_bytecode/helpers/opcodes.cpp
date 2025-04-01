@@ -54,6 +54,10 @@ std::string opcode_to_string(CODE_SIZE op){
             return "OP_LOAD_VECTOR_ELEMENT";
         case OpCode::OP_UPDATE_VECTOR_ELEMENT:
             return "OP_UPDATE_VECTOR_ELEMENT";
+        case OpCode::OP_DEFINE_TYPE:
+            return "OP_DEFINE_TYPE";
+        case OpCode::OP_DEFINE_OP_FOR_TYPES:
+            return "OP_DEFINE_OP_FOR_TYPES";
         case OpCode::OP_CREATE_MAP:
             return "OP_CREATE_MAP";
         case OpCode::OP_LOAD_MAP_ELEMENT:

@@ -320,10 +320,12 @@ void display_bytecode(function *func)
         case OpCode::OP_ACCESS_FOR_UPDATE:
             std::cout << "OP_ACCESS_FOR_UPDATE" << std::endl;
             break;
-        case OpCode::OP_DEFINE_OP_FOR_TYPE:
-            std::cout << "OP_DEFINE_OP_FOR_TYPE" << std::endl;
+        case OpCode::OP_DEFINE_TYPE:
+            std::cout << "OP_DEFINE_TYPE" << std::endl;
             break;
-
+        case OpCode::OP_DEFINE_OP_FOR_TYPES:
+            std::cout << "OP_DEFINE_OP_FOR_TYPES" << std::endl;
+            break;
         // Stack
         case OpCode::OP_UPDATE_STACK_ELEMENT:
             std::cout << "OP_UPDATE_STACK_ELEMENT" << std::endl;
@@ -993,67 +995,9 @@ void interpret_assign(Node *node, function *func)
     evaluate(value, func);
 
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
-    // int type = -1;
-    // if (assign_type == "let")
-    // {
-    //     type = 0;
-    // }
-    // else if (assign_type == "const")
-    // {
-    //     type = 1;
-    // }
-    // else if (assign_type == "global")
-    // {
-    //     if(func->name != "main"){
-    //         interpretation_error("Global variables can only be defined in the main function", node, func);
-    //     }
-    //     type = 2;
-    // }
-    // else
-    // {
-    //     interpretation_error("Invalid assign type", node, func);
-    // }
     int type = (int)Variable::string_to_declaration_type(assign_type); // Convert the string to the corresponding declaration type
     WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
 
-    // int var_type;
-    // if (variable_type == "any")
-    // {
-    //     var_type = 0;
-    // }
-    // else if (variable_type == "number")
-    // {
-    //     var_type = 1;
-    // }
-    // else if (variable_type == "string")
-    // {
-    //     var_type = 2;
-    // }
-    // else if (variable_type == "bool")
-    // {
-    //     var_type = 3;
-    // }
-    // else if (variable_type == "null")
-    // {
-    //     var_type = 4;
-    // }
-    // else if (variable_type == "vector")
-    // {
-    //     var_type = 5;
-    // }
-    // else if (variable_type == "map")
-    // {
-    //     var_type = 6;
-    // }
-    // else if (variable_type == "func")
-    // {
-    //     var_type = 7;
-    // }
-    // else
-    // {
-    //     var_type = -1;
-    //     interpretation_error("Invalid variable type: " + variable_type, node, func);
-    // }
     int var_type = (int)Variable::string_to_type(variable_type); // Convert the string to the corresponding variable type
     if (var_type == -1)
     {
@@ -1395,11 +1339,45 @@ void interpret_foreach(Node *node, function *func)
 }
 
 /*
+Pushes the expression that should eval to a type string to the stack
+Then pushes the default value of the type to the stack
+Then pushes the type to the stack
+*/
+void interpret_type_define(Node *node, function *func)
+{
+    evaluate(node->get_child(2), func); // Type constructor
+    evaluate(node->get_child(1), func); // Default value
+    evaluate(node->get_child(0), func); // Type name
+    WRITE_BYTE(OpCode::OP_DEFINE_TYPE, func);
+
+}
+
+void interpret_op_define(Node *node, function *func)
+{
+    // check if it is a binary or unary operator
+    std::string op_type = node->get_value(1);
+    if (op_type != "binary" && op_type != "unary")
+    {
+        interpretation_error("Invalid operator type (must be binary or unary)", node, func);
+    }
+
+    if(op_type == "binary")
+    {
+        evaluate(node->get_child(0), func); // left operand
+        evaluate(node->get_child(1), func); // right operand
+        evaluate(node->get_child(2), func); // operator (should want function)
+    }
+    else if(op_type == "unary")
+    {
+        evaluate(node->get_child(0), func); // operand
+        evaluate(node->get_child(1), func); // operator (should want function)
+    }
+}
+
+
+/*
 Interprets a define statement
-Starts with an operation
-Then a type
-Then a function
-All of the Nodes must be EXPR Nodes
+Chooses if it is for a type or an operator and dispatches to the appropriate function
 */
 void interpret_define(Node *node, function *func)
 {
@@ -1408,38 +1386,21 @@ void interpret_define(Node *node, function *func)
         interpretation_error("Define doesn't start with DEFINE Node", node, func);
     }
 
-    // first child is the operation
-    Node *operation = node->get_child(0);
-    // second child is the type
-    Node *type = node->get_child(1);
-    // third child is the function 
-    Node *function = node->get_child(2);
-
-    if (operation->get_type() != NodeType::EXPR_NODE)
+    // check if the define is for a type or op 
+    std::string define_type = node->get_value(0);
+    if (define_type != "op" && define_type != "type")
     {
-        interpretation_error("Define operation doesn't start with EXPR Node", node, func);
+        interpretation_error("Invalid define type: " + define_type, node, func);
     }
 
-    if (type->get_type() != NodeType::EXPR_NODE)
+    if (define_type == "op")
     {
-        interpretation_error("Define type doesn't start with EXPR Node", node, func);
+        interpret_op_define(node, func);
     }
-
-    if (function->get_type() != NodeType::EXPR_NODE)
+    else if (define_type == "type")
     {
-        interpretation_error("Define function doesn't start with EXPR Node", node, func);
+        interpret_type_define(node, func);
     }
-
-    // evaluate function because it needs to be on the bottom of the stack
-    evaluate(function, func);
-
-    // evaluate type
-    evaluate(type, func);
-
-    // evaluate operation
-    evaluate(operation, func);
-
-    WRITE_BYTE(OpCode::OP_DEFINE_OP_FOR_TYPE, func);
 }
 
 /*

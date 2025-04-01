@@ -715,19 +715,19 @@ void vm_loop(bool verbose)
         Value obj = pop(&vm);
         break;
     }
-    case OpCode::OP_DEFINE_OP_FOR_TYPE:
-    {
-        Value op = pop(&vm);
-        Value type = pop(&vm);
-        Value func = pop(&vm);
-        if (op.type != Value_Type::STRING || type.type != Value_Type::STRING || func.type != Value_Type::FUNCTION)
-        {
-            vm_error("Invalid types for custom operation");
-        }
+    // case OpCode::OP_DEFINE_OP_FOR_TYPES:
+    // {
+    //     Value op = pop(&vm);
+    //     Value type = pop(&vm);
+    //     Value func = pop(&vm);
+    //     if (op.type != Value_Type::STRING || type.type != Value_Type::STRING || func.type != Value_Type::FUNCTION)
+    //     {
+    //         vm_error("Invalid types for custom operation");
+    //     }
 
-        vm.custom_types[VALUE_AS_STRING(type)][VALUE_AS_STRING(op)] = func;
-        break;
-    }
+    //     vm.custom_types[VALUE_AS_STRING(type)][VALUE_AS_STRING(op)] = func;
+    //     break;
+    // }
 
     // Control flow operations
     case OpCode::OP_RETURN:

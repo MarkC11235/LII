@@ -137,3 +137,10 @@ let tol = 10^-14;
 // TODO: ADD 
 //           exit expr ; // exit the program completely and prints the value of expr
 // TODO: ADD bitwise operators (&, |, ^, ~, <<, >>)
+
+
+
+------------------------------------------------------------------------------------------------------------------
+
+Fix the issue in the parser that if I define a Node with an empty string (""), then add a value later, I would expect it to be the first entry
+in the list, but its not (need to make an init method that doesn't add any values to the list )

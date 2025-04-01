@@ -1,5 +1,7 @@
 #include "operators.hpp"
 
+#include <iostream>
+
 std::map<std::string, std::tuple<int, std::string>> get_operators() {
     static const std::map<std::string, std::tuple<int, std::string>> operators = {
         {"(", {20, "call"}}, // function call
