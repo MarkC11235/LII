@@ -178,6 +178,20 @@ This array stores the names of the variables
 */
 std::vector<std::string> variable_names; 
 
+/*
+This stores all the type names (built in and custom)
+*/
+std::vector<std::string> type_names = {
+    "any",
+    "number",
+    "string",
+    "bool",
+    "null",
+    "vector",
+    "map",
+    "func",
+};
+
 
 // Visual Representation for debugging -------------------------------
 void display_bytecode(function *func)
@@ -506,6 +520,45 @@ int get_variable_index(const std::string &name)
     }
     return -1;
 }
+
+void WRITE_TYPE_NAME(const std::string &name)
+{
+    // check if the type name already exists
+    for (int i = 0; i < (int)type_names.size(); i++)
+    {
+        if (type_names[i] == name)
+        {
+            // error
+            interpretation_error("Type name already exists: " + name, nullptr, nullptr);
+        }
+    }
+    type_names.push_back(name);
+}
+
+int get_type_index(const std::string &name)
+{
+    for (int i = 0; i < (int)type_names.size(); i++)
+    {
+        if (type_names[i] == name)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool is_valid_type(const std::string &name)
+{
+    for (int i = 0; i < (int)type_names.size(); i++)
+    {
+        if (type_names[i] == name)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 /*
 Writes the name of a variable to the variable names array if it doesn't already exist
@@ -1345,33 +1398,92 @@ Then pushes the type to the stack
 */
 void interpret_type_define(Node *node, function *func)
 {
+    // evaluate(node->get_child(2), func); // Type constructor
+    // evaluate(node->get_child(1), func); // Default value
+    // evaluate(node->get_child(0), func); // Type name
+    // WRITE_BYTE(OpCode::OP_DEFINE_TYPE, func);
+
     evaluate(node->get_child(2), func); // Type constructor
     evaluate(node->get_child(1), func); // Default value
-    evaluate(node->get_child(0), func); // Type name
-    WRITE_BYTE(OpCode::OP_DEFINE_TYPE, func);
-
+    // write type name to the types array
+    WRITE_TYPE_NAME(node->get_child(0)->get_value()); // Add the type name to the types array
+    WRITE_BYTE(OpCode::OP_LOAD, func); // push type name to stack
+    WRITE_BYTE(type_names.size() - 1, func); // push the index of the type name to the stack
+    WRITE_BYTE(OpCode::OP_DEFINE_TYPE, func); // define the type
 }
 
 void interpret_op_define(Node *node, function *func)
-{
-    // check if it is a binary or unary operator
-    std::string op_type = node->get_value(1);
-    if (op_type != "binary" && op_type != "unary")
+{    
+    // get the left operand
+    Node *l_child = node->get_child(0);
+    // expect a variable
+    if (l_child->get_type() != NodeType::VAR_NODE)
     {
+        interpretation_error("Left operand is not a variable", node, func);
+    }
+
+    std::string opStr = node->get_value(0);
+    
+    if(is_binary_operator(opStr)){
+        evaluate(node->get_child(2), func);
+        // get the right operand
+        Node *r_child = node->get_child(1);
+        // expect a variable
+        if (r_child->get_type() != NodeType::VAR_NODE)
+        {
+            interpretation_error("Right operand is not a variable", node, func);
+        }
+
+        // check if the type is a valid type
+        std::string type_name = r_child->get_value();
+        if (!is_valid_type(type_name))
+        {
+            interpretation_error("Invalid type: " + type_name, node, func);
+        }
+        
+        // push the 2nd type
+        WRITE_BYTE(OpCode::OP_LOAD, func); // push type name to stack
+        // get the index of the type name
+        int type_index = get_type_index(type_name);
+        WRITE_BYTE(type_index, func); // push the index of the type name to the stack
+
+        // check if the type is a valid type
+        if (!is_valid_type(l_child->get_value()))
+        {
+            interpretation_error("Invalid type: " + l_child->get_value(), node, func);
+        }
+
+        // push the first type
+        WRITE_BYTE(OpCode::OP_LOAD, func); // push type name to stack
+        // get the index of the type name
+        type_index = get_type_index(l_child->get_value());
+        WRITE_BYTE(type_index, func); // push the index of the type name to the stack
+
+
+
+    }
+    else if(is_unary_operator(opStr)){
+        evaluate(node->get_child(1), func);
+
+        // check if the type is a valid type
+        std::string type_name = l_child->get_value();
+        if (!is_valid_type(type_name))
+        {
+            interpretation_error("Invalid type: " + type_name, node, func);
+        }
+        // push the type
+        WRITE_BYTE(OpCode::OP_LOAD, func); // push type name to stack
+        // get the index of the type name
+        int type_index = get_type_index(type_name);
+        WRITE_BYTE(type_index, func); // push the index of the type name to the stack
+    }
+    else{
         interpretation_error("Invalid operator type (must be binary or unary)", node, func);
     }
 
-    if(op_type == "binary")
-    {
-        evaluate(node->get_child(0), func); // left operand
-        evaluate(node->get_child(1), func); // right operand
-        evaluate(node->get_child(2), func); // operator (should want function)
-    }
-    else if(op_type == "unary")
-    {
-        evaluate(node->get_child(0), func); // operand
-        evaluate(node->get_child(1), func); // operator (should want function)
-    }
+    evaluate(node->get_child(3), func); // Function body
+    WRITE_BYTE(OpCode::OP_DEFINE_OP_FOR_TYPES, func); // define the operator
+
 }
 
 
@@ -1384,6 +1496,12 @@ void interpret_define(Node *node, function *func)
     if (node->get_type() != NodeType::DEFINE_NODE)
     {
         interpretation_error("Define doesn't start with DEFINE Node", node, func);
+    }
+
+    // make sure define is in the main function
+    if (func->name != "main")
+    {
+        interpretation_error("Define statement not in main function", node, func);
     }
 
     // check if the define is for a type or op 

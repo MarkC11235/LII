@@ -133,42 +133,6 @@ int precedence(std::string op, Token token){
     return std::get<0>(get_operators()[op]);
 }
 
-bool is_binary_operator(std::string op){
-    if(get_operators().find(op) == get_operators().end()){
-        std::cout << "Unknown Operator: " + op << std::endl;
-        exit(1);
-    }
-
-    return std::get<1>(get_operators()[op]) == "binary";
-}
-
-bool is_unary_operator(std::string op){
-    if(get_operators().find(op) == get_operators().end()){
-        std::cout << "Unknown Operator: " + op << std::endl;
-        exit(1);
-    }
-
-    return std::get<1>(get_operators()[op]) == "unary";
-}
-
-bool is_access_operator(std::string op){
-    if(get_operators().find(op) == get_operators().end()){
-        std::cout << "Unknown Operator: " + op << std::endl;
-        exit(1);
-    }
-
-    return std::get<1>(get_operators()[op]) == "access";
-}
-
-bool is_call_operator(std::string op){
-    if(get_operators().find(op) == get_operators().end()){
-        std::cout << "Unknown Operator: " + op << std::endl;
-        exit(1);
-    }
-
-    return std::get<1>(get_operators()[op]) == "call";
-}
-
 std::vector<std::string> splitStringByComma(const std::string& str) {
     std::vector<std::string> result;
     std::stringstream ss(str);
@@ -1175,6 +1139,67 @@ void parse_foreach(std::vector<Token>& tokens, Node* current){
     }
 }
 
+void parse_define_type(std::vector<Token>& tokens, Node* define_node){
+    // expect identifier
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
+        parsing_error("Syntax error: expected identifier", token);
+    }
+    define_node->add_child(new Node(NodeType::VAR_NODE, token.get_value(), token.get_line_number()));
+        
+    // expect ','
+    token = pop(tokens);
+    if(token.get_type() != TokenType::COMMA_TOKEN){
+        parsing_error("Syntax error: expected ','", token);
+    }
+    // Parse the expression (default type value)
+    parse_value(tokens, define_node);
+
+    // expect ','
+    token = pop(tokens);
+    if(token.get_type() != TokenType::COMMA_TOKEN){
+        parsing_error("Syntax error: expected ','", token);
+    }
+
+    // Parse value (will expect it to be a function later than this point because I want it to be able to come out of an expression)
+    // (constructor for type)
+    parse_value(tokens, define_node);
+}
+
+void parse_define_op(std::vector<Token>& tokens, Node* define_node){
+    parse_value(tokens, define_node); // get op string
+
+    // expect ','
+    Token token = pop(tokens);
+    if(token.get_type() != TokenType::COMMA_TOKEN){
+        parsing_error("Syntax error: expected ','", token);
+    }
+
+    parse_value(tokens, define_node); // get type string
+
+    // expect ','
+    token = pop(tokens);
+    if(token.get_type() != TokenType::COMMA_TOKEN){
+        parsing_error("Syntax error: expected ','", token);
+    }
+
+    // Parse the expression (operator function) or type2 string
+    // can be either depending on if the operator is unary or binary
+    parse_value(tokens, define_node);
+
+    // expect ',' for bin op and ')' for unary op
+    token = peek(tokens);
+    if(token.get_type() == TokenType::COMMA_TOKEN){
+        pop(tokens); // skip the comma
+        // parse the function 
+        parse_value(tokens, define_node);
+    } else if(token.get_type() == TokenType::CLOSEPAR_TOKEN){
+        // do nothing
+    } else {
+        parsing_error("Syntax error: expected ',' or ')'", token);
+    }
+}
+
 /*
 Parses a define statement; Ex: define op in type as func
 where op, type, and func are expressions
@@ -1209,101 +1234,10 @@ void parse_define(std::vector<Token>& tokens, Node* current){
     }
 
     if(identifier == "type"){
-        // expect identifier
-        token = pop(tokens);
-        if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
-            parsing_error("Syntax error: expected identifier", token);
-        }
-        define_node->add_child(new Node(NodeType::VAR_NODE, token.get_value(), token.get_line_number()));
-        
-        // expect ','
-        token = pop(tokens);
-        if(token.get_type() != TokenType::COMMA_TOKEN){
-            parsing_error("Syntax error: expected ','", token);
-        }
-        // Parse the expression (default type value)
-        parse_value(tokens, define_node);
-
-        // expect ','
-        token = pop(tokens);
-        if(token.get_type() != TokenType::COMMA_TOKEN){
-            parsing_error("Syntax error: expected ','", token);
-        }
-
-        // Parse value (will expect it to be a function later than this point because I want it to be able to come out of an expression)
-        // (constructor for type)
-        parse_value(tokens, define_node);
+        parse_define_type(tokens, define_node);
     } 
     else if(identifier == "op"){
-        // expect string
-        token = pop(tokens);
-        if(token.get_type() != TokenType::STRING_TOKEN){
-            parsing_error("Syntax error: expected string", token);
-        }
-        define_node->add_value(token.get_value());
-
-        if(is_binary_operator(token.get_value())){
-            // expect comma 
-            token = pop(tokens);
-            if(token.get_type() != TokenType::COMMA_TOKEN){
-                parsing_error("Syntax error: expected ','", token);
-            }
-
-            // expect type
-            token = pop(tokens);
-            if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
-                parsing_error("Syntax error: expected identifier", token);
-            }
-            define_node->add_child(new Node(NodeType::VAR_NODE, token.get_value(), token.get_line_number()));
-
-            // expect ','
-            token = pop(tokens);
-            if(token.get_type() != TokenType::COMMA_TOKEN){
-                parsing_error("Syntax error: expected ','", token);
-            }
-
-            // expect type
-            token = pop(tokens);
-            if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
-                parsing_error("Syntax error: expected identifier", token);
-            }
-            define_node->add_child(new Node(NodeType::VAR_NODE, token.get_value(), token.get_line_number()));
-
-            // expect ','
-            token = pop(tokens);
-            if(token.get_type() != TokenType::COMMA_TOKEN){
-                parsing_error("Syntax error: expected ','", token);
-            }
-
-            // Parse value (will expect it to be a function later than this point because I want it to be able to come out of an expression)
-            // (constructor for type)
-            parse_value(tokens, define_node);
-        } 
-        else if(is_unary_operator(token.get_value())){
-            // expect comma 
-            token = pop(tokens);
-            if(token.get_type() != TokenType::COMMA_TOKEN){
-                parsing_error("Syntax error: expected ','", token);
-            }
-
-            // expect type
-            token = pop(tokens);
-            if(token.get_type() != TokenType::IDENTIFIER_TOKEN){
-                parsing_error("Syntax error: expected identifier", token);
-            }
-            define_node->add_child(new Node(NodeType::VAR_NODE, token.get_value(), token.get_line_number()));
-
-            // expect ','
-            token = pop(tokens);
-            if(token.get_type() != TokenType::COMMA_TOKEN){
-                parsing_error("Syntax error: expected ','", token);
-            }
-
-            // Parse value (will expect it to be a function later than this point because I want it to be able to come out of an expression)
-            // (constructor for type)
-            parse_value(tokens, define_node);
-        }
-
+        parse_define_op(tokens, define_node);
     } 
 
     // expect closing parenthesis

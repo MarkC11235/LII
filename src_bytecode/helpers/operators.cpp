@@ -25,3 +25,40 @@ std::map<std::string, std::tuple<int, std::string>> get_operators() {
     };
     return operators;
 }
+
+
+bool is_binary_operator(std::string op){
+    if(get_operators().find(op) == get_operators().end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(get_operators()[op]) == "binary";
+}
+
+bool is_unary_operator(std::string op){
+    if(get_operators().find(op) == get_operators().end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(get_operators()[op]) == "unary";
+}
+
+bool is_access_operator(std::string op){
+    if(get_operators().find(op) == get_operators().end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(get_operators()[op]) == "access";
+}
+
+bool is_call_operator(std::string op){
+    if(get_operators().find(op) == get_operators().end()){
+        std::cout << "Unknown Operator: " + op << std::endl;
+        exit(1);
+    }
+
+    return std::get<1>(get_operators()[op]) == "call";
+}
