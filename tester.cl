@@ -29,9 +29,15 @@ define (op, "u-", point, func(p) {
 
 // let point p1 = point;
 // creating a point using the map constructor
-let point up1 = point; // default value
-let point up2 = point(1, 2);
-// let point p2 = point(3, 4);
+let point p1 = point; // default value
+let point p2 = point(1, 2);
+let point p3 = point(3, 4);
+
+print p1;
+print p2;
+print p3;
+
+print p2 + p3; // this will call the function we defined for the + operator with p2 and p3 as arguments
 
 
 // print "p1.x = ", p1["x"], "\n"; // accessing the x property of p1

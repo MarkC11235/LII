@@ -9,6 +9,7 @@
 #include "../helpers/Function.hpp"
 #include "../helpers/cl_exe_file.hpp"
 #include "./VM.hpp"
+#include "../helpers/operators.hpp"
 // #include "jit.hpp"
 
 // Initializes the virtual machine ----------------------------------
@@ -63,10 +64,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::STRING, VALUE_AS_STRING(a) + VALUE_AS_STRING(b)});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "+", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "+", verbose);
+        // }
         else if (a.type == Value_Type::MAP && b.type == Value_Type::MAP)
         {
             std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
@@ -99,10 +100,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) - std::get<double>(b.data)});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "-", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "-", verbose);
+        // }
         else
         {
             vm_error("Invalid types for subtraction");
@@ -116,10 +117,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::NUMBER, -std::get<double>(a.data)});
         }
-        else if (are_maps_of_same_type(a, a))
-        {
-            operate_on_map(&vm, a, "u-", verbose);
-        }
+        // else if (are_maps_of_same_type(a, a))
+        // {
+        //     operate_on_map(&vm, a, "u-", verbose);
+        // }
         else
         {
             vm_error("Invalid types for unary subtraction");
@@ -182,10 +183,10 @@ void vm_loop(bool verbose)
             }
             push(&vm, {Value_Type::VECTOR, result});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "*", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "*", verbose);
+        // }
         else
         {
             vm_error("Invalid types for multiplication");
@@ -204,10 +205,10 @@ void vm_loop(bool verbose)
             }
             push(&vm, {Value_Type::NUMBER, std::get<double>(a.data) / std::get<double>(b.data)});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "/", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "/", verbose);
+        // }
         else
         {
             vm_error("Invalid types for division");
@@ -226,10 +227,10 @@ void vm_loop(bool verbose)
             }
             push(&vm, {Value_Type::NUMBER, std::fmod(std::get<double>(a.data), std::get<double>(b.data))});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "%", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "%", verbose);
+        // }
         else
         {
             vm_error("Invalid types for modulus");
@@ -244,10 +245,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::NUMBER, std::pow(std::get<double>(a.data), std::get<double>(b.data))});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "^", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "^", verbose);
+        // }
         else
         {
             vm_error("Invalid types for exponentiation");
@@ -261,38 +262,41 @@ void vm_loop(bool verbose)
     {
         Value b = pop(&vm);
         Value a = pop(&vm);
-        if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "&&", verbose);
-        }
-        else
-        {
-            push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});
-        }
+        // if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "&&", verbose);
+        // }
+        // else
+        // {
+        //     push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});
+        // }
+        push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) && VALUE_AS_BOOL(b)});
         break;
     }
     case OpCode::OP_OR:
     {
         Value b = pop(&vm);
         Value a = pop(&vm);
-        if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "||", verbose);
-        }
-        else
-        {
-            push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});
-        }
+        // if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "||", verbose);
+        // }
+        // else
+        // {
+        //     push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});
+        // }
+        push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) || VALUE_AS_BOOL(b)});
         break;
     }
     case OpCode::OP_NOT:
     {
         Value a = pop(&vm);
-        if(are_maps_of_same_type(a, a)) // a bit of a hack, but it works
-        {
-            operate_on_map(&vm, a, "!", verbose);
-        }
-        else
+        // if(are_maps_of_same_type(a, a)) // a bit of a hack, but it works
+        // {
+        //     operate_on_map(&vm, a, "!", verbose);
+        // }
+        // else
+        // push(&vm, {Value_Type::BOOL, !VALUE_AS_BOOL(a)});
         push(&vm, {Value_Type::BOOL, !VALUE_AS_BOOL(a)});
         break;
     }
@@ -320,9 +324,9 @@ void vm_loop(bool verbose)
         else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
             push(&vm, {Value_Type::BOOL, false});
         }
-        else if(are_maps_of_same_type(a, b)){
-            operate_on_maps(&vm, a, b, "==", verbose);
-        }
+        // else if(are_maps_of_same_type(a, b)){
+        //     operate_on_maps(&vm, a, b, "==", verbose);
+        // }
         else{
             push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) == VALUE_AS_BOOL(b)});
         }
@@ -349,9 +353,9 @@ void vm_loop(bool verbose)
         else if(a.type == Value_Type::NULL_VALUE || b.type == Value_Type::NULL_VALUE){
             push(&vm, {Value_Type::BOOL, true});
         }
-        else if(are_maps_of_same_type(a, b)){
-            operate_on_maps(&vm, a, b, "!=", verbose);
-        }
+        // else if(are_maps_of_same_type(a, b)){
+        //     operate_on_maps(&vm, a, b, "!=", verbose);
+        // }
         else{
             push(&vm, {Value_Type::BOOL, VALUE_AS_BOOL(a) != VALUE_AS_BOOL(b)});
         }
@@ -365,10 +369,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) > std::get<double>(b.data)});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, ">", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, ">", verbose);
+        // }
         else
         {
             vm_error("Invalid types for greater than comparison");
@@ -383,10 +387,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) >= std::get<double>(b.data)});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, ">=", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, ">=", verbose);
+        // }
         else
         {
             vm_error("Invalid types for greater than or equal comparison");
@@ -401,10 +405,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) < std::get<double>(b.data)});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "<", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "<", verbose);
+        // }
         else
         {
             vm_error("Invalid types for less than comparison");
@@ -419,10 +423,10 @@ void vm_loop(bool verbose)
         {
             push(&vm, {Value_Type::BOOL, std::get<double>(a.data) <= std::get<double>(b.data)});
         }
-        else if (are_maps_of_same_type(a, b))
-        {
-            operate_on_maps(&vm, a, b, "<=", verbose);
-        }
+        // else if (are_maps_of_same_type(a, b))
+        // {
+        //     operate_on_maps(&vm, a, b, "<=", verbose);
+        // }
         else
         {
             vm_error("Invalid types for less than or equal comparison");
@@ -728,7 +732,77 @@ void vm_loop(bool verbose)
     //     vm.custom_types[VALUE_AS_STRING(type)][VALUE_AS_STRING(op)] = func;
     //     break;
     // }
+    case OpCode::OP_DEFINE_TYPE:
+    {
+        // get type
+        Value type = pop(&vm);
+        if (type.type != Value_Type::STRING)
+        {
+            vm_error("Invalid type name for custom type definition (not a string): " + get_value_type_string(type));
+        }
 
+        // get default value
+        Value default_value = pop(&vm);
+        
+        // get custom value
+        Value custom_value = pop(&vm);
+        if (custom_value.type != Value_Type::FUNCTION)
+        {
+            vm_error("Invalid type for custom value (not a function): " + get_value_type_string(custom_value));
+        }
+
+        add_custom_type(&vm, VALUE_AS_STRING(type), default_value, custom_value);
+    }
+    break;
+    case OpCode::OP_DEFINE_OP_FOR_TYPES:
+    {
+        // get opStr
+        Value op = pop(&vm);
+        if (op.type != Value_Type::STRING)
+        {
+            vm_error("Invalid type for custom operation");
+        }
+
+        // get type 
+        Value type = pop(&vm);
+        if (type.type != Value_Type::STRING)
+        {
+            vm_error("Invalid type for custom operation");
+        }
+
+        if(is_binary_operator(VALUE_AS_STRING(op))){
+            // Get second type
+            Value type2 = pop(&vm);
+            if (type2.type != Value_Type::STRING)
+            {
+                vm_error("Invalid type for custom operation");
+            }
+
+            // Get function
+            Value func = pop(&vm);
+            if (func.type != Value_Type::FUNCTION)
+            {
+                vm_error("Invalid type for custom operation");
+            }
+            // Add the custom operation to the custom types map
+            add_custom_op(&vm, std::tuple(VALUE_AS_STRING(type), VALUE_AS_STRING(type2)), VALUE_AS_STRING(op), func);
+        }
+        else if(is_unary_operator(VALUE_AS_STRING(op))){
+            // Get function
+            Value func = pop(&vm);
+            if (func.type != Value_Type::FUNCTION)
+            {
+                vm_error("Invalid type for custom operation");
+            }
+            // Add the custom operation to the custom types map
+            add_custom_op(&vm, std::tuple(VALUE_AS_STRING(type), VALUE_AS_STRING(type)), VALUE_AS_STRING(op), func);
+        }
+        else{
+            vm_error("Invalid operator: " + VALUE_AS_STRING(op));
+        }
+        
+    }
+    break;
     // Control flow operations
     case OpCode::OP_RETURN:
     {

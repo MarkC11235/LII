@@ -58,10 +58,22 @@ struct VM
     // std::vector<JIT_FUNCTION> jit_functions;
 
     // CUSTOM_TYPES
-    // custom map types
-    // contains a submap for each operator, each operator maps to a function that takes either a map or two maps (depending on the operator) and returns a Value
-    // map {"type_name": {"__op": Value}}
-    std::map<std::string, std::map<std::string, Value>> custom_types;
+    /*\
+    // types
+    vector< (name, default, custom_value) >
+
+    // ops
+    map{
+        string (op)
+        map{
+            tuple(type, type) (for unary ops, the two strings in the tuple will be the same)
+            Value (usually should be a function)
+        }
+    }
+    */
+
+    std::vector<std::tuple<std::string, Value, Value>> custom_types; // List of custom types
+    std::map<std::string, std::map<std::tuple<std::string, std::string>, Value>> custom_ops; 
 };
 
 VM vm; // Statically allocated because only one VM is needed
@@ -459,74 +471,146 @@ Value get_function_variable(VM* vm, const std::string &name)
 
 // Custom types
 // -------------------------------------------------------------------
+
+/**/
+void add_custom_type(VM* vm, std::string name, Value default_val, Value custom)
+{
+    // check if the type already exists
+    for(auto it = vm->custom_types.begin(); it != vm->custom_types.end(); it++){
+        if(std::get<0>(*it) == name){
+            vm_error("Custom type " + name + " already exists");
+        }
+    }
+
+    // add the custom type
+    vm->custom_types.push_back(std::make_tuple(name, default_val, custom));
+}
+
+/**/
+void add_custom_op(VM* vm, std::tuple<std::string, std::string> types, std::string name, Value op)
+{
+    // check if the op between the two types already exists
+    if(vm->custom_ops.find(name) != vm->custom_ops.end()){
+        if(vm->custom_ops[name].find(types) != vm->custom_ops[name].end()){
+            vm_error("Custom op " + name + " already exists");
+        }
+    }
+
+    // add the custom op
+    vm->custom_ops[name][types] = op;
+}
+
+bool type_exists(VM* vm, std::string name)
+{
+    for(auto it = vm->custom_types.begin(); it != vm->custom_types.end(); it++){
+        if(std::get<0>(*it) == name){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool op_exists(VM* vm, std::string name, std::tuple<std::string, std::string> types)
+{
+    if(vm->custom_ops.find(name) != vm->custom_ops.end()){
+        if(vm->custom_ops[name].find(types) != vm->custom_ops[name].end()){
+            return true;
+        }
+    }
+    return false;
+}
+
+Value get_custom_type(VM* vm, std::string name)
+{
+    for(auto it = vm->custom_types.begin(); it != vm->custom_types.end(); it++){
+        if(std::get<0>(*it) == name){
+            return std::get<1>(*it);
+        }
+    }
+    vm_error("Custom type " + name + " not found");
+    return Value(); // To avoid warning, but this line will never be reached because of vm_error
+}
+
+Value get_custom_op(VM* vm, std::string name, std::tuple<std::string, std::string> types)
+{
+    if(vm->custom_ops.find(name) != vm->custom_ops.end()){
+        if(vm->custom_ops[name].find(types) != vm->custom_ops[name].end()){
+            return vm->custom_ops[name][types];
+        }
+    }
+    vm_error("Custom op " + name + " not found");
+    return Value(); // To avoid warning, but this line will never be reached because of vm_error
+}
+
+
 /*
 Takes two values and returns true if they are both maps
 */
-bool are_maps(Value a, Value b)
-{
-    return a.type == Value_Type::MAP && b.type == Value_Type::MAP;
-}
+// bool are_maps(Value a, Value b)
+// {
+//     return a.type == Value_Type::MAP && b.type == Value_Type::MAP;
+// }
 
 /*
 Takes two values and returns true if they are both maps and have the same type (i.e. the same '__type' field)
 */
-bool are_maps_of_same_type(Value a, Value b)
-{
-    if (!are_maps(a, b))
-    {
-        return false;
-    }
-    std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
-    std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
-    if (map_a.find("__type") == map_a.end() || map_b.find("__type") == map_b.end())
-    {
-        return false;
-    }
-    return VALUE_AS_STRING(map_a["__type"]) == VALUE_AS_STRING(map_b["__type"]);
-}
+// bool are_maps_of_same_type(Value a, Value b)
+// {
+//     if (!are_maps(a, b))
+//     {
+//         return false;
+//     }
+//     std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+//     std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+//     if (map_a.find("__type") == map_a.end() || map_b.find("__type") == map_b.end())
+//     {
+//         return false;
+//     }
+//     return VALUE_AS_STRING(map_a["__type"]) == VALUE_AS_STRING(map_b["__type"]);
+// }
 
 /*
 Takes two maps and an operator and calls the function associated with the operator in the custom types
 */
-void operate_on_maps(VM* vm, Value a, Value b, std::string op, bool verbose = false)
-{
-    std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
-    std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
+// void operate_on_maps(VM* vm, Value a, Value b, std::string op, bool verbose = false)
+// {
+//     std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+//     std::map<std::string, Value> map_b = VALUE_AS_MAP(b);
 
-    // look for type and op in custom types
-    if(vm->custom_types.find(VALUE_AS_STRING(map_a["__type"])) == vm->custom_types.end()){
-        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " not found");
-    }
+//     // look for type and op in custom types
+//     if(vm->custom_types.find(VALUE_AS_STRING(map_a["__type"])) == vm->custom_types.end()){
+//         vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " not found");
+//     }
 
-    if(vm->custom_types[VALUE_AS_STRING(map_a["__type"])].find(op) == vm->custom_types[VALUE_AS_STRING(map_a["__type"])].end()){
-        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " does not have operator " + op);
-    }
+//     if(vm->custom_types[VALUE_AS_STRING(map_a["__type"])].find(op) == vm->custom_types[VALUE_AS_STRING(map_a["__type"])].end()){
+//         vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " does not have operator " + op);
+//     }
 
-    push(vm, {Value_Type::MAP, map_a});
-    push(vm, {Value_Type::MAP, map_b});
-    push(vm, vm->custom_types[VALUE_AS_STRING(map_a["__type"])][op]);
-    function_call(verbose);
-}
+//     push(vm, {Value_Type::MAP, map_a});
+//     push(vm, {Value_Type::MAP, map_b});
+//     push(vm, vm->custom_types[VALUE_AS_STRING(map_a["__type"])][op]);
+//     function_call(verbose);
+// }
 
 /*
 Takes a map and an operator and calls the function associated with the operator in the custom types
 */
-void operate_on_map(VM* vm, Value a, std::string op, bool verbose = false)
-{
-    std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
+// void operate_on_map(VM* vm, Value a, std::string op, bool verbose = false)
+// {
+//     std::map<std::string, Value> map_a = VALUE_AS_MAP(a);
 
-    // look for type and op in custom types
-    if(vm->custom_types.find(VALUE_AS_STRING(map_a["__type"])) == vm->custom_types.end()){
-        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " not found");
-    }
-    if(vm->custom_types[VALUE_AS_STRING(map_a["__type"])].find(op) == vm->custom_types[VALUE_AS_STRING(map_a["__type"])].end()){
-        vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " does not have operator " + op);
-    }
-    push(vm, {Value_Type::MAP, map_a});
-    push(vm, vm->custom_types[VALUE_AS_STRING(map_a["__type"])][op]);
-    function_call(verbose);
+//     // look for type and op in custom types
+//     if(vm->custom_types.find(VALUE_AS_STRING(map_a["__type"])) == vm->custom_types.end()){
+//         vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " not found");
+//     }
+//     if(vm->custom_types[VALUE_AS_STRING(map_a["__type"])].find(op) == vm->custom_types[VALUE_AS_STRING(map_a["__type"])].end()){
+//         vm_error("Custom type " + VALUE_AS_STRING(map_a["__type"]) + " does not have operator " + op);
+//     }
+//     push(vm, {Value_Type::MAP, map_a});
+//     push(vm, vm->custom_types[VALUE_AS_STRING(map_a["__type"])][op]);
+//     function_call(verbose);
 
-}
+// }
 // -------------------------------------------------------------------
 
 #endif // VM_HPP

@@ -532,18 +532,37 @@ void WRITE_TYPE_NAME(const std::string &name)
     variable_type_map.insert({variable_type_map.size(), name});
     // write to variable_names
     variable_names.push_back(name);
+    // write to constants
+    constants.push_back({Value_Type::STRING, name});
 }
 
 int get_type_index(const std::string &name)
 {
+    // make sure the type is in the variable_type_map
+    bool in_map = false;
     for (int i = 0; i < (int)variable_type_map.size(); i++)
     {
         if (variable_type_map[i] == name)
         {
+            in_map = true;
+            break;
+        }
+    }
+    if (!in_map)
+    {
+        interpretation_error("Type not found: " + name, nullptr, nullptr);
+    }
+
+    // get the name of the type from the constants array
+    for (int i = 0; i < (int)constants.size(); i++)
+    {
+        if (constants[i].type == Value_Type::STRING && VALUE_AS_STRING(constants[i]) == name)
+        {
             return i;
         }
     }
-    return -1;
+    interpretation_error("Type name string: " + name + " not found in constants", nullptr, nullptr);
+    return -1; // unreachable
 }
 
 bool is_valid_type(const std::string &name)
@@ -1415,7 +1434,7 @@ void interpret_type_define(Node *node, function *func)
     // write type name to the types array
     WRITE_TYPE_NAME(node->get_child(0)->get_value()); // Add the type name to the types array
     WRITE_BYTE(OpCode::OP_LOAD, func); // push type name to stack
-    WRITE_BYTE(variable_names.size() - 1, func); // push the index of the type name to the stack
+    WRITE_BYTE(constants.size() - 1, func); // push the index of the type name to the stack
     WRITE_BYTE(OpCode::OP_DEFINE_TYPE, func); // define the type
 }
 
@@ -1429,7 +1448,7 @@ void interpret_op_define(Node *node, function *func)
         interpretation_error("Left operand is not a variable", node, func);
     }
     
-    if(node->get_children().size() == 4){
+    if(node->get_children().size() == 4){ // binary operator
         evaluate(node->get_child(3), func);
         // get the right operand
         Node *r_child = node->get_child(2)->get_child(0);
@@ -1464,10 +1483,8 @@ void interpret_op_define(Node *node, function *func)
         type_index = get_type_index(l_child->get_value());
         WRITE_BYTE(type_index, func); // push the index of the type name to the stack
 
-
-
     }
-    else if(node->get_children().size() == 3){
+    else if(node->get_children().size() == 3){ // unary operator
         evaluate(node->get_child(2), func);
 
         // check if the type is a valid type
@@ -1486,8 +1503,8 @@ void interpret_op_define(Node *node, function *func)
         interpretation_error("Invalid operator type (must be binary or unary)", node, func);
     }
 
-    // push the operator to the stack
     
+    evaluate(node->get_child(0), func); // Operator symbol
 
     WRITE_BYTE(OpCode::OP_DEFINE_OP_FOR_TYPES, func); // define the operator
     
