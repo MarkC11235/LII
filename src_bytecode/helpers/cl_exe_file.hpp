@@ -16,6 +16,7 @@ struct cl_exe{
     
     std::vector<std::string> variable_names;
     std::vector<Value> constants;
+    std::vector<std::string> type_names;
 
     function* main;
 };
@@ -30,6 +31,6 @@ cl_exe* read_cl_exe(std::string path);
 /*
 Writes the output of the compiler to a .cl_exe file
 */
-void write_cl_exe(std::string name, std::string path, function* main, std::vector<std::string> variable_names, std::vector<Value> constants);
+void write_cl_exe(std::string name, std::string path, function* main, std::vector<std::string> variable_names, std::vector<Value> constants, std::vector<std::string> type_names);
 
 #endif //CALC_EXE_FILE_HPP

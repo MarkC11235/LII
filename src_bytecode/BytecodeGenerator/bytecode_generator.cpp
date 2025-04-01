@@ -25,6 +25,10 @@ void BytecodeGenerationPass::run(CompilerContext& context) {
             display_constants();
             std::cout << "Variables:" << std::endl;
             display_variables();
+            std::cout << "Types:" << std::endl;
+            for (const auto& type : variable_type_map) {
+                std::cout << type.first << ": " << type.second << std::endl;
+            }
         }
 
     }
@@ -55,6 +59,11 @@ void BytecodeGenerationPass::gen_test_file(std::string test_file_name, CompilerC
         std::cout << "Constants not found in context" << std::endl;
         return;
     }
+    if (!context.contains("type_names")) {
+        // CompilerContext::error("Type names not found in context");
+        std::cout << "Type names not found in context" << std::endl;
+        return;
+    }
 
     // Generate the full path for the test file
     std::string full_path = test_dir + "/" + test_file_name + ".cl_exe";
@@ -63,9 +72,10 @@ void BytecodeGenerationPass::gen_test_file(std::string test_file_name, CompilerC
     function* func = context.get<function*>("function");
     std::vector<std::string> variable_names = context.get<std::vector<std::string>>("variable_names");
     std::vector<Value> constants = context.get<std::vector<Value>>("constants");
+    std::vector<std::string> type_names = context.get<std::vector<std::string>>("type_names");
 
     // Write the bytecode file
-    write_cl_exe(test_file_name + ".cl_exe", test_dir + "/", func, variable_names, constants);
+    write_cl_exe(test_file_name + ".cl_exe", test_dir + "/", func, variable_names, constants, type_names);
 
     if (std::filesystem::exists(full_path)) {
         std::cout << "Test file generated: " << full_path << std::endl;
@@ -1633,7 +1643,7 @@ void generate_bytecode(Node *ast, CompilerContext& context)
     context.set("function", func);
     context.set("variable_names", variable_names);
     context.set("constants", constants);
-    context.set("types", variable_type_map);
+    context.set("type_names", variable_type_map);
 
     // write_cl_exe(name, "./", func, variable_names, constants);
 }

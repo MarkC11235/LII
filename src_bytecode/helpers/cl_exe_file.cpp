@@ -112,6 +112,14 @@ cl_exe* read_cl_exe(std::string path){
         exe->constants.push_back(constant);
     }
     
+    //read the type_names vector
+    std::string type_names_size;
+    std::getline(file, type_names_size);
+    for(int i = 0; i < std::stoi(type_names_size); i++){
+        std::string name;
+        std::getline(file, name);
+        exe->type_names.push_back(name);
+    }
 
     //read the main bytecode array
     exe->main = new function;
@@ -129,7 +137,7 @@ cl_exe* read_cl_exe(std::string path){
     return exe;
 }
 
-void write_cl_exe(std::string name, std::string path, function* main, std::vector<std::string> variable_names, std::vector<Value> constants){
+void write_cl_exe(std::string name, std::string path, function* main, std::vector<std::string> variable_names, std::vector<Value> constants, std::vector<std::string> type_names){
     //create a text file with the name of the program
     std::ofstream file;
     name = name.substr(0, name.find_last_of("."));
@@ -176,6 +184,12 @@ void write_cl_exe(std::string name, std::string path, function* main, std::vecto
         }
 
         // file << get_value_type_string(constant) << "|" << VALUE_AS_STRING(constant) << std::endl;
+    }
+
+    // write the type_names vector
+    file << type_names.size() << std::endl;
+    for(auto name : type_names){
+        file << name << std::endl;
     }
 
     //write the main bytecode array
