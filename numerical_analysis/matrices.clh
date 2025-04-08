@@ -1,22 +1,23 @@
-let matrix = map {
+global matrix = map {
     "__type": "matrix",
     "rows": 0,
     "cols": 0,
     "data": [[]]
 };
 
-let create_matrix = func(matrix, rows, cols, data){
-    matrix["rows"] = rows;
-    matrix["cols"] = cols;
-    matrix["data"] = data;
-    return matrix;
+let create_matrix = func(rows, cols, data){
+    let mat = matrix;
+    mat["rows"] = rows;
+    mat["cols"] = cols;
+    mat["data"] = data;
+    return mat;
 };
 
-define "!" in "matrix" as func(matrix){
-    matrix["rows"] = 0;
-    matrix["cols"] = 0;
-    matrix["data"] = [[]];
-    return matrix;
+define "!" in "matrix" as func(mat){
+    mat["rows"] = 0;
+    mat["cols"] = 0;
+    mat["data"] = [[]];
+    return mat;
 };
 
 define "*" in "matrix" as func(m1, m2){
@@ -81,34 +82,34 @@ define "-" in "matrix" as func(m1, m2){
     return result;
 };
 
-let transpose = func(matrix){
-    let r = matrix["rows"];
-    let c = matrix["cols"];
+let transpose = func(mat){
+    let r = mat["rows"];
+    let c = mat["cols"];
 
-    let result = !matrix;
+    let result = !mat;
     result["rows"] = c;
     result["cols"] = r;
     result["data"] = c * [r * [0]];
 
     for (let i = 0; i < r; i = i + 1){
         for (let j = 0; j < c; j = j + 1){
-            result["data"][j][i] = matrix["data"][i][j];
+            result["data"][j][i] = mat["data"][i][j];
         }
     }
     return result;
 };
 
-let inverse = func(matrix){
-    let r = matrix["rows"];
-    let c = matrix["cols"];
+let inverse = func(mat){
+    let r = mat["rows"];
+    let c = mat["cols"];
 
     if (r != c){
         print "Error: Matrix must be square to find inverse";
         return null;
     }
 
-    let A = matrix;
-    let I = !matrix;
+    let A = mat;
+    let I = !mat;
     I["rows"] = r;
     I["cols"] = c;
     I["data"] = r * [c * [0]];
@@ -163,10 +164,10 @@ let inverse = func(matrix){
     return I;
 };
 
-let print_matrix = func(matrix){
+let print_matrix = func(mat){
     let padding = 23;
-    let width = matrix["cols"];
-    let height = matrix["rows"];
+    let width = mat["cols"];
+    let height = mat["rows"];
     let temp = "--";
     for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
         temp = temp + " ";
@@ -177,16 +178,16 @@ let print_matrix = func(matrix){
     for (let i = 0; i < height; i = i + 1){
         let temp = "|";
         for (let j = 0; j < width; j = j + 1){
-            let len = $string_length(matrix["data"][i][j] + "");
+            let len = $string_length(mat["data"][i][j] + "");
             for (let k = 0; k < padding - len; k = k + 1){
                 temp = temp + " ";
             }
             if (j == width - 1){
-                temp = temp + matrix["data"][i][j] + " |";
+                temp = temp + mat["data"][i][j] + " |";
                 print temp;
             }
             else{
-                temp = temp + matrix["data"][i][j] + " ";
+                temp = temp + mat["data"][i][j] + " ";
             }
         }
     }
@@ -202,17 +203,17 @@ let print_matrix = func(matrix){
     return 0;
 };
 
-let hilbert_matrix = func(matrix, n) {
-    matrix["rows"] = n;
-    matrix["cols"] = n;
-    matrix["data"] = n * [n * [0]];
+let hilbert_matrix = func(mat, n) {
+    mat["rows"] = n;
+    mat["cols"] = n;
+    mat["data"] = n * [n * [0]];
     for (let i = 0; i < n; i = i + 1){
         for (let j = 0; j < n; j = j + 1){
             // matrix["data"][i][j] = 1 / (i + j - 1); // if we are using 1-based indexing
-            matrix["data"][i][j] = 1 / (i + j + 1); // because we are using 0-based indexing
+            mat["data"][i][j] = 1 / (i + j + 1); // because we are using 0-based indexing
         }
     }
-    return matrix;
+    return mat;
 };
 
 let solve_system = func(A, b){
@@ -261,16 +262,16 @@ let solve_system = func(A, b){
     return b;
 };
 
-let matrix_to_vector = func(matrix){
-    if(matrix["cols"] == 1){
-        let vector = matrix["rows"] * [0];
-        for(let i = 0; i < matrix["rows"]; i = i + 1){
-            vector[i] = matrix["data"][i][0];
+let matrix_to_vector = func(mat){
+    if(mat["cols"] == 1){
+        let vector = mat["rows"] * [0];
+        for(let i = 0; i < mat["rows"]; i = i + 1){
+            vector[i] = mat["data"][i][0];
         }
         return vector;
     }
-    else if(matrix["rows"] == 1){
-        return matrix["data"][0];
+    else if(mat["rows"] == 1){
+        return mat["data"][0];
     }
     else{
         print "Error: Invalid matrix dimensions to convert to vector";
@@ -311,17 +312,17 @@ let norm = func(vector, type){
     return -1;
 };
 
-let matrix_norm = func(matrix, type){
+let matrix_norm = func(mat, type){
     let abs = func(x){if (x < 0){return -x;} return x;};
-    let r = matrix["rows"];
-    let c = matrix["cols"];
+    let r = mat["rows"];
+    let c = mat["cols"];
 
     if(type == "inf"){ // max abs row sum
         let max = 0;
         for(let i = 0; i < r; i = i + 1){
             let sum = 0;
             for(let j = 0; j < c; j = j + 1){
-                sum = sum + abs(matrix["data"][i][j]);
+                sum = sum + abs(mat["data"][i][j]);
             }
             if(sum > max){
                 max = sum;
