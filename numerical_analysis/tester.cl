@@ -1,4 +1,4 @@
-#"./numerical_analysis/matrices.clh"
+#"./matrices.clh"
 
 let B = create_matrix(3, 3, [
     [1, 2, 1],
