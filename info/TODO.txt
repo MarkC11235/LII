@@ -137,3 +137,8 @@ let tol = 10^-14;
 // TODO: ADD 
 //           exit expr ; // exit the program completely and prints the value of expr
 // TODO: ADD bitwise operators (&, |, ^, ~, <<, >>)
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+utilize namespaces for the compiler and vm 

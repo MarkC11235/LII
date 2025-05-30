@@ -258,52 +258,13 @@ Will overwrite the variable if one with the same name already exists
 void set_variable(VM* vm, const std::string &name, Value value, int assignment_type, int variable_type)
 {
     function_frame *frame = get_current_function_frame(vm);
-    // frame->variables[frame->current_scope][name] = value;
-
-    // convert variable type to string
-    // std::string variable_type_string = "";
-    // switch (variable_type)
-    // {
-    //     case 0:
-    //         variable_type_string = "any";
-    //         break;
-    //     case 1:
-    //         variable_type_string = "number";
-    //         break;
-    //     case 2:
-    //         variable_type_string = "string";
-    //         break;
-    //     case 3:
-    //         variable_type_string = "bool";
-    //         break;
-    //     case 4:
-    //         variable_type_string = "null";
-    //         break;
-    //     case 5:
-    //         variable_type_string = "vector";
-    //         break;
-    //     case 6: 
-    //         variable_type_string = "map";
-    //         break;
-    //     case 7:
-    //         variable_type_string = "func";
-    //         break;
-    //     default:    
-    //         vm_error("Invalid variable type: " + std::to_string(variable_type));
-    //         break;
-    // }
     std::string variable_type_string = Variable::type_to_string(variable_type);
 
-    // std::cout << "Variable name: " << name << std::endl;
-    // std::cout << "Value type code: " << (int)value.type << std::endl;
-    // std::cout << "Value data type: " << value.data.index() << std::endl;
     // check if the variable and value are the same type
     if(variable_type_string != get_value_type_string(value) && variable_type_string != "any"){
         vm_error("set_variable(): Cannot set variable " + name + " of type " + variable_type_string + " with value of type " + get_value_type_string(value));
     }
 
-
-    // global 
     if(assignment_type == 2){ // global
         // check if we are in the main function
         if(vm->function_frames.size() != 1){
@@ -313,25 +274,18 @@ void set_variable(VM* vm, const std::string &name, Value value, int assignment_t
         if(vm->global_variables.find(name) != vm->global_variables.end()){
             vm_error("Global variable " + name + " already exists and cannot be overwritten");
         }
-        // vm->global_variables[name] = std::make_tuple(value, "global", variable_type_string);
-        vm->global_variables[name] = Variable(name, Declaration_Type::DECLARATION_GLOBAL, variable_type, value); // Using the Variable class to create a global variable
+        vm->global_variables[name] = Variable(name, Declaration_Type::DECLARATION_GLOBAL, variable_type_string, value); 
     }
-
-    // const 
     else if(assignment_type == 1){ // const
         // check if the variable already exists in the most inner scope
         if (frame->variables[frame->current_scope].find(name) != frame->variables[frame->current_scope].end()){
             vm_error("Variable " + name + " already exists in the current scope and cannot be overwritten");
         }
-        // frame->variables[frame->current_scope][name] = std::make_tuple(value, "const", variable_type_string);
-        frame->variables[frame->current_scope][name] = Variable(name, Declaration_Type::DECLARATION_CONST, variable_type, value); // Using the Variable class to create a const variable
+        frame->variables[frame->current_scope][name] = Variable(name, Declaration_Type::DECLARATION_CONST, variable_type_string, value); 
     }
-
-    // let
     else if(assignment_type == 0){ // let
         // add the variable to the current scope allowing overwriting
-        // frame->variables[frame->current_scope][name] = std::make_tuple(value, "let", variable_type_string);
-        frame->variables[frame->current_scope][name] = Variable(name, Declaration_Type::DECLARATION_LET, variable_type, value); // Using the Variable class to create a let variable
+        frame->variables[frame->current_scope][name] = Variable(name, Declaration_Type::DECLARATION_LET, variable_type_string, value); 
     }
 
     else{
@@ -348,38 +302,17 @@ void update_variable(VM* vm, const std::string &name, Value value)
     function_frame *frame = get_current_function_frame(vm);
     for (int i = frame->current_scope; i >= 0; i--)
     {
-        // std::cout << "Checking scope " << i << std::endl;
-        // std::cout << "Variable name: " << name << std::endl;
-        // //print out the variables in the scope
-        // for(auto it = frame->variables[i].begin(); it != frame->variables[i].end(); it++){
-        //     std::cout << "Variable: " << it->first << std::endl;
-        // }
-        // std::cout << "------------------------" << std::endl;
-
-
         if (frame->variables[i].find(name) != frame->variables[i].end())
         {
-            // frame->variables[i][name] = value;
-            // return;
-
-            // check if the variable is const
-            // if (std::get<1>(frame->variables[i][name]) == "const")
-            // {
-            //     vm_error("Cannot update const variable " + name);
-            // }
             if(frame->variables[i][name].is_const()){
                 vm_error("Cannot update const variable " + name);
             }
 
-            // frame->variables[i][name] = std::make_tuple(value, "let");
-            // check if it is hte same type
-            // std::string variable_type = std::get<2>(frame->variables[i][name]);
-            std::string variable_type = frame->variables[i][name].get_type_as_string(); // get the type of the variable from the Variable class
+            std::string variable_type = frame->variables[i][name].get_type(); 
             if(variable_type != get_value_type_string(value) && variable_type != "any"){
                 vm_error("Cannot update variable " + name + " of type " + variable_type + " with value of type " + get_value_type_string(value));
             }
-            // frame->variables[i][name] = std::make_tuple(value, "let", variable_type);
-            frame->variables[i][name].set_value(value); // Update the value using the Variable class method
+            frame->variables[i][name].set_value(value); 
             return;
         }
     }

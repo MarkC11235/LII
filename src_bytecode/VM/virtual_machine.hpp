@@ -944,7 +944,7 @@ void display_debug_info()
         for(const auto& pair : scope_variables)
         {
             // std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second) << std::endl;
-            std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second.get_value()) << std::endl;
+            std::cout << "\t\t\t" << pair.second.get_declaration_type_as_string() << " " << get_value_type_string(pair.second.get_value()) << " " << pair.first + ": " << VALUE_AS_STRING(pair.second.get_value()) << std::endl;
         }
     }
 
@@ -952,7 +952,7 @@ void display_debug_info()
     std::cout << "Stack: \n";
     for(int i = 0; i < vm.stack_count; i++)
     {
-        std::cout << VALUE_AS_STRING(vm.stack[i]) << std::endl;
+        std::cout << get_value_type_string(vm.stack[i]) + ": " << VALUE_AS_STRING(vm.stack[i]) << std::endl;
     }
 
     std::cout << "--------------------------------------------------------------------" << std::endl;

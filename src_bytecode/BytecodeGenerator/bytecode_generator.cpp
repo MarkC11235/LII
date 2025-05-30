@@ -1054,7 +1054,12 @@ void interpret_assign(Node *node, function *func)
     //     var_type = -1;
     //     interpretation_error("Invalid variable type: " + variable_type, node, func);
     // }
-    int var_type = (int)Variable::string_to_type(variable_type); // Convert the string to the corresponding variable type
+    // int var_type = (int)Variable::string_to_type(variable_type); // Convert the string to the corresponding variable type
+    // if (var_type == -1)
+    // {
+    //     interpretation_error("Invalid variable type: " + variable_type, node, func);
+    // }
+    int var_type = Variable::type_index(variable_type); // Convert the string to the corresponding variable type index
     if (var_type == -1)
     {
         interpretation_error("Invalid variable type: " + variable_type, node, func);
