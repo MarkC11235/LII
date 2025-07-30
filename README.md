@@ -24,7 +24,7 @@ To Use:
 If you want to compile the compilier and interpreter from source, you will need to have the following installed on your system:
 
 1. Make  
-2. Clang++-16 (Earlier versions may work but have not been tested)  
+2. Clang++-16 (Earlier versions may work but have not been tested, really just need the c++17 standard)  
 3. SDL2 (For the graphics library)  
 
 ## **Syntax Highlighting for Visual Studio Code**
@@ -76,6 +76,53 @@ Maps to a std::map<std::string, Value> in C++
 ## **Functions**
 
 All functions must return a value (this extends to stdlib functions). This also means that when calling a function, you must assign the return value to a variable or use it in an expression. 
+
+## **Assignment Types**
+
+There are 3 different options when creating a variable, let, const, and global.   
+
+### let
+
+- let creates a variable in the current function and local scope your are in.    
+- The variable can only be accessed within the function it was created in.  
+- The variable also can only be accessed in the local scope it was created or in deeper local scopes.   
+- When accessing one of these variables, the vm will look up the scopes and choose the closest one.  
+
+```
+let x = 5;
+x = 77;
+```
+
+### const
+
+- const creates a variable in the current function and local scope your are in.    
+- The variable can only be accessed within the function it was created in.  
+- The variable also can only be accessed in the local scope it was created or in deeper local scopes.   
+- The variable is unable to be modified
+
+```
+const x = 5;
+x = 77; // ERROR
+```
+
+### global
+
+- global creates a variable in the global scope    
+- The variable is unable to be modified
+- Can only create globals when in the global scope
+- Can be accessed from anywhere
+- let and const binded variables will shadow global variables with the same name  
+
+
+```
+global x = 5;
+
+let f = func(){
+    print x; // 5
+};
+```
+
+
 
 ## **Syntax Examples**
 
@@ -286,6 +333,25 @@ print argc; // Output: 3
 print argv; // Output: ["arg1", "arg2", "arg3"]
 ```
 
+### Strong Typed Variable
+Can require a variable to remain a certain type  
+
+'''  
+let number x = 5;
+let string s = "Hello";
+let bool   b = true;
+let null   n = null;
+let func   f = func () {return 1;};
+let map    m = map {"name":"Bob"};
+let vector v = [1, 2, 3];
+'''  
+
+Also can use the any type to be explicit, but the following two lines of code are equivalent  
+```
+let any x = 1;
+let x = 1;
+```
+
 ## **Standard Library** 
 
 CastleLang has a built in standard library implemented in C++. These functions are able to be called from .cl file by prefixing a function call with '$'. An example of this is -> 
@@ -468,10 +534,9 @@ The tokenizer skips invalid characters and does not throw an error.
 
 ## **Future Plans**
 
-1. Expand the standard library  
-2. Improve the jit compiler  
-    - make the jit compiler look ahead in the bytecode and identify chunks of the code that would be good to compile together. Do this on another thread so that the main thread can continue to run the VM.
-
+1. Make functions allow for typed args 
+2. Expand the standard library  
+3. Remake and reintegrate the jit compiler
 
 
 ## Standard Library Functions
@@ -613,3 +678,8 @@ The `STD_LIB_FUNCTIONS_DEFINITIONS` vector contains the definitions of all stand
 - Hash: 422453b6faf2f7a5409904e811ec3271e4806603
 - Date: 3/13/2025
 - Compiler infrastructure rework complete
+
+### Version 2.0.0  
+- Hash:  
+- Date: 7/29/2025  
+- Addition of option to require that varibles be a certain type and global and const variable assignment types  
