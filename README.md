@@ -543,7 +543,8 @@ The tokenizer skips invalid characters and does not throw an error.
     - Allow the operation to be define between any type, not just between the same type 
 4. Expand the standard library  
 5. Remake and reintegrate the jit compiler
-
+6. Make it so that SDL2 isn't required to build the compiler and interpreter
+    - Maybe make it more of a plugin
 
 ## Standard Library Functions
 
