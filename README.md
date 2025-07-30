@@ -336,7 +336,7 @@ print argv; // Output: ["arg1", "arg2", "arg3"]
 ### Strong Typed Variable
 Can require a variable to remain a certain type  
 
-'''  
+```  
 let number x = 5;
 let string s = "Hello";
 let bool   b = true;
@@ -344,7 +344,7 @@ let null   n = null;
 let func   f = func () {return 1;};
 let map    m = map {"name":"Bob"};
 let vector v = [1, 2, 3];
-'''  
+```  
 
 Also can use the any type to be explicit, but the following two lines of code are equivalent  
 ```
@@ -534,9 +534,15 @@ The tokenizer skips invalid characters and does not throw an error.
 
 ## **Future Plans**
 
-1. Make functions allow for typed args 
-2. Expand the standard library  
-3. Remake and reintegrate the jit compiler
+1. Make functions allow for typed args  
+2. Allow custom user defined types 
+    - These will have a base storage type (has to be a built in type) and a super type
+    - The super type will be used before the base type when doing operations between types
+3. Make the syntax for defining operations between types better
+    - Don't use __type field in a map
+    - Allow the operation to be define between any type, not just between the same type 
+4. Expand the standard library  
+5. Remake and reintegrate the jit compiler
 
 
 ## Standard Library Functions
@@ -680,6 +686,6 @@ The `STD_LIB_FUNCTIONS_DEFINITIONS` vector contains the definitions of all stand
 - Compiler infrastructure rework complete
 
 ### Version 2.0.0  
-- Hash:  
+- Hash: 1eac618 
 - Date: 7/29/2025  
 - Addition of option to require that varibles be a certain type and global and const variable assignment types  
