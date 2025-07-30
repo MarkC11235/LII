@@ -26,10 +26,10 @@ struct function_frame
 
 struct VM; // Forward declaration
 
-typedef void (*JIT_FUNCTION)(VM* vm);
+//typedef void (*JIT_FUNCTION)(VM* vm);
 
 // #define CALLS_TO_JIT 1
-#define JIT_OPTIMIZATION_LEVEL "-O2"
+//#define JIT_OPTIMIZATION_LEVEL "-O2"
 
 Value pop(VM* vm);
 Value top(VM* vm);

@@ -1,4 +1,4 @@
-CC = clang++-16
+CC = clang++
 CXXFLAGS = -Wall -std=c++17 -I$(SRC_DIR)
 LDFLAGS = -lSDL2 -lSDL2_ttf
 INPUT_FILE = tester.cl
@@ -63,7 +63,7 @@ $(VM_EXE): $(VM_OBJS)
 	@$(CC) -o $(VM_EXE) $(VM_OBJS) $(LDFLAGS)
 	@echo "VM executable created: $(VM_EXE)"
 
-build: clean $(EMBEDDED_FONT_OBJ) $(COMPILER_EXE) $(VM_EXE) 
+build: $(EMBEDDED_FONT_OBJ) $(COMPILER_EXE) $(VM_EXE) 
 	@echo "Build completed."
 
 clean:
