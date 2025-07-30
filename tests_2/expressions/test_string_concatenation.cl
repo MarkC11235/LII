@@ -1,4 +1,4 @@
-let str = "Hello, World!";
+let string str = "Hello, World!";
 
 str = str + " Welcome to the world of Calc!";
 

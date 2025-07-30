@@ -92,7 +92,7 @@ Value_Type get_value_type_from_string(std::string type) {
         return Value_Type::STRING;
     } else if(type == "vector") {
         return Value_Type::VECTOR;
-    } else if(type == "function") {
+    } else if(type == "func") {
         return Value_Type::FUNCTION;
     } else if(type == "null") {
         return Value_Type::NULL_VALUE;
@@ -113,7 +113,7 @@ std::string get_value_type_string(Value value) {
         case VECTOR:
             return "vector";
         case FUNCTION:
-            return "function";
+            return "func";
         case NULL_VALUE:
             return "null";
         case MAP:

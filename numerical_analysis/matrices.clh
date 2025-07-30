@@ -5,12 +5,11 @@ global matrix = map {
     "data": [[]]
 };
 
-let create_matrix = func(rows, cols, data){
-    let mat = matrix;
-    mat["rows"] = rows;
-    mat["cols"] = cols;
-    mat["data"] = data;
-    return mat;
+let func create_matrix = func(matrix, rows, cols, data){
+    matrix["rows"] = rows;
+    matrix["cols"] = cols;
+    matrix["data"] = data;
+    return matrix;
 };
 
 define "!" in "matrix" as func(mat){
@@ -26,14 +25,14 @@ define "*" in "matrix" as func(m1, m2){
         return null;
     }
 
-    let result = !m1;
+    let map result = !m1;
     result["rows"] = m1["rows"];
     result["cols"] = m2["cols"];
     result["data"] = m1["rows"] * [m2["cols"] * [0]];
 
-    for (let i = 0; i < m1["rows"]; i = i + 1){
-        for (let j = 0; j < m2["cols"]; j = j + 1){
-            for (let k = 0; k < m1["cols"]; k = k + 1){
+    for (let number i = 0; i < m1["rows"]; i = i + 1){
+        for (let number j = 0; j < m2["cols"]; j = j + 1){
+            for (let number k = 0; k < m1["cols"]; k = k + 1){
                 result["data"][i][j] = result["data"][i][j] + m1["data"][i][k] * m2["data"][k][j];
             }
         }
@@ -48,13 +47,13 @@ define "+" in "matrix" as func(m1, m2){
         return null;
     }
 
-    let result = !m1;
+    let map result = !m1;
     result["rows"] = m1["rows"];
     result["cols"] = m1["cols"];
     result["data"] = m1["rows"] * [m1["cols"] * [0]];
 
-    for (let i = 0; i < m1["rows"]; i = i + 1){
-        for (let j = 0; j < m1["cols"]; j = j + 1){
+    for (let number i = 0; i < m1["rows"]; i = i + 1){
+        for (let number j = 0; j < m1["cols"]; j = j + 1){
             result["data"][i][j] = m1["data"][i][j] + m2["data"][i][j];
         }
     }
@@ -68,13 +67,13 @@ define "-" in "matrix" as func(m1, m2){
         return null;
     }
 
-    let result = !m1;
+    let map result = !m1;
     result["rows"] = m1["rows"];
     result["cols"] = m1["cols"];
     result["data"] = m1["rows"] * [m1["cols"] * [0]];
 
-    for (let i = 0; i < m1["rows"]; i = i + 1){
-        for (let j = 0; j < m1["cols"]; j = j + 1){
+    for (let number i = 0; i < m1["rows"]; i = i + 1){
+        for (let number j = 0; j < m1["cols"]; j = j + 1){
             result["data"][i][j] = m1["data"][i][j] - m2["data"][i][j];
         }
     }
@@ -82,57 +81,57 @@ define "-" in "matrix" as func(m1, m2){
     return result;
 };
 
-let transpose = func(mat){
-    let r = mat["rows"];
-    let c = mat["cols"];
+let func transpose = func(matrix){
+    let number r = matrix["rows"];
+    let number c = matrix["cols"];
 
-    let result = !mat;
+    let map result = !matrix;
     result["rows"] = c;
     result["cols"] = r;
     result["data"] = c * [r * [0]];
 
-    for (let i = 0; i < r; i = i + 1){
-        for (let j = 0; j < c; j = j + 1){
-            result["data"][j][i] = mat["data"][i][j];
+    for (let number i = 0; i < r; i = i + 1){
+        for (let number j = 0; j < c; j = j + 1){
+            result["data"][j][i] = matrix["data"][i][j];
         }
     }
     return result;
 };
 
-let inverse = func(mat){
-    let r = mat["rows"];
-    let c = mat["cols"];
+let func inverse = func(matrix){
+    let number r = matrix["rows"];
+    let number c = matrix["cols"];
 
     if (r != c){
         print "Error: Matrix must be square to find inverse";
         return null;
     }
 
-    let A = mat;
-    let I = !mat;
+    let map A = matrix;
+    let map I = !matrix;
     I["rows"] = r;
     I["cols"] = c;
     I["data"] = r * [c * [0]];
-    for (let i = 0; i < r; i = i + 1){
+    for (let number i = 0; i < r; i = i + 1){
         I["data"][i][i] = 1;
     }
 
     // Helper functions ------------------------------------------
-    let scale_row = func(A, I, row, scale){
-        for (let i = 0; i < A["cols"]; i = i + 1){
+    let func scale_row = func(A, I, row, scale){
+        for (let number i = 0; i < A["cols"]; i = i + 1){
             A["data"][row][i] = A["data"][row][i] * scale;
         }
-        for (let i = 0; i < I["cols"]; i = i + 1){
+        for (let number i = 0; i < I["cols"]; i = i + 1){
             I["data"][row][i] = I["data"][row][i] * scale;
         }
         return [A, I];
     };
 
-    let add_row = func(A, I, row1, row2, scale){
-        for (let i = 0; i < A["cols"]; i = i + 1){
+    let func add_row = func(A, I, row1, row2, scale){
+        for (let number i = 0; i < A["cols"]; i = i + 1){
             A["data"][row1][i] = A["data"][row1][i] + A["data"][row2][i] * scale;
         }
-        for (let i = 0; i < I["cols"]; i = i + 1){
+        for (let number i = 0; i < I["cols"]; i = i + 1){
             I["data"][row1][i] = I["data"][row1][i] + I["data"][row2][i] * scale;
         }
         return [A, I];
@@ -140,22 +139,22 @@ let inverse = func(mat){
     // -----------------------------------------------------------
 
     // Gaussian Elimination
-    for(let i = 0; i < r; i = i + 1){
+    for(let number i = 0; i < r; i = i + 1){
         // Scale A[i][i] to 1
         if (A["data"][i][i] == 0){
             print "Error: Division by zero";
             return null;
         }
-        let scale = 1 / A["data"][i][i];
-        let temp = scale_row(A, I, i, scale);
+        let number scale = 1 / A["data"][i][i];
+        let vector temp = scale_row(A, I, i, scale);
         A = temp[0];
         I = temp[1];
 
         // Eliminate all elements in the column
-        for(let j = 0; j < r; j = j + 1){
+        for(let number j = 0; j < r; j = j + 1){
             if(j == i){continue;}
-            let scale = -A["data"][j][i];
-            let temp = add_row(A, I, j, i, scale);
+            let number scale = -A["data"][j][i];
+            let vector temp = add_row(A, I, j, i, scale);
             A = temp[0];
             I = temp[1];
         }
@@ -164,22 +163,22 @@ let inverse = func(mat){
     return I;
 };
 
-let print_matrix = func(mat){
-    let padding = 23;
-    let width = mat["cols"];
-    let height = mat["rows"];
-    let temp = "--";
-    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
+let func print_matrix = func(matrix){
+    let number padding = 23;
+    let number width = matrix["cols"];
+    let number height = matrix["rows"];
+    let string temp = "--";
+    for (let number i = 0; i < width * (padding + 1) - 2; i = i + 1){
         temp = temp + " ";
     }
     temp = temp + "--";
     print temp;
 
-    for (let i = 0; i < height; i = i + 1){
-        let temp = "|";
-        for (let j = 0; j < width; j = j + 1){
-            let len = $string_length(mat["data"][i][j] + "");
-            for (let k = 0; k < padding - len; k = k + 1){
+    for (let number i = 0; i < height; i = i + 1){
+        let string temp = "|";
+        for (let number j = 0; j < width; j = j + 1){
+            let number len = $string_length(matrix["data"][i][j] + "");
+            for (let number k = 0; k < padding - len; k = k + 1){
                 temp = temp + " ";
             }
             if (j == width - 1){
@@ -193,7 +192,7 @@ let print_matrix = func(mat){
     }
 
     temp = "--";
-    for (let i = 0; i < width * (padding + 1) - 2; i = i + 1){
+    for (let number i = 0; i < width * (padding + 1) - 2; i = i + 1){
         temp = temp + " ";
     }
     temp = temp + "--";
@@ -203,12 +202,12 @@ let print_matrix = func(mat){
     return 0;
 };
 
-let hilbert_matrix = func(mat, n) {
-    mat["rows"] = n;
-    mat["cols"] = n;
-    mat["data"] = n * [n * [0]];
-    for (let i = 0; i < n; i = i + 1){
-        for (let j = 0; j < n; j = j + 1){
+let func hilbert_matrix = func(matrix, n) {
+    matrix["rows"] = n;
+    matrix["cols"] = n;
+    matrix["data"] = n * [n * [0]];
+    for (let number i = 0; i < n; i = i + 1){
+        for (let number j = 0; j < n; j = j + 1){
             // matrix["data"][i][j] = 1 / (i + j - 1); // if we are using 1-based indexing
             mat["data"][i][j] = 1 / (i + j + 1); // because we are using 0-based indexing
         }
@@ -216,20 +215,20 @@ let hilbert_matrix = func(mat, n) {
     return mat;
 };
 
-let solve_system = func(A, b){
-    let n = A["rows"];
+let func solve_system = func(A, b){
+    let number n = A["rows"];
 
     // Helper functions ------------------------------------------
-    let scale_row = func(A, b, row, scale){
-        for (let i = 0; i < A["cols"]; i = i + 1){
+    let func scale_row = func(A, b, row, scale){
+        for (let number i = 0; i < A["cols"]; i = i + 1){
             A["data"][row][i] = A["data"][row][i] * scale;
         }
         b["data"][row][0] = b["data"][row][0] * scale;
         return [A, b];
     };
 
-    let add_row = func(A, b, row1, row2, scale){
-        for (let i = 0; i < A["cols"]; i = i + 1){
+    let func add_row = func(A, b, row1, row2, scale){
+        for (let number i = 0; i < A["cols"]; i = i + 1){
             A["data"][row1][i] = A["data"][row1][i] + A["data"][row2][i] * scale;
         }
         b["data"][row1][0] = b["data"][row1][0] + b["data"][row2][0] * scale;
@@ -238,22 +237,22 @@ let solve_system = func(A, b){
     // -----------------------------------------------------------
 
     // Gaussian Elimination
-    for(let i = 0; i < n; i = i + 1){
+    for(let number i = 0; i < n; i = i + 1){
         // Scale A[i][i] to 1
         if (A["data"][i][i] == 0){
             print "Error: Division by zero";
             return null;
         }
-        let scale = 1 / A["data"][i][i];
-        let temp = scale_row(A, b, i, scale);
+        let number scale = 1 / A["data"][i][i];
+        let vector temp = scale_row(A, b, i, scale);
         A = temp[0];
         b = temp[1];
 
         // Eliminate all elements in the column
-        for(let j = 0; j < n; j = j + 1){
+        for(let number j = 0; j < n; j = j + 1){
             if(j == i){continue;}
-            let scale = -A["data"][j][i];
-            let temp = add_row(A, b, j, i, scale);
+            let number scale = -A["data"][j][i];
+            let vector temp = add_row(A, b, j, i, scale);
             A = temp[0];
             b = temp[1];
         }
@@ -262,11 +261,11 @@ let solve_system = func(A, b){
     return b;
 };
 
-let matrix_to_vector = func(mat){
-    if(mat["cols"] == 1){
-        let vector = mat["rows"] * [0];
-        for(let i = 0; i < mat["rows"]; i = i + 1){
-            vector[i] = mat["data"][i][0];
+let func matrix_to_vector = func(matrix){
+    if(matrix["cols"] == 1){
+        let vector vector = matrix["rows"] * [0];
+        for(let number i = 0; i < matrix["rows"]; i = i + 1){
+            vector[i] = matrix["data"][i][0];
         }
         return vector;
     }
@@ -280,27 +279,27 @@ let matrix_to_vector = func(mat){
     return null; // should never reach here
 };
 
-let norm = func(vector, type){
-    let abs = func(x){if (x < 0){return -x;} return x;};
-    let n = $vector_length(vector);
+let func norm = func(vector, type){
+    let func abs = func(x){if (x < 0){return -x;} return x;};
+    let number n = $vector_length(vector);
     
     if(type == "1"){
-        let sum = 0;
-        for(let i = 0; i < n; i = i + 1){
+        let number sum = 0;
+        for(let number i = 0; i < n; i = i + 1){
             sum = sum + abs(vector[i]);
         }
         return sum;
     }
     if(type == "2"){
-        let sum = 0;
-        for(let i = 0; i < n; i = i + 1){
+        let number sum = 0;
+        for(let number i = 0; i < n; i = i + 1){
             sum = sum + vector[i] * vector[i];
         }
         return $sqrt(sum);
     }
     if(type == "inf"){
-        let max = abs(vector[0]);
-        for(let i = 1; i < n; i = i + 1){
+        let number max = abs(vector[0]);
+        for(let number i = 1; i < n; i = i + 1){
             if(abs(vector[i]) > max){
                 max = abs(vector[i]);
             }
@@ -312,17 +311,17 @@ let norm = func(vector, type){
     return -1;
 };
 
-let matrix_norm = func(mat, type){
-    let abs = func(x){if (x < 0){return -x;} return x;};
-    let r = mat["rows"];
-    let c = mat["cols"];
+let func matrix_norm = func(matrix, type){
+    let func abs = func(x){if (x < 0){return -x;} return x;};
+    let number r = matrix["rows"];
+    let number c = matrix["cols"];
 
     if(type == "inf"){ // max abs row sum
-        let max = 0;
-        for(let i = 0; i < r; i = i + 1){
-            let sum = 0;
-            for(let j = 0; j < c; j = j + 1){
-                sum = sum + abs(mat["data"][i][j]);
+        let number max = 0;
+        for(let number i = 0; i < r; i = i + 1){
+            let number sum = 0;
+            for(let number j = 0; j < c; j = j + 1){
+                sum = sum + abs(matrix["data"][i][j]);
             }
             if(sum > max){
                 max = sum;

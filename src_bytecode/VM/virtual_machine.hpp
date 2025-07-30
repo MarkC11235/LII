@@ -31,13 +31,13 @@ void init_vm(cl_exe* exe, bool jit, int calls_to_jit = 10, int stack_capacity = 
     // vm.calls_to_jit = calls_to_jit;
 
     // Add argc and argv to the main function as variables
-    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count}, "global");
+    set_variable(&vm, "argc", {Value_Type::NUMBER, (double)args_count}, 2, 1); // global, number
     std::vector<Value> argv;
     for (std::string arg : args)
     {
         argv.push_back({Value_Type::STRING, arg});
     }
-    set_variable(&vm, "argv", {Value_Type::VECTOR, argv}, "global");
+    set_variable(&vm, "argv", {Value_Type::VECTOR, argv}, 2, 5); // global, vector
 }
 // -------------------------------------------------------------------
 
@@ -438,22 +438,11 @@ void vm_loop(bool verbose)
         break;
     case OpCode::OP_STORE_VAR:
     {
-        int type = get_ip(&vm)[1];
-        std::string assignment_type = "unknown";
-        if (type == 0)
-        {
-            assignment_type = "let";
-        }
-        else if (type == 1)
-        {
-            assignment_type = "const";
-        }
-        else if (type == 2)
-        {
-            assignment_type = "global";
-        }
-        set_variable(&vm, vm.variable_names[get_ip(&vm)[2]], pop(&vm), assignment_type);
-        increase_ip(&vm, 2);
+        int assignment_type = get_ip(&vm)[1];
+        int variable_type = get_ip(&vm)[2];
+        Value value = pop(&vm);
+        set_variable(&vm, vm.variable_names[get_ip(&vm)[3]], value, assignment_type, variable_type);
+        increase_ip(&vm, 3);
         break;
     }
     case OpCode::OP_UPDATE_VAR:
@@ -875,7 +864,8 @@ void vm_loop(bool verbose)
     // Scope operations
     case OpCode::OP_INC_SCOPE:
         get_current_function_frame(&vm)->current_scope++;
-        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, std::tuple<Value, std::string>>());
+        // get_current_function_frame(&vm)->variables.push_back(std::map<std::string, std::tuple<Value, std::string, std::string>>());
+        get_current_function_frame(&vm)->variables.push_back(std::map<std::string, Variable>());
         break;
     case OpCode::OP_DEC_SCOPE:
         get_current_function_frame(&vm)->current_scope--;
@@ -943,16 +933,18 @@ void display_debug_info()
 
     std::cout << "\tCurrent Function: " << ff->func->name << std::endl;
     std::cout << "\tFunction Variables (outermost to innermost scope): " << std::endl;
-    std::vector<std::map<std::string, std::tuple<Value, std::string>>> variables = ff->variables;
+    // std::vector<std::map<std::string, std::tuple<Value, std::string, std::string>>> variables = ff->variables;
+    std::vector<std::map<std::string, Variable>> variables = ff->variables; // changed to use the new Variable struct
     for(int i = 0; i < (int)variables.size(); i++)
     {
         std::cout << "\t\tScope: " << i << std::endl;
         // std::map<std::string, Value> scope_variables = variables[i];
-        std::map<std::string, std::tuple<Value, std::string>> scope_variables = variables[i];
+        // std::map<std::string, std::tuple<Value, std::string, std::string>> scope_variables = variables[i];
+        std::map<std::string, Variable> scope_variables = variables[i]; // changed to use the new Variable struct
         for(const auto& pair : scope_variables)
         {
             // std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(pair.second) << std::endl;
-            std::cout << "\t\t\t" << pair.first << ": " << VALUE_AS_STRING(std::get<0>(pair.second)) << std::endl;
+            std::cout << "\t\t\t" << pair.second.get_declaration_type_as_string() << " " << get_value_type_string(pair.second.get_value()) << " " << pair.first + ": " << VALUE_AS_STRING(pair.second.get_value()) << std::endl;
         }
     }
 
@@ -960,7 +952,7 @@ void display_debug_info()
     std::cout << "Stack: \n";
     for(int i = 0; i < vm.stack_count; i++)
     {
-        std::cout << VALUE_AS_STRING(vm.stack[i]) << std::endl;
+        std::cout << get_value_type_string(vm.stack[i]) + ": " << VALUE_AS_STRING(vm.stack[i]) << std::endl;
     }
 
     std::cout << "--------------------------------------------------------------------" << std::endl;

@@ -400,9 +400,25 @@ std::vector<Token> includes(std::vector<Token> tokens, std::string file_path){
     for(int i = 0; i < int(tokens.size()); i++){
         if(tokens[i].get_type() == TokenType::INCLUDE_TOKEN){
             std::string include_file = tokens[i].get_value();
-            // std::vector<Token> include_tokens = read_input("./" + include_file, verbose, true);
-            //get directory of the file 
-            std::string directory = file_path.substr(0, file_path.find_last_of("/\\"));
+            
+            // Properly extract the directory part from the file path
+            std::string directory;
+            size_t last_slash = file_path.find_last_of("/\\");
+            
+            if (last_slash != std::string::npos) {
+                // If the file path contains a slash, extract the directory part
+                directory = file_path.substr(0, last_slash);
+            } else {
+                // No slashes, so it's in the current directory
+                directory = ".";
+            }
+            
+            // Debug output to help diagnose issues
+            // std::cout << "Original path: " << file_path << std::endl;
+            // std::cout << "Directory: " << directory << std::endl;
+            // std::cout << "Include file: " << include_file << std::endl;
+            // std::cout << "Full include path: " << directory + "/" + include_file << std::endl;
+            
             std::vector<Token> include_tokens = read_input(directory + "/" + include_file, true);
             new_tokens.insert(new_tokens.end(), include_tokens.begin(), include_tokens.end());
         }

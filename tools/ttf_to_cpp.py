@@ -13,8 +13,8 @@ def generate_source(font_data, output_path):
         f.write('#include "embedded_font.hpp"\n\n')
         f.write('const unsigned char embedded_font[] = {')
         for i, byte in enumerate(font_data):
-            if i % 12 == 0:
-                f.write('\n    ')
+            # if i % 12 == 0:
+            #     f.write('\n    ')
             f.write(f'0x{byte:02x}, ')
         f.write('\n};\n\n')
         f.write(f'const unsigned int embedded_font_size = {len(font_data)};\n')

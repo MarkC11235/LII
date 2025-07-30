@@ -1,4 +1,4 @@
-let string_len = func(x){
+let func string_len = func(x){
     return x;
 };
 

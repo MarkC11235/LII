@@ -1,24 +1,24 @@
-let lt1 = 1 < 2;
-let lt2 = 2 < 1;
-let lt3 = 1 < 1;
+let bool lt1 = 1 < 2;
+let bool lt2 = 2 < 1;
+let bool lt3 = 1 < 1;
 
-let gt1 = 1 > 2;
-let gt2 = 2 > 1;
-let gt3 = 1 > 1;
+let bool gt1 = 1 > 2;
+let bool gt2 = 2 > 1;
+let bool gt3 = 1 > 1;
 
-let lte1 = 1 <= 2;
-let lte2 = 2 <= 1;
-let lte3 = 1 <= 1;
+let bool lte1 = 1 <= 2;
+let bool lte2 = 2 <= 1;
+let bool lte3 = 1 <= 1;
 
-let gte1 = 1 >= 2;
-let gte2 = 2 >= 1;
-let gte3 = 1 >= 1;
+let bool gte1 = 1 >= 2;
+let bool gte2 = 2 >= 1;
+let bool gte3 = 1 >= 1;
 
-let eq1 = 1 == 1;
-let eq2 = 1 == 2;
+let bool eq1 = 1 == 1;
+let bool eq2 = 1 == 2;
 
-let neq1 = 1 != 1;
-let neq2 = 1 != 2;
+let bool neq1 = 1 != 1;
+let bool neq2 = 1 != 2;
 
 
 print "lt1: 1 < 2 = " + lt1;

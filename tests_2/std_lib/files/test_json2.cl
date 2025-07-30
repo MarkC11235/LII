@@ -1,4 +1,4 @@
-let obj = map{
+let map obj = map{
     "vec" : [
         1,
         "string",
@@ -20,9 +20,9 @@ let obj = map{
     }
 };
 
-let json_string = $map_to_json(obj);
+let string json_string = $map_to_json(obj);
 print json_string;
-let obj2 = $json_to_map(json_string);
+let map obj2 = $json_to_map(json_string);
 
 print obj;
 print obj2;

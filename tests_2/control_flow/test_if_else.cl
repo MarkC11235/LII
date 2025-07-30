@@ -1,5 +1,5 @@
-let x = 0;
-let y = 1;
+let number x = 0;
+let number y = 1;
 if(x){
     print 1;
 }

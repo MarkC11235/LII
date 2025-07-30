@@ -1,5 +1,5 @@
 #"helpers.clh"
-let add = func(pprint, a, b) {
-    let pr = pprint("add " + a + " " + b);
+let func add = func(pprint, a, b) {
+    let number pr = pprint("add " + a + " " + b);
     return a + b;
 };

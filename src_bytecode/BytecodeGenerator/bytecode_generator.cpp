@@ -254,23 +254,12 @@ void display_bytecode(function *func)
             std::cout << "OP_STORE_VAR";
             std::cout << "          ";
             int type = (int)func->code[++i];
-            std::string assignment_type;
-            switch (type)
-            {
-            case 0:
-                assignment_type = "let";
-                break;
-            case 1:
-                assignment_type = "const";
-                break;
-            case 2:
-                assignment_type = "global";
-                break;
-            default:
-                assignment_type = "unknown";
-                break;
-            }
-            std::cout << "Assignment type: " << assignment_type << std::endl;
+            std::string declaration_type = Variable::declaration_type_to_string((Declaration_Type)type);
+            std::cout << "Declaration type: " << declaration_type << std::endl;
+            std::cout << "          ";
+            int var_type = (int)func->code[++i];
+            std::string var_type_str = Variable::type_to_string(var_type);
+            std::cout << "Variable type: " << var_type_str << std::endl;
             std::cout << "          ";
             std::cout << "Index: " << (int)func->code[++i];
             std::cout << "          ";
@@ -936,6 +925,8 @@ void interpret_function(Node *node, function *func)
         WRITE_BYTE(OpCode::OP_STORE_VAR, new_func);
         int type = 0; // let
         WRITE_BYTE(type, new_func); // 0 = let, 1 = const, 2 = global
+        int var_type = 0; // any
+        WRITE_BYTE(var_type, new_func); // 0 = any, 1 = number, 2 = string, 3 = bool, 4 = null, 5 = vector, 6 = map, 7 = function
         WRITE_BYTE(get_variable_index(new_func->arguments[i]), new_func);
     }
 
@@ -987,6 +978,7 @@ void interpret_assign(Node *node, function *func)
     }
 
     std::string assign_type = node->get_value(0); // let, const, global
+    std::string variable_type = node->get_value(1); // number, string, bool, null, vector, map, function
     Node *var = node->get_child(0);
     std::string var_name = var->get_value();
     Node *value = node->get_child(1);
@@ -1001,27 +993,79 @@ void interpret_assign(Node *node, function *func)
     evaluate(value, func);
 
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
-    int type = -1;
-    if (assign_type == "let")
-    {
-        type = 0;
-    }
-    else if (assign_type == "const")
-    {
-        type = 1;
-    }
-    else if (assign_type == "global")
-    {
-        if(func->name != "main"){
-            interpretation_error("Global variables can only be defined in the main function", node, func);
-        }
-        type = 2;
-    }
-    else
-    {
-        interpretation_error("Invalid assign type", node, func);
-    }
+    // int type = -1;
+    // if (assign_type == "let")
+    // {
+    //     type = 0;
+    // }
+    // else if (assign_type == "const")
+    // {
+    //     type = 1;
+    // }
+    // else if (assign_type == "global")
+    // {
+    //     if(func->name != "main"){
+    //         interpretation_error("Global variables can only be defined in the main function", node, func);
+    //     }
+    //     type = 2;
+    // }
+    // else
+    // {
+    //     interpretation_error("Invalid assign type", node, func);
+    // }
+    int type = (int)Variable::string_to_declaration_type(assign_type); // Convert the string to the corresponding declaration type
     WRITE_BYTE(type, func); // 0 = let, 1 = const, 2 = global
+
+    // int var_type;
+    // if (variable_type == "any")
+    // {
+    //     var_type = 0;
+    // }
+    // else if (variable_type == "number")
+    // {
+    //     var_type = 1;
+    // }
+    // else if (variable_type == "string")
+    // {
+    //     var_type = 2;
+    // }
+    // else if (variable_type == "bool")
+    // {
+    //     var_type = 3;
+    // }
+    // else if (variable_type == "null")
+    // {
+    //     var_type = 4;
+    // }
+    // else if (variable_type == "vector")
+    // {
+    //     var_type = 5;
+    // }
+    // else if (variable_type == "map")
+    // {
+    //     var_type = 6;
+    // }
+    // else if (variable_type == "func")
+    // {
+    //     var_type = 7;
+    // }
+    // else
+    // {
+    //     var_type = -1;
+    //     interpretation_error("Invalid variable type: " + variable_type, node, func);
+    // }
+    // int var_type = (int)Variable::string_to_type(variable_type); // Convert the string to the corresponding variable type
+    // if (var_type == -1)
+    // {
+    //     interpretation_error("Invalid variable type: " + variable_type, node, func);
+    // }
+    int var_type = Variable::type_index(variable_type); // Convert the string to the corresponding variable type index
+    if (var_type == -1)
+    {
+        interpretation_error("Invalid variable type: " + variable_type, node, func);
+    }
+    WRITE_BYTE(var_type, func); // 0 = any, 1 = number, 2 = string, 3 = bool, 4 = null, 5 = vector, 6 = map, 7 = function
+
     WRITE_BYTE(get_variable_index(var_name), func);
 }
 
@@ -1302,10 +1346,12 @@ void interpret_foreach(Node *node, function *func)
     // assign pair to identifiers
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
     WRITE_BYTE(0, func); // 0 = let
+    WRITE_BYTE(0, func); // 0 = any
     WRITE_BYTE(get_variable_index(key_name), func);
 
     WRITE_BYTE(OpCode::OP_STORE_VAR, func);
     WRITE_BYTE(0, func); // 0 = let
+    WRITE_BYTE(0, func); // 0 = any
     WRITE_BYTE(get_variable_index(value_name), func);
 
     // interpret the statement list

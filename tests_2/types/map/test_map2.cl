@@ -1,4 +1,4 @@
-let Person = map{
+let map Person = map{
     "name" : "Bob",
     "f" : func(){return 1;},
     "l" : [1, 2, 3],
@@ -8,15 +8,15 @@ let Person = map{
 
 print Person;
 
-let f = Person["f"];
+let func f = Person["f"];
 print f();
 
-let l = Person["l"];
+let vector l = Person["l"];
 print l;
 
-let n = Person["n"];
+let null n = Person["n"];
 print n;
 
-let s = Person["s"];
+let map s = Person["s"];
 print s;
 

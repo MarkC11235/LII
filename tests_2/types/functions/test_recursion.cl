@@ -1,4 +1,4 @@
-let factorial = func(factorial, i){
+let func factorial = func(factorial, i){
     if(i){
         return i * factorial(factorial, i - 1);
     } else {

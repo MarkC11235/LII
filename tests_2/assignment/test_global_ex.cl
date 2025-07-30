@@ -1,4 +1,4 @@
-global create_matrix = func(rows, cols, data) {
+global func create_matrix = func(rows, cols, data) {
     return map{
         "__type": "matrix",
         "rows" : rows,
@@ -12,8 +12,8 @@ define "+" in "matrix" as func(a, b){
         print "Matrix dimensions do not match for addition.";
         return null;
     }
-    for (let i = 0; i < a["rows"]; i = i + 1) {
-        for (let j = 0; j < a["cols"]; j = j + 1) {
+    for (let number i = 0; i < a["rows"]; i = i + 1) {
+        for (let number j = 0; j < a["cols"]; j = j + 1) {
             a["data"][i * a["cols"] + j] = a["data"][i * a["cols"] + j] + b["data"][i * b["cols"] + j];
         }
     }
@@ -25,8 +25,8 @@ define "-" in "matrix" as func(a, b){
         print "Matrix dimensions do not match for subtraction.";
         return null;
     }
-    for (let i = 0; i < a["rows"]; i = i + 1) {
-        for (let j = 0; j < a["cols"]; j = j + 1) {
+    for (let number i = 0; i < a["rows"]; i = i + 1) {
+        for (let number j = 0; j < a["cols"]; j = j + 1) {
             a["data"][i * a["cols"] + j] = a["data"][i * a["cols"] + j] - b["data"][i * b["cols"] + j];
         }
     }
@@ -38,10 +38,10 @@ define "*" in "matrix" as func(a, b){
         print "Matrix dimensions do not match for multiplication.";
         return null;
     }
-    let result = create_matrix(a["rows"], b["cols"], a["rows"] * b["cols"] * [0]);
-    for (let i = 0; i < a["rows"]; i = i + 1) {
-        for (let j = 0; j < b["cols"]; j = j + 1) {
-            for (let k = 0; k < a["cols"]; k = k + 1) {
+    let map result = create_matrix(a["rows"], b["cols"], a["rows"] * b["cols"] * [0]);
+    for (let number i = 0; i < a["rows"]; i = i + 1) {
+        for (let number j = 0; j < b["cols"]; j = j + 1) {
+            for (let number k = 0; k < a["cols"]; k = k + 1) {
                 result["data"][i * b["cols"] + j] = result["data"][i * b["cols"] + j] + a["data"][i * a["cols"] + k] * b["data"][k * b["cols"] + j];
             }
         }
@@ -49,9 +49,9 @@ define "*" in "matrix" as func(a, b){
     return result;
 };
 
-let A = create_matrix(2, 3, [1, 2, 3, 4, 5, 6]);
-let B = create_matrix(2, 3, [6, 5, 4, 3, 2, 1]);
-let C = create_matrix(3, 2, [1, 2, 3, 4, 5, 6]);
+let map A = create_matrix(2, 3, [1, 2, 3, 4, 5, 6]);
+let map B = create_matrix(2, 3, [6, 5, 4, 3, 2, 1]);
+let map C = create_matrix(3, 2, [1, 2, 3, 4, 5, 6]);
 
 print "A + B = " + (A + B);
 print "A - B = " + (A - B);
