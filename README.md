@@ -545,6 +545,12 @@ The tokenizer skips invalid characters and does not throw an error.
 5. Remake and reintegrate the jit compiler
 6. Make it so that SDL2 isn't required to build the compiler and interpreter
     - Maybe make it more of a plugin
+7. add a match keyword to avoid long if else chains
+8. add a type check compiler pass
+9. add more verification passes
+10. add a further compiler pass to make an executable.
+    maybe multiple passes that lower bytecode into a more simple ir 
+
 
 ## Standard Library Functions
 
